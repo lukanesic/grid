@@ -136,7 +136,10 @@ export default function PrivacySecurityScreen() {
             </View>
           </View>
 
-          <Pressable style={styles.linkCard}>
+          <Pressable
+            style={styles.linkCard}
+            onPress={() => router.push("/_menu/blockedUsers")}
+          >
             <View style={styles.linkLeft}>
               <FontAwesome name="ban" size={20} color={colors.textSecondary} />
               <Text style={styles.linkTitle}>Blokirani korisnici</Text>
@@ -199,7 +202,10 @@ export default function PrivacySecurityScreen() {
             </View>
           </View>
 
-          <Pressable style={styles.linkCard}>
+          <Pressable
+            style={styles.linkCard}
+            onPress={() => router.push("/_menu/loginHistory")}
+          >
             <View style={styles.linkLeft}>
               <FontAwesome
                 name="history"
@@ -215,7 +221,10 @@ export default function PrivacySecurityScreen() {
             />
           </Pressable>
 
-          <Pressable style={styles.linkCard}>
+          <Pressable
+            style={styles.linkCard}
+            onPress={() => router.push("/_menu/activeDevices")}
+          >
             <View style={styles.linkLeft}>
               <FontAwesome
                 name="mobile"

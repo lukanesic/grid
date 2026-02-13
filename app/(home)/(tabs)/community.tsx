@@ -22,7 +22,7 @@ export default function CommunityScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={{ width: 60 }} />
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/viewMap")}>
           <Text style={styles.viewMap}>View map</Text>
         </TouchableOpacity>
       </View>

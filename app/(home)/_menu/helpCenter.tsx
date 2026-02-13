@@ -21,6 +21,7 @@ export default function HelpCenterScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
+  const glowColor = isDark ? "#B8FF00" : colors.blue;
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -72,12 +73,32 @@ export default function HelpCenterScreen() {
           <Text style={styles.sectionTitle}>Teme</Text>
           <View style={styles.topicsGrid}>
             {HELP_TOPICS.map((topic, index) => (
-              <Pressable key={index} style={styles.topicCard}>
-                <FontAwesome
-                  name={topic.icon as any}
-                  size={24}
-                  color={isDark ? "#B8FF00" : colors.blue}
-                />
+              <Pressable
+                key={index}
+                style={styles.topicCard}
+                onPress={() => {
+                  if (topic.title === "Plaćanje i pretplata") {
+                    router.push("/_menu/helpPaymentSubscription");
+                  } else if (topic.title === "Rezervacije") {
+                    router.push("/_menu/helpReservations");
+                  } else if (topic.title === "Nalog i profil") {
+                    router.push("/_menu/helpAccountProfile");
+                  } else if (topic.title === "Bezbednost") {
+                    router.push("/_menu/helpSecurity");
+                  } else if (topic.title === "Mečevi i turniri") {
+                    router.push("/_menu/helpMatchesTournaments");
+                  } else if (topic.title === "Podešavanja") {
+                    router.push("/_menu/helpSettings");
+                  }
+                }}
+              >
+                <View style={[styles.iconGlow, { shadowColor: glowColor }]}>
+                  <FontAwesome
+                    name={topic.icon as any}
+                    size={24}
+                    color={isDark ? "#B8FF00" : colors.blue}
+                  />
+                </View>
                 <Text style={styles.topicTitle}>{topic.title}</Text>
                 <Text style={styles.topicCount}>{topic.count} članaka</Text>
               </Pressable>
@@ -123,6 +144,7 @@ export default function HelpCenterScreen() {
                     <View
                       style={[
                         styles.contactIcon,
+                        { shadowColor: iconColor },
                         {
                           backgroundColor: `${iconColor}${isDark ? "15" : "1A"}`,
                         },
@@ -155,8 +177,13 @@ export default function HelpCenterScreen() {
         {/* Resources */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resursi</Text>
-          <Pressable style={styles.resourceCard}>
-            <FontAwesome name="book" size={20} color={colors.blue} />
+          <Pressable
+            style={styles.resourceCard}
+            onPress={() => router.push("/_menu/helpPaymentSubscription")}
+          >
+            <View style={[styles.iconGlow, { shadowColor: colors.blue }]}>
+              <FontAwesome name="book" size={20} color={colors.blue} />
+            </View>
             <View style={styles.resourceText}>
               <Text style={styles.resourceTitle}>Dokumentacija</Text>
               <Text style={styles.resourceSubtitle}>
@@ -171,7 +198,9 @@ export default function HelpCenterScreen() {
           </Pressable>
 
           <Pressable style={styles.resourceCard}>
-            <FontAwesome name="video-camera" size={20} color={colors.blue} />
+            <View style={[styles.iconGlow, { shadowColor: colors.blue }]}>
+              <FontAwesome name="video-camera" size={20} color={colors.blue} />
+            </View>
             <View style={styles.resourceText}>
               <Text style={styles.resourceTitle}>Video tutorijali</Text>
               <Text style={styles.resourceSubtitle}>
@@ -186,7 +215,9 @@ export default function HelpCenterScreen() {
           </Pressable>
 
           <Pressable style={styles.resourceCard}>
-            <FontAwesome name="users" size={20} color={colors.blue} />
+            <View style={[styles.iconGlow, { shadowColor: colors.blue }]}>
+              <FontAwesome name="users" size={20} color={colors.blue} />
+            </View>
             <View style={styles.resourceText}>
               <Text style={styles.resourceTitle}>Zajednica</Text>
               <Text style={styles.resourceSubtitle}>
@@ -203,11 +234,13 @@ export default function HelpCenterScreen() {
 
         {/* Feedback */}
         <View style={styles.feedbackCard}>
-          <FontAwesome
-            name="lightbulb-o"
-            size={24}
-            color={isDark ? "#B8FF00" : colors.blue}
-          />
+          <View style={[styles.iconGlow, { shadowColor: glowColor }]}>
+            <FontAwesome
+              name="lightbulb-o"
+              size={24}
+              color={isDark ? "#B8FF00" : colors.blue}
+            />
+          </View>
           <View style={styles.feedbackText}>
             <Text style={styles.feedbackTitle}>Niste našli odgovor?</Text>
             <Text style={styles.feedbackSubtitle}>
@@ -340,6 +373,16 @@ const getStyles = (colors: any, isDark: boolean) =>
       borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: isDark ? 0.2 : 0.16,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    iconGlow: {
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: isDark ? 0.2 : 0.14,
+      shadowRadius: 7,
+      elevation: 2,
     },
     contactText: {
       flex: 1,
