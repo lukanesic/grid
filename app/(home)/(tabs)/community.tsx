@@ -1,19 +1,22 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
-    ImageBackground,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CLUBS } from "../../../constants/data";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function CommunityScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -27,29 +30,33 @@ export default function CommunityScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <FontAwesome name="search" size={18} color="#8B8B8B" />
+          <FontAwesome name="search" size={18} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Barcelona"
-            placeholderTextColor="#F2F2F2"
+            placeholderTextColor={colors.text}
             value="Barcelona"
           />
           <TouchableOpacity>
-            <FontAwesome name="send" size={18} color="#8B8B8B" />
+            <FontAwesome name="send" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity>
-            <FontAwesome name="heart-o" size={18} color="#8B8B8B" />
+            <FontAwesome
+              name="heart-o"
+              size={18}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
 
         {/* Filters */}
         <View style={styles.filtersContainer}>
           <TouchableOpacity style={styles.filterButton}>
-            <FontAwesome name="sliders" size={18} color="#F2F2F2" />
+            <FontAwesome name="sliders" size={18} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterChip}>
             <Text style={styles.filterChipText}>Tennis</Text>
-            <FontAwesome name="chevron-down" size={12} color="#F2F2F2" />
+            <FontAwesome name="chevron-down" size={12} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterChip}>
             <Text style={styles.filterChipText}>25 May | 10 - 15</Text>
@@ -99,131 +106,133 @@ export default function CommunityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  viewMap: {
-    color: "#3867FF",
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F2F2F2",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 16,
-    gap: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#0B0B0B",
-    fontWeight: "500",
-  },
-  filtersContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 20,
-  },
-  filterButton: {
-    backgroundColor: "#121418",
-    borderRadius: 8,
-    padding: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#121418",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  filterChipText: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  clubCard: {
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#121418",
-  },
-  clubImage: {
-    width: "100%",
-    height: 240,
-    justifyContent: "flex-end",
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  clubImageOverlay: {
-    padding: 16,
-    position: "relative",
-  },
-  clubInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: 4,
-  },
-  clubName: {
-    color: "#F2F2F2",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  clubPrice: {
-    color: "#F2F2F2",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  clubFrom: {
-    color: "#F2F2F2",
-    fontSize: 13,
-    opacity: 0.8,
-  },
-  clubDetails: {
-    padding: 16,
-  },
-  clubLocation: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  timeSlotsContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  timeSlot: {
-    backgroundColor: "#0B0B0B",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  timeSlotText: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    viewMap: {
+      color: colors.blue,
+      fontSize: 15,
+      fontWeight: "500",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 16,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginBottom: 16,
+      gap: 12,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: "500",
+    },
+    filtersContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 20,
+    },
+    filterButton: {
+      backgroundColor: colors.cardBackground,
+      borderRadius: 8,
+      padding: 12,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    filterChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.cardBackground,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      gap: 8,
+    },
+    filterChipText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    clubCard: {
+      marginBottom: 16,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: colors.cardBackground,
+    },
+    clubImage: {
+      width: "100%",
+      height: 240,
+      justifyContent: "flex-end",
+    },
+    imageOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    clubImageOverlay: {
+      padding: 16,
+      position: "relative",
+    },
+    clubInfo: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-end",
+      marginBottom: 4,
+    },
+    clubName: {
+      color: "#F2F2F2",
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    clubPrice: {
+      color: "#F2F2F2",
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    clubFrom: {
+      color: "#F2F2F2",
+      fontSize: 13,
+      opacity: 0.8,
+    },
+    clubDetails: {
+      padding: 16,
+      backgroundColor: colors.surface,
+    },
+    clubLocation: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginBottom: 12,
+    },
+    timeSlotsContainer: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    timeSlot: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    timeSlotText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+  });

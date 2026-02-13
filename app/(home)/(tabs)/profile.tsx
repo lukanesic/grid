@@ -2,23 +2,27 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Badge, IconButton } from "../../../components";
 import {
-    PROFILE_INFO,
-    PROFILE_INFO_STATS,
-    PROFILE_POSTS,
-    PROFILE_SPORTS,
+  PROFILE_INFO,
+  PROFILE_INFO_STATS,
+  PROFILE_POSTS,
+  PROFILE_SPORTS,
 } from "../../../constants/data";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function ProfileScreen() {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const accentColor = isDark ? "#B8FF00" : colors.blue;
   const [activeTab, setActiveTab] = useState<"activity" | "info" | "stats">(
     "activity",
   );
@@ -107,13 +111,20 @@ export default function ProfileScreen() {
         <View style={styles.actionButtons}>
           <View style={styles.buttonHalf}>
             <Pressable style={styles.followingButton}>
-              <FontAwesome name="users" size={16} color="#B8FF00" />
+              <FontAwesome name="users" size={16} color={accentColor} />
               <Text style={styles.followingButtonText}>Zapratite</Text>
             </Pressable>
           </View>
           <View style={styles.buttonHalf}>
-            <Pressable style={styles.playButton}>
-              <FontAwesome name="play" size={14} color="#111111" />
+            <Pressable
+              style={styles.playButton}
+              onPress={() => router.push("/createMatch")}
+            >
+              <FontAwesome
+                name="play"
+                size={14}
+                color={isDark ? "#111111" : "#FFFFFF"}
+              />
               <Text style={styles.playButtonText}>Igraj</Text>
             </Pressable>
           </View>
@@ -192,7 +203,11 @@ export default function ProfileScreen() {
                     <Text style={styles.postName}>{post.name}</Text>
                     <Text style={styles.postMeta}>{post.meta}</Text>
                   </View>
-                  <FontAwesome name="ellipsis-h" size={16} color="#8B8B8B" />
+                  <FontAwesome
+                    name="ellipsis-h"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
                 </View>
 
                 <Image
@@ -205,15 +220,23 @@ export default function ProfileScreen() {
 
                 <View style={styles.postActions}>
                   <View style={styles.postActionsLeft}>
-                    <FontAwesome name="heart-o" size={18} color="#F2F2F2" />
-                    <FontAwesome name="comment-o" size={18} color="#F2F2F2" />
+                    <FontAwesome name="heart-o" size={18} color={colors.text} />
+                    <FontAwesome
+                      name="comment-o"
+                      size={18}
+                      color={colors.text}
+                    />
                     <FontAwesome
                       name="paper-plane-o"
                       size={18}
-                      color="#F2F2F2"
+                      color={colors.text}
                     />
                   </View>
-                  <FontAwesome name="bookmark-o" size={18} color="#F2F2F2" />
+                  <FontAwesome
+                    name="bookmark-o"
+                    size={18}
+                    color={colors.text}
+                  />
                 </View>
 
                 <Text style={styles.postLikes}>{post.likes}</Text>
@@ -232,7 +255,7 @@ export default function ProfileScreen() {
                   <FontAwesome
                     name="hand-pointer-o"
                     size={14}
-                    color="#8B8B8B"
+                    color={colors.textSecondary}
                   />
                   <Text style={styles.infoTitle}>Dominantna ruka</Text>
                 </View>
@@ -245,7 +268,11 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.infoCard}>
                 <View style={styles.infoTitleRow}>
-                  <FontAwesome name="map-marker" size={14} color="#8B8B8B" />
+                  <FontAwesome
+                    name="map-marker"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.infoTitle}>Pozicija</Text>
                 </View>
                 <Text style={styles.infoValue}>
@@ -260,7 +287,11 @@ export default function ProfileScreen() {
             <View style={styles.infoGrid}>
               <View style={styles.infoCardSmall}>
                 <View style={styles.infoTitleRow}>
-                  <FontAwesome name="line-chart" size={14} color="#8B8B8B" />
+                  <FontAwesome
+                    name="line-chart"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.infoTitle}>Procenat pobeda</Text>
                 </View>
                 <Text style={styles.infoValueLarge}>
@@ -272,7 +303,11 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.infoCardSmall}>
                 <View style={styles.infoTitleRow}>
-                  <FontAwesome name="calendar" size={14} color="#8B8B8B" />
+                  <FontAwesome
+                    name="calendar"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.infoTitle}>Odigrani mečevi</Text>
                 </View>
                 <Text style={styles.infoValueLarge}>
@@ -288,7 +323,11 @@ export default function ProfileScreen() {
               <View style={styles.infoRowBetween}>
                 <View>
                   <View style={styles.infoTitleRow}>
-                    <FontAwesome name="area-chart" size={14} color="#8B8B8B" />
+                    <FontAwesome
+                      name="area-chart"
+                      size={14}
+                      color={colors.textSecondary}
+                    />
                     <Text style={styles.infoTitle}>Forma</Text>
                   </View>
                   <Text style={styles.infoValue}>Stabilna</Text>
@@ -311,7 +350,11 @@ export default function ProfileScreen() {
 
             <View style={styles.infoCardWide}>
               <View style={styles.infoTitleRow}>
-                <FontAwesome name="bullseye" size={14} color="#8B8B8B" />
+                <FontAwesome
+                  name="bullseye"
+                  size={14}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.infoTitle}>Statistika servisa</Text>
               </View>
               <View style={styles.infoRowBetween}>
@@ -330,7 +373,11 @@ export default function ProfileScreen() {
 
             <View style={styles.infoCardWide}>
               <View style={styles.infoTitleRow}>
-                <FontAwesome name="tags" size={14} color="#8B8B8B" />
+                <FontAwesome
+                  name="tags"
+                  size={14}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.infoTitle}>Stil igre</Text>
               </View>
               <View style={styles.infoTags}>
@@ -432,467 +479,470 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  logoImage: {
-    width: 48,
-    height: 48,
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  profileImageContainer: {
-    position: "relative",
-  },
-  profileImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-  },
-  levelBadge: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  levelText: {
-    color: "#111111",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  matchCircle: {
-    position: "absolute",
-    right: -20,
-    top: 20,
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#1E1F23",
-    borderWidth: 2,
-    borderColor: "#B8FF00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  matchPercentage: {
-    color: "#B8FF00",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  name: {
-    color: "#F2F2F2",
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  userInfo: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  bioSection: {
-    marginBottom: 28,
-  },
-  bioText: {
-    color: "#D1D1D1",
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  seeMoreLink: {
-    color: "#3867FF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 28,
-    paddingVertical: 20,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statNumber: {
-    color: "#F2F2F2",
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 28,
-  },
-  buttonHalf: {
-    flex: 1,
-  },
-  followingButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 24,
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#B8FF00",
-  },
-  followingButtonText: {
-    color: "#B8FF00",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  playButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 24,
-    backgroundColor: "#B8FF00",
-  },
-  playButtonText: {
-    color: "#111111",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  sportsScroll: {
-    marginHorizontal: -20,
-    marginBottom: 28,
-  },
-  sportsContent: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  sportTag: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#2C2C2C",
-  },
-  sportTagActive: {
-    backgroundColor: "#1E1F23",
-    borderColor: "#1E1F23",
-  },
-  sportTagText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  sportTagTextActive: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E1F23",
-    marginBottom: 24,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#F2F2F2",
-  },
-  tabActiveText: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  tabText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  postList: {
-    gap: 16,
-  },
-  postCard: {
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-  },
-  postHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  postAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#2C2C2C",
-  },
-  postHeaderText: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  postName: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  postMeta: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  postImage: {
-    width: "100%",
-    height: 220,
-    borderRadius: 12,
-    backgroundColor: "#1E1F23",
-  },
-  postActions: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  postActionsLeft: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  postLikes: {
-    color: "#F2F2F2",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 10,
-  },
-  postCaption: {
-    color: "#D1D1D1",
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-  postCaptionName: {
-    color: "#F2F2F2",
-    fontWeight: "600",
-  },
-  infoSection: {
-    gap: 16,
-  },
-  infoGrid: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  infoCard: {
-    flex: 1,
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 110,
-    justifyContent: "space-between",
-  },
-  infoCardSmall: {
-    flex: 1,
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 110,
-    justifyContent: "space-between",
-  },
-  infoCardWide: {
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-  },
-  infoTitle: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  infoTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  infoValue: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  infoValueLarge: {
-    color: "#F2F2F2",
-    fontSize: 28,
-    fontWeight: "700",
-  },
-  infoSub: {
-    color: "#8B8B8B",
-    fontSize: 12,
-  },
-  infoRowBetween: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  infoBadge: {
-    color: "#B8FF00",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  infoDots: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  infoDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#2C2C2C",
-  },
-  infoDotActive: {
-    backgroundColor: "#F2F2F2",
-  },
-  infoTags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  infoTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: "#1E1F23",
-  },
-  infoTagText: {
-    color: "#F2F2F2",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  historyList: {
-    gap: 16,
-  },
-  historyCard: {
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-  },
-  historyHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  historyType: {
-    color: "#F2F2F2",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  historyDate: {
-    color: "#8B8B8B",
-    fontSize: 12,
-  },
-  historyLocation: {
-    color: "#8B8B8B",
-    fontSize: 12,
-  },
-  historyMetaRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
-  historyTag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    backgroundColor: "#1E1F23",
-  },
-  historyTagText: {
-    color: "#8B8B8B",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  resultTag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  resultWin: {
-    backgroundColor: "rgba(184, 255, 0, 0.15)",
-  },
-  resultLoss: {
-    backgroundColor: "rgba(255, 68, 68, 0.15)",
-  },
-  resultTagText: {
-    color: "#F2F2F2",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  historyTeams: {
-    gap: 6,
-  },
-  teamRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  teamDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#B8FF00",
-  },
-  teamDotMuted: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#2C2C2C",
-  },
-  teamName: {
-    color: "#F2F2F2",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  teamNameMuted: {
-    color: "#8B8B8B",
-    fontSize: 13,
-  },
-  contentPlaceholder: {
-    padding: 40,
-    alignItems: "center",
-  },
-  placeholderText: {
-    color: "#8B8B8B",
-    fontSize: 16,
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 100,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    logoImage: {
+      width: 48,
+      height: 48,
+    },
+    headerActions: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    profileSection: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    profileImageContainer: {
+      position: "relative",
+    },
+    profileImage: {
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+    },
+    levelBadge: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      backgroundColor: "#FFFFFF",
+      borderRadius: 16,
+      borderWidth: isDark ? 0 : 1,
+      borderColor: isDark ? "transparent" : "#B8FF00",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    levelText: {
+      color: "#111111",
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    matchCircle: {
+      position: "absolute",
+      right: -20,
+      top: 20,
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: isDark ? "#1E1F23" : "#1E1F23",
+      borderWidth: 2,
+      borderColor: isDark ? "#B8FF00" : "#B8FF00",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    matchPercentage: {
+      color: isDark ? "#B8FF00" : "#B8FF00",
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    name: {
+      color: colors.text,
+      fontSize: 28,
+      fontWeight: "700",
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    userInfo: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+      marginBottom: 20,
+    },
+    bioSection: {
+      marginBottom: 28,
+    },
+    bioText: {
+      color: colors.text,
+      fontSize: 15,
+      lineHeight: 22,
+      marginBottom: 8,
+    },
+    seeMoreLink: {
+      color: "#3867FF",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    statsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginBottom: 28,
+      paddingVertical: 20,
+    },
+    statItem: {
+      alignItems: "center",
+    },
+    statNumber: {
+      color: colors.text,
+      fontSize: 32,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    statLabel: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    actionButtons: {
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 28,
+    },
+    buttonHalf: {
+      flex: 1,
+    },
+    followingButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 24,
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    followingButtonText: {
+      color: isDark ? "#B8FF00" : colors.blue,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    playButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 24,
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    playButtonText: {
+      color: isDark ? "#111111" : "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    sportsScroll: {
+      marginHorizontal: -20,
+      marginBottom: 28,
+    },
+    sportsContent: {
+      paddingHorizontal: 20,
+      gap: 12,
+    },
+    sportTag: {
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 24,
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sportTagActive: {
+      backgroundColor: isDark ? "#1E1F23" : colors.surface,
+      borderColor: isDark ? "#1E1F23" : colors.surface,
+    },
+    sportTagText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    sportTagTextActive: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    tabsContainer: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      marginBottom: 24,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 12,
+      alignItems: "center",
+    },
+    tabActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: isDark ? colors.text : colors.blue,
+    },
+    tabActiveText: {
+      color: isDark ? colors.text : colors.blue,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    tabText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    postList: {
+      gap: 16,
+    },
+    postCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 16,
+    },
+    postHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    postAvatar: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: colors.border,
+    },
+    postHeaderText: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    postName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    postMeta: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    postImage: {
+      width: "100%",
+      height: 220,
+      borderRadius: 12,
+      backgroundColor: isDark ? "#1E1F23" : colors.border,
+    },
+    postActions: {
+      marginTop: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    postActionsLeft: {
+      flexDirection: "row",
+      gap: 16,
+    },
+    postLikes: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: "600",
+      marginTop: 10,
+    },
+    postCaption: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+      marginTop: 6,
+    },
+    postCaptionName: {
+      color: colors.text,
+      fontWeight: "600",
+    },
+    infoSection: {
+      gap: 16,
+    },
+    infoGrid: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    infoCard: {
+      flex: 1,
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      minHeight: 110,
+      justifyContent: "space-between",
+    },
+    infoCardSmall: {
+      flex: 1,
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      minHeight: 110,
+      justifyContent: "space-between",
+    },
+    infoCardWide: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      gap: 12,
+    },
+    infoTitle: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+    infoTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    infoValue: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    infoValueLarge: {
+      color: colors.text,
+      fontSize: 28,
+      fontWeight: "700",
+    },
+    infoSub: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    infoRowBetween: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    infoBadge: {
+      color: isDark ? "#B8FF00" : colors.blue,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    infoDots: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    },
+    infoDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.border,
+    },
+    infoDotActive: {
+      backgroundColor: colors.text,
+    },
+    infoTags: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    infoTag: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: isDark ? "#1E1F23" : colors.border,
+    },
+    infoTagText: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    historyList: {
+      gap: 16,
+    },
+    historyCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      gap: 12,
+    },
+    historyHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    historyType: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.5,
+    },
+    historyDate: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    historyLocation: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    historyMetaRow: {
+      flexDirection: "row",
+      gap: 8,
+      alignItems: "center",
+    },
+    historyTag: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 10,
+      backgroundColor: isDark ? "#1E1F23" : colors.border,
+    },
+    historyTagText: {
+      color: colors.textSecondary,
+      fontSize: 11,
+      fontWeight: "600",
+    },
+    resultTag: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 10,
+    },
+    resultWin: {
+      backgroundColor: "rgba(184, 255, 0, 0.15)",
+    },
+    resultLoss: {
+      backgroundColor: "rgba(255, 68, 68, 0.15)",
+    },
+    resultTagText: {
+      color: colors.text,
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    historyTeams: {
+      gap: 6,
+    },
+    teamRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    teamDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    teamDotMuted: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.border,
+    },
+    teamName: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    teamNameMuted: {
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    contentPlaceholder: {
+      padding: 40,
+      alignItems: "center",
+    },
+    placeholderText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  });

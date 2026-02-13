@@ -13,11 +13,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionCard, EmptyState, FriendCard, QRCard } from "../../components";
 import { SUGGESTED_FRIENDS } from "../../constants/data";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function ConnectFriends() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [friends, setFriends] = useState(SUGGESTED_FRIENDS);
+
+  const styles = getStyles(colors);
 
   const handleConnect = (friendId: number) => {
     setFriends(
@@ -59,7 +63,7 @@ export default function ConnectFriends() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          <FontAwesome name="chevron-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Poveži se sa prijateljima</Text>
         <View style={{ width: 20 }} />
@@ -71,7 +75,7 @@ export default function ConnectFriends() {
           <TextInput
             style={styles.searchInput}
             placeholder="Pretraži prijatelje..."
-            placeholderTextColor="#8B8B8B"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -135,44 +139,45 @@ export default function ConnectFriends() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  searchInput: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    color: "#F2F2F2",
-    fontSize: 16,
-  },
-  friendsList: {
-    gap: 16,
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: "600",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+      marginBottom: 16,
+    },
+    searchInput: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      color: colors.text,
+      fontSize: 16,
+    },
+    friendsList: {
+      gap: 16,
+    },
+  });

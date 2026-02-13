@@ -11,9 +11,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LANGUAGES } from "../../../constants/data";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function LanguageScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
   const [selectedLanguage, setSelectedLanguage] = useState("sr");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -28,7 +31,7 @@ export default function LanguageScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          <FontAwesome name="chevron-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Jezik</Text>
         <View style={{ width: 20 }} />
@@ -37,17 +40,21 @@ export default function LanguageScreen() {
       <View style={styles.content}>
         {/* Search */}
         <View style={styles.searchContainer}>
-          <FontAwesome name="search" size={18} color="#8B8B8B" />
+          <FontAwesome name="search" size={18} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Pretraži jezike..."
-            placeholderTextColor="#8B8B8B"
+            placeholderTextColor={colors.textSecondary}
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery("")}>
-              <FontAwesome name="close" size={16} color="#8B8B8B" />
+              <FontAwesome
+                name="close"
+                size={16}
+                color={colors.textSecondary}
+              />
             </Pressable>
           )}
         </View>
@@ -68,7 +75,11 @@ export default function LanguageScreen() {
               </Text>
             </View>
             <View style={styles.activeBadge}>
-              <FontAwesome name="check" size={14} color="#0B0B0B" />
+              <FontAwesome
+                name="check"
+                size={14}
+                color={isDark ? "#0B0B0B" : "#FFFFFF"}
+              />
             </View>
           </View>
         </View>
@@ -96,7 +107,11 @@ export default function LanguageScreen() {
                     <Text style={styles.languageSubtitle}>{language.name}</Text>
                   </View>
                   {isSelected && (
-                    <FontAwesome name="check" size={18} color="#B8FF00" />
+                    <FontAwesome
+                      name="check"
+                      size={18}
+                      color={isDark ? "#B8FF00" : colors.blue}
+                    />
                   )}
                 </Pressable>
               );
@@ -123,147 +138,148 @@ export default function LanguageScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  searchContainer: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 24,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#F2F2F2",
-    fontSize: 16,
-  },
-  currentSection: {
-    marginBottom: 32,
-  },
-  section: {
-    flex: 1,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  currentLanguageCard: {
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    borderWidth: 2,
-    borderColor: "#B8FF00",
-  },
-  currentFlag: {
-    fontSize: 32,
-  },
-  currentLanguageText: {
-    flex: 1,
-  },
-  currentLanguageName: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  currentLanguageSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  activeBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#B8FF00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  languageCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  languageCardSelected: {
-    borderWidth: 1,
-    borderColor: "#B8FF00",
-  },
-  languageFlag: {
-    fontSize: 28,
-  },
-  languageInfo: {
-    flex: 1,
-  },
-  languageName: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  languageSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 13,
-  },
-  infoCard: {
-    backgroundColor: "#1E1F23",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  infoText: {
-    flex: 1,
-    color: "#8B8B8B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: "#0B0B0B",
-    borderTopWidth: 1,
-    borderTopColor: "#1E1F23",
-  },
-  saveButton: {
-    backgroundColor: "#B8FF00",
-    borderRadius: 24,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: "#0B0B0B",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    searchContainer: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 24,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+    },
+    currentSection: {
+      marginBottom: 32,
+    },
+    section: {
+      flex: 1,
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+      marginBottom: 16,
+    },
+    currentLanguageCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 16,
+      padding: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      borderWidth: 2,
+      borderColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    currentFlag: {
+      fontSize: 32,
+    },
+    currentLanguageText: {
+      flex: 1,
+    },
+    currentLanguageName: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    currentLanguageSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    activeBadge: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    languageCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 12,
+    },
+    languageCardSelected: {
+      borderWidth: 1,
+      borderColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    languageFlag: {
+      fontSize: 28,
+    },
+    languageInfo: {
+      flex: 1,
+    },
+    languageName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    languageSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    infoCard: {
+      backgroundColor: isDark ? "#1E1F23" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 16,
+    },
+    infoText: {
+      flex: 1,
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    footer: {
+      padding: 20,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? "#1E1F23" : colors.border,
+    },
+    saveButton: {
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+      borderRadius: 24,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    saveButtonText: {
+      color: isDark ? "#0B0B0B" : "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "700",
+    },
+  });

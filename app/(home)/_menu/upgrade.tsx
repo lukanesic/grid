@@ -1,7 +1,14 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UPGRADE_FEATURES, UPGRADE_PLANS } from "../../../constants/data";
 
@@ -29,7 +36,11 @@ export default function UpgradeScreen() {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.proBadge}>
-            <FontAwesome name="star" size={24} color="#0B0B0B" />
+            <Image
+              source={require("../../../assets/logo/home-icon.png")}
+              style={styles.proBadgeLogo}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.heroTitle}>Otključaj sve funkcije</Text>
           <Text style={styles.heroSubtitle}>
@@ -113,8 +124,8 @@ export default function UpgradeScreen() {
               ))}
             </View>
             <Text style={styles.testimonialText}>
-              "Od kada koristim Pro verziju, mnogo lakše organizujem mečeve i
-              pratim svoj napredak. Najbolja investicija!"
+              &quot;Od kada koristim Pro verziju, mnogo lakše organizujem mečeve
+              i pratim svoj napredak. Najbolja investicija!&quot;
             </Text>
             <Text style={styles.testimonialAuthor}>- Marko P.</Text>
           </View>
@@ -125,8 +136,8 @@ export default function UpgradeScreen() {
               ))}
             </View>
             <Text style={styles.testimonialText}>
-              "Napredna statistika mi je pomogla da poboljšam igru. Vidim tačno
-              gde mogu još da radim."
+              &quot;Napredna statistika mi je pomogla da poboljšam igru. Vidim
+              tačno gde mogu još da radim.&quot;
             </Text>
             <Text style={styles.testimonialAuthor}>- Ana J.</Text>
           </View>
@@ -215,13 +226,13 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
   proBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#B8FF00",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+  },
+  proBadgeLogo: {
+    width: 80,
+    height: 80,
   },
   heroTitle: {
     color: "#F2F2F2",

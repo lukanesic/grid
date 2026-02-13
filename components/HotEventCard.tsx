@@ -1,6 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface HotEventCardProps {
   id: string;
@@ -24,16 +25,19 @@ export default function HotEventCard({
   type,
   onPress,
 }: HotEventCardProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   const getTypeColor = () => {
     switch (type) {
       case "tournament":
-        return "#FFD700";
+        return isDark ? "#FFD700" : "#B8A900";
       case "workshop":
-        return "#B8FF00";
+        return colors.blue;
       case "training":
         return "#FF6B35";
       default:
-        return "#B8FF00";
+        return colors.blue;
     }
   };
 
@@ -99,90 +103,91 @@ export default function HotEventCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#121418",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    position: "relative",
-    borderLeftWidth: 4,
-    borderLeftColor: "#3867FF",
-  },
-  hotBadge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "#3867FF",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hotText: {
-    fontSize: 12,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    gap: 12,
-  },
-  icon: {
-    fontSize: 32,
-  },
-  headerText: {
-    flex: 1,
-  },
-  typeTag: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  typeText: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  title: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  subtitle: {
-    color: "#8B8B8B",
-    fontSize: 13,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  infoRow: {
-    marginBottom: 6,
-  },
-  infoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  infoText: {
-    color: "#B8B8B8",
-    fontSize: 12,
-  },
-  footer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#1E1F23",
-  },
-  participantsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  participants: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      position: "relative",
+      borderLeftWidth: 4,
+      borderLeftColor: "#3867FF",
+    },
+    hotBadge: {
+      position: "absolute",
+      top: 12,
+      right: 12,
+      backgroundColor: "#3867FF",
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    hotText: {
+      fontSize: 12,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 8,
+      gap: 12,
+    },
+    icon: {
+      fontSize: 32,
+    },
+    headerText: {
+      flex: 1,
+    },
+    typeTag: {
+      alignSelf: "flex-start",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    typeText: {
+      fontSize: 10,
+      fontWeight: "700",
+      letterSpacing: 0.5,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginBottom: 12,
+      lineHeight: 18,
+    },
+    infoRow: {
+      marginBottom: 6,
+    },
+    infoItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    infoText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    footer: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    participantsContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    participants: {
+      fontSize: 13,
+      fontWeight: "600",
+    },
+  });

@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface MatchCardProps {
   id: string;
@@ -20,10 +21,13 @@ export default function MatchCard({
   level,
   onPress,
 }: MatchCardProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.icon}>
-        <FontAwesome name="circle-o" size={24} color="#E9EDF5" />
+        <FontAwesome name="circle-o" size={24} color={colors.textSecondary} />
       </View>
       <View style={styles.info}>
         <Text style={styles.type}>{type}</Text>
@@ -34,43 +38,44 @@ export default function MatchCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    width: 320,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: "#1E1F23",
-    borderRadius: 16,
-    padding: 16,
-    gap: 12,
-    marginRight: 12,
-  },
-  icon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: "#2C2C2C",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  info: {
-    flex: 1,
-  },
-  type: {
-    color: "#F2F2F2",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  date: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  location: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    card: {
+      width: 320,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      gap: 12,
+      marginRight: 12,
+    },
+    icon: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: colors.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    info: {
+      flex: 1,
+    },
+    type: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.5,
+    },
+    date: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginTop: 4,
+    },
+    location: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginTop: 4,
+    },
+  });

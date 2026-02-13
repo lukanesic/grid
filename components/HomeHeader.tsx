@@ -2,6 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 import Badge from "./Badge";
 import IconButton from "./IconButton";
 
@@ -17,6 +18,7 @@ export default function HomeHeader({
   setActiveTab,
 }: HomeHeaderProps) {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
     <>
@@ -31,10 +33,17 @@ export default function HomeHeader({
             <IconButton
               icon="bell"
               onPress={() => router.push("/(home)/notification")}
+              color={colors.text}
+              backgroundColor="transparent"
             />
             <Badge count={20} />
           </View>
-          <IconButton icon="bars" onPress={() => router.push("/(home)/menu")} />
+          <IconButton
+            icon="bars"
+            onPress={() => router.push("/(home)/menu")}
+            color={colors.text}
+            backgroundColor="transparent"
+          />
         </View>
       </View>
 
@@ -50,7 +59,7 @@ export default function HomeHeader({
           style={[styles.pushButton, { backgroundColor: "#1E1F23" }]}
           onPress={() => {}}
         >
-          <FontAwesome name="bell" size={16} color="#B8FF00" />
+          <FontAwesome name="bell" size={16} color={colors.accent} />
           <Text style={styles.pushButtonText}>Push za mečeve</Text>
         </Pressable>
         <Pressable

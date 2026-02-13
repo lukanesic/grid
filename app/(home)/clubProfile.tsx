@@ -1,15 +1,16 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-    Image,
-    ImageBackground,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Image,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const CLUB_DATA: { [key: string]: any } = {
   "1": {
@@ -112,6 +113,8 @@ const CLUB_DATA: { [key: string]: any } = {
 export default function ClubProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
   const club = CLUB_DATA[id as string];
 
   if (!club) {
@@ -143,13 +146,21 @@ export default function ClubProfileScreen() {
           <View style={styles.infoSection}>
             <Text style={styles.clubName}>{club.name}</Text>
             <View style={styles.ratingRow}>
-              <FontAwesome name="star" size={16} color="#B8FF00" />
+              <FontAwesome
+                name="star"
+                size={16}
+                color={isDark ? colors.accent : colors.blue}
+              />
               <Text style={styles.ratingText}>
                 {club.rating} ({club.reviews} recenzija)
               </Text>
             </View>
             <View style={styles.locationRow}>
-              <FontAwesome name="map-marker" size={16} color="#8B8B8B" />
+              <FontAwesome
+                name="map-marker"
+                size={16}
+                color={colors.textSecondary}
+              />
               <Text style={styles.locationText}>{club.address}</Text>
             </View>
             <View style={styles.distanceRow}>
@@ -170,7 +181,11 @@ export default function ClubProfileScreen() {
             <View style={styles.amenitiesGrid}>
               {club.amenities.map((amenity: any, index: number) => (
                 <View key={index} style={styles.amenityCard}>
-                  <FontAwesome name={amenity.icon} size={20} color="#B8FF00" />
+                  <FontAwesome
+                    name={amenity.icon}
+                    size={20}
+                    color={isDark ? colors.accent : colors.blue}
+                  />
                   <Text style={styles.amenityLabel}>{amenity.label}</Text>
                 </View>
               ))}
@@ -182,13 +197,21 @@ export default function ClubProfileScreen() {
             <Text style={styles.sectionTitle}>Tereni</Text>
             <View style={styles.infoCard}>
               <View style={styles.infoRow}>
-                <FontAwesome name="circle" size={16} color="#3867FF" />
+                <FontAwesome
+                  name="circle"
+                  size={16}
+                  color={isDark ? colors.accent : colors.blue}
+                />
                 <Text style={styles.infoText}>
                   {club.courts} terena dostupno
                 </Text>
               </View>
               <View style={styles.infoRow}>
-                <FontAwesome name="clock-o" size={16} color="#3867FF" />
+                <FontAwesome
+                  name="clock-o"
+                  size={16}
+                  color={isDark ? colors.accent : colors.blue}
+                />
                 <Text style={styles.infoText}>{club.openingHours}</Text>
               </View>
             </View>
@@ -215,7 +238,9 @@ export default function ClubProfileScreen() {
             <View style={styles.reviewsHeader}>
               <Text style={styles.sectionTitle}>Recenzije</Text>
               <Pressable>
-                <Text style={styles.seeAllLink}>Vidi sve</Text>
+                <Text style={[styles.seeAllLink, { color: colors.blue }]}>
+                  Vidi sve
+                </Text>
               </Pressable>
             </View>
             <View style={styles.reviewCard}>
@@ -232,7 +257,7 @@ export default function ClubProfileScreen() {
                         key={star}
                         name="star"
                         size={12}
-                        color="#B8FF00"
+                        color={isDark ? colors.accent : colors.blue}
                       />
                     ))}
                   </View>
@@ -263,216 +288,216 @@ export default function ClubProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  headerImage: {
-    width: "100%",
-    height: 300,
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-  },
-  headerOverlay: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  content: {
-    padding: 20,
-  },
-  infoSection: {
-    marginBottom: 24,
-  },
-  clubName: {
-    color: "#F2F2F2",
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
-  },
-  ratingText: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  locationText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    flex: 1,
-  },
-  distanceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  distanceText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  priceText: {
-    color: "#B8FF00",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  section: {
-    marginBottom: 28,
-  },
-  sectionTitle: {
-    color: "#F2F2F2",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  description: {
-    color: "#8B8B8B",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  amenitiesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  amenityCard: {
-    width: "30%",
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    gap: 8,
-  },
-  amenityLabel: {
-    color: "#F2F2F2",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  infoCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  infoText: {
-    color: "#F2F2F2",
-    fontSize: 15,
-  },
-  timeSlotsScroll: {
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
-  },
-  timeSlot: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginRight: 8,
-  },
-  timeSlotText: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reviewsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  seeAllLink: {
-    color: "#3867FF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reviewCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-  },
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  reviewAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  reviewInfo: {
-    flex: 1,
-  },
-  reviewName: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  reviewStars: {
-    flexDirection: "row",
-    gap: 2,
-  },
-  reviewDate: {
-    color: "#8B8B8B",
-    fontSize: 12,
-  },
-  reviewText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: "#0B0B0B",
-    borderTopWidth: 1,
-    borderTopColor: "#1E1F23",
-  },
-  bookButton: {
-    backgroundColor: "#B8FF00",
-    borderRadius: 24,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  bookButtonText: {
-    color: "#0B0B0B",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  errorText: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 40,
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    headerImage: {
+      width: "100%",
+      height: 300,
+    },
+    imageOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
+    },
+    headerOverlay: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    content: {
+      padding: 20,
+    },
+    infoSection: {
+      marginBottom: 24,
+    },
+    clubName: {
+      color: colors.text,
+      fontSize: 28,
+      fontWeight: "700",
+      marginBottom: 8,
+    },
+    ratingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 8,
+    },
+    ratingText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    locationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 12,
+    },
+    locationText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      flex: 1,
+    },
+    distanceRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    distanceText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    priceText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    section: {
+      marginBottom: 28,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: "700",
+      marginBottom: 12,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    amenitiesGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+    },
+    amenityCard: {
+      width: "30%",
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: "center",
+      gap: 8,
+    },
+    amenityLabel: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    infoCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      gap: 12,
+    },
+    infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    infoText: {
+      color: colors.text,
+      fontSize: 15,
+    },
+    timeSlotsScroll: {
+      marginHorizontal: -20,
+      paddingHorizontal: 20,
+    },
+    timeSlot: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      marginRight: 8,
+    },
+    timeSlotText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    reviewsHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    seeAllLink: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    reviewCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+    },
+    reviewHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    reviewAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+    },
+    reviewInfo: {
+      flex: 1,
+    },
+    reviewName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    reviewStars: {
+      flexDirection: "row",
+      gap: 2,
+    },
+    reviewDate: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    reviewText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    footer: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 20,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    bookButton: {
+      backgroundColor: isDark ? colors.accent : colors.blue,
+      borderRadius: 24,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    bookButtonText: {
+      color: isDark ? colors.background : "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    errorText: {
+      color: colors.text,
+      fontSize: 16,
+      textAlign: "center",
+      marginTop: 40,
+    },
+  });

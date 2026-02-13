@@ -20,6 +20,7 @@ import {
     SUGGESTED_USERS,
 } from "../../constants/data";
 import { useChats } from "../../contexts/ChatContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Message {
   id: string;
@@ -31,6 +32,10 @@ interface Message {
 
 export default function ChatScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const pendingStatusColor = isDark ? colors.textSecondary : "#C3C9D3";
+  const readStatusColor = isDark ? colors.blue : colors.accent;
   const { id, name, avatar, isOnline, isGroup, groupAvatars, members } =
     useLocalSearchParams();
   const { chats } = useChats();
@@ -140,20 +145,24 @@ export default function ChatScreen() {
             {item.isMine && item.status && (
               <View style={styles.statusIcon}>
                 {item.status === "sent" && (
-                  <FontAwesome name="check" size={12} color="#8B8B8B" />
+                  <FontAwesome
+                    name="check"
+                    size={12}
+                    color={pendingStatusColor}
+                  />
                 )}
                 {item.status === "delivered" && (
                   <View style={styles.doubleCheck}>
                     <FontAwesome
                       name="check"
                       size={12}
-                      color="#8B8B8B"
+                      color={pendingStatusColor}
                       style={styles.checkIcon}
                     />
                     <FontAwesome
                       name="check"
                       size={12}
-                      color="#8B8B8B"
+                      color={pendingStatusColor}
                       style={styles.checkIcon2}
                     />
                   </View>
@@ -163,13 +172,13 @@ export default function ChatScreen() {
                     <FontAwesome
                       name="check"
                       size={12}
-                      color="#B8FF00"
+                      color={readStatusColor}
                       style={styles.checkIcon}
                     />
                     <FontAwesome
                       name="check"
                       size={12}
-                      color="#B8FF00"
+                      color={readStatusColor}
                       style={styles.checkIcon2}
                     />
                   </View>
@@ -195,7 +204,7 @@ export default function ChatScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+            <FontAwesome name="chevron-left" size={20} color={colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -243,7 +252,7 @@ export default function ChatScreen() {
 
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.headerButton}>
-              <FontAwesome name="ellipsis-v" size={20} color="#F2F2F2" />
+              <FontAwesome name="ellipsis-v" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -273,21 +282,21 @@ export default function ChatScreen() {
         {/* Input Area */}
         <View style={styles.inputContainer}>
           <TouchableOpacity style={styles.attachButton}>
-            <FontAwesome name="plus-circle" size={24} color="#8B8B8B" />
+            <FontAwesome name="plus-circle" size={24} color={colors.text} />
           </TouchableOpacity>
 
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
               placeholder="Napišite poruku..."
-              placeholderTextColor="#5E5E5E"
+              placeholderTextColor={colors.textSecondary}
               value={inputText}
               onChangeText={setInputText}
               multiline
               maxLength={500}
             />
             <TouchableOpacity style={styles.emojiButton}>
-              <FontAwesome name="smile-o" size={20} color="#8B8B8B" />
+              <FontAwesome name="smile-o" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -302,7 +311,11 @@ export default function ChatScreen() {
             <FontAwesome
               name="send"
               size={18}
-              color={inputText.trim() === "" ? "#5E5E5E" : "#0B0B0B"}
+              color={
+                inputText.trim() === ""
+                  ? colors.textSecondary
+                  : colors.background
+              }
             />
           </Pressable>
         </View>
@@ -311,230 +324,231 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 12,
-  },
-  avatarContainer: {
-    position: "relative",
-  },
-  groupAvatarContainer: {
-    width: 40,
-    height: 40,
-    position: "relative",
-  },
-  groupAvatar1: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    borderWidth: 2,
-    borderColor: "#0B0B0B",
-  },
-  groupAvatar2: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    borderWidth: 2,
-    borderColor: "#0B0B0B",
-  },
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  onlineIndicator: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#B8FF00",
-    borderWidth: 2,
-    borderColor: "#0B0B0B",
-  },
-  headerTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  headerName: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  headerStatus: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  headerButton: {
-    padding: 4,
-  },
-  messagesList: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  messageContainer: {
-    flexDirection: "row",
-    marginBottom: 16,
-    maxWidth: "80%",
-  },
-  myMessageContainer: {
-    alignSelf: "flex-end",
-    flexDirection: "row-reverse",
-  },
-  theirMessageContainer: {
-    alignSelf: "flex-start",
-  },
-  messageAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 8,
-  },
-  messageBubble: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    maxWidth: "100%",
-  },
-  myMessageBubble: {
-    backgroundColor: "#B8FF00",
-    borderBottomRightRadius: 4,
-  },
-  theirMessageBubble: {
-    backgroundColor: "#1A1A1A",
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  myMessageText: {
-    color: "#0B0B0B",
-  },
-  theirMessageText: {
-    color: "#F2F2F2",
-  },
-  messageFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-    gap: 4,
-  },
-  timestamp: {
-    fontSize: 11,
-  },
-  myTimestamp: {
-    color: "#0B0B0B",
-    opacity: 0.6,
-  },
-  theirTimestamp: {
-    color: "#8B8B8B",
-  },
-  statusIcon: {
-    marginLeft: 2,
-  },
-  doubleCheck: {
-    flexDirection: "row",
-    position: "relative",
-  },
-  checkIcon: {
-    position: "relative",
-  },
-  checkIcon2: {
-    position: "absolute",
-    left: 4,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#1A1A1A",
-    backgroundColor: "#0B0B0B",
-  },
-  attachButton: {
-    padding: 8,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  inputWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 20,
-    paddingLeft: 16,
-    paddingRight: 12,
-    paddingVertical: 8,
-    minHeight: 40,
-    maxHeight: 100,
-  },
-  input: {
-    flex: 1,
-    color: "#F2F2F2",
-    fontSize: 15,
-    paddingVertical: 4,
-    maxHeight: 84,
-  },
-  emojiButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#B8FF00",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#1A1A1A",
-  },
-  loadingContainer: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    keyboardView: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    backButton: {
+      padding: 4,
+    },
+    headerCenter: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      marginLeft: 12,
+    },
+    avatarContainer: {
+      position: "relative",
+    },
+    groupAvatarContainer: {
+      width: 40,
+      height: 40,
+      position: "relative",
+    },
+    groupAvatar1: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      position: "absolute",
+      top: 0,
+      left: 0,
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    groupAvatar2: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    headerAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+    },
+    onlineIndicator: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.accent,
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    headerTextContainer: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    headerName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    headerStatus: {
+      color: colors.text,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+    },
+    headerButton: {
+      padding: 4,
+    },
+    messagesList: {
+      paddingHorizontal: 16,
+      paddingVertical: 20,
+    },
+    messageContainer: {
+      flexDirection: "row",
+      marginBottom: 16,
+      maxWidth: "80%",
+    },
+    myMessageContainer: {
+      alignSelf: "flex-end",
+      flexDirection: "row-reverse",
+    },
+    theirMessageContainer: {
+      alignSelf: "flex-start",
+    },
+    messageAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      marginRight: 8,
+    },
+    messageBubble: {
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      maxWidth: "100%",
+    },
+    myMessageBubble: {
+      backgroundColor: isDark ? colors.accent : colors.blue,
+      borderBottomRightRadius: 4,
+    },
+    theirMessageBubble: {
+      backgroundColor: colors.surface,
+      borderBottomLeftRadius: 4,
+    },
+    messageText: {
+      fontSize: 15,
+      lineHeight: 20,
+    },
+    myMessageText: {
+      color: colors.background,
+    },
+    theirMessageText: {
+      color: colors.text,
+    },
+    messageFooter: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 4,
+      gap: 4,
+    },
+    timestamp: {
+      fontSize: 11,
+    },
+    myTimestamp: {
+      color: colors.background,
+      opacity: 0.6,
+    },
+    theirTimestamp: {
+      color: colors.text,
+    },
+    statusIcon: {
+      marginLeft: 2,
+    },
+    doubleCheck: {
+      flexDirection: "row",
+      position: "relative",
+    },
+    checkIcon: {
+      position: "relative",
+    },
+    checkIcon2: {
+      position: "absolute",
+      left: 4,
+    },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 20,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    attachButton: {
+      padding: 8,
+      marginRight: 8,
+      marginBottom: 4,
+    },
+    inputWrapper: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "flex-end",
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      paddingLeft: 16,
+      paddingRight: 12,
+      paddingVertical: 8,
+      minHeight: 40,
+      maxHeight: 100,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 15,
+      paddingVertical: 4,
+      maxHeight: 84,
+    },
+    emojiButton: {
+      padding: 4,
+      marginLeft: 8,
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.accent,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: 8,
+    },
+    sendButtonDisabled: {
+      backgroundColor: colors.surface,
+    },
+    loadingContainer: {
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+  });

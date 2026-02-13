@@ -1299,7 +1299,7 @@ export const UPGRADE_PLANS = [
 
 export const UPGRADE_FEATURES = [
   {
-    icon: "infinity",
+    icon: "repeat",
     title: "Neograničeni mečevi",
     description: "Kreiraj koliko god mečeva želiš",
   },

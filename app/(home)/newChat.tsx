@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SUGGESTED_USERS } from "../../constants/data";
 import { useChats } from "../../contexts/ChatContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -22,6 +23,8 @@ type ViewState = "options" | "groupChat" | "newChat";
 
 export default function NewChatScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
   const { addChat, chats } = useChats();
   const [currentView, setCurrentView] = useState<ViewState>("options");
   const [groupName, setGroupName] = useState("");
@@ -112,11 +115,8 @@ export default function NewChatScreen() {
 
     addChat(newGroupChat);
 
-    // Reset state and return to options view
-    setSelectedUsers([]);
-    setGroupName("");
-    setSearchQuery("");
-    setCurrentView("options");
+    // Close modal and return to inbox where the new group chat is visible
+    router.back();
   };
 
   const handleUserSelect = (user: any) => {
@@ -245,7 +245,11 @@ export default function NewChatScreen() {
           <View style={styles.actionsSection}>
             <TouchableOpacity style={styles.actionItem} onPress={handleNewChat}>
               <View style={styles.actionIconContainer}>
-                <FontAwesome name="user" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={colors.textSecondary}
+                />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Novi chat</Text>
@@ -261,7 +265,11 @@ export default function NewChatScreen() {
               onPress={handleGroupChat}
             >
               <View style={styles.actionIconContainer}>
-                <FontAwesome name="users" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="users"
+                  size={20}
+                  color={colors.textSecondary}
+                />
               </View>
               <View style={styles.actionTextContainer}>
                 <Text style={styles.actionTitle}>Grupni chat</Text>
@@ -423,7 +431,7 @@ export default function NewChatScreen() {
             <TextInput
               style={styles.groupNameInput}
               placeholder="Naziv grupe (opciono)"
-              placeholderTextColor="#5E5E5E"
+              placeholderTextColor={colors.textSecondary}
               value={groupName}
               onChangeText={setGroupName}
             />
@@ -440,7 +448,7 @@ export default function NewChatScreen() {
             <TextInput
               style={styles.searchInput}
               placeholder="Pretraži korisnike"
-              placeholderTextColor="#5E5E5E"
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -489,7 +497,11 @@ export default function NewChatScreen() {
                     ]}
                   >
                     {isSelected && (
-                      <FontAwesome name="check" size={14} color="#0B0B0B" />
+                      <FontAwesome
+                        name="check"
+                        size={14}
+                        color={isDark ? "#0B0B0B" : "#FFFFFF"}
+                      />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -509,198 +521,199 @@ export default function NewChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  viewContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: SCREEN_WIDTH,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  backButton: {
-    padding: 4,
-  },
-  cancelText: {
-    color: "#007AFF",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  placeholder: {
-    width: 28,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 10,
-    marginHorizontal: 20,
-    marginVertical: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#F2F2F2",
-    fontSize: 16,
-    paddingVertical: 4,
-  },
-  actionsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  actionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#1A1A1A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  actionTextContainer: {
-    flex: 1,
-  },
-  actionTitle: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  suggestedSection: {
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginBottom: 12,
-    letterSpacing: 0.5,
-  },
-  userItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  userAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  userSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  nextButton: {
-    padding: 4,
-  },
-  nextText: {
-    color: "#007AFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  nextTextDisabled: {
-    color: "#5E5E5E",
-  },
-  groupNameContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  groupNameInput: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  clearButton: {
-    padding: 4,
-  },
-  groupSectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  selectedCount: {
-    color: "#007AFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#5E5E5E",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxSelected: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
-  emptyText: {
-    color: "#8B8B8B",
-    fontSize: 16,
-    marginTop: 16,
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    viewContainer: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: SCREEN_WIDTH,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    backButton: {
+      padding: 4,
+    },
+    cancelText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    placeholder: {
+      width: 28,
+    },
+    content: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 20,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      marginHorizontal: 20,
+      marginVertical: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+      paddingVertical: 4,
+    },
+    actionsSection: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    actionItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    actionIconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+    actionTextContainer: {
+      flex: 1,
+    },
+    actionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    actionSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    suggestedSection: {
+      paddingHorizontal: 20,
+    },
+    sectionTitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      marginBottom: 12,
+      letterSpacing: 0.5,
+    },
+    userItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    userAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      marginRight: 12,
+    },
+    userInfo: {
+      flex: 1,
+    },
+    userName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    userSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    nextButton: {
+      padding: 4,
+    },
+    nextText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    nextTextDisabled: {
+      color: colors.textSecondary,
+    },
+    groupNameContainer: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    groupNameInput: {
+      color: colors.text,
+      fontSize: 16,
+      paddingVertical: 8,
+    },
+    clearButton: {
+      padding: 4,
+    },
+    groupSectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    selectedCount: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.textSecondary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    checkboxSelected: {
+      backgroundColor: isDark ? colors.accent : colors.blue,
+      borderColor: isDark ? colors.accent : colors.blue,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 60,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      marginTop: 16,
+    },
+  });

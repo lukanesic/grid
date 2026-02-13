@@ -2,18 +2,22 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function ProfileInfoScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const accentColor = isDark ? "#B8FF00" : colors.blue;
   const [name, setName] = useState("Marko Petrović");
   const [email, setEmail] = useState("marko.petrovic@email.com");
   const [phone, setPhone] = useState("+381 64 123 4567");
@@ -28,7 +32,7 @@ export default function ProfileInfoScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          <FontAwesome name="chevron-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Profil informacije</Text>
         <View style={{ width: 20 }} />
@@ -39,7 +43,11 @@ export default function ProfileInfoScreen() {
         <View style={styles.avatarSection}>
           <Image source={{ uri: avatar }} style={styles.avatar} />
           <Pressable style={styles.changeAvatarButton}>
-            <FontAwesome name="camera" size={16} color="#0B0B0B" />
+            <FontAwesome
+              name="camera"
+              size={16}
+              color={isDark ? "#0B0B0B" : "#FFFFFF"}
+            />
             <Text style={styles.changeAvatarText}>Promeni sliku</Text>
           </Pressable>
         </View>
@@ -51,12 +59,12 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Ime i prezime</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="user" size={18} color="#8B8B8B" />
+              <FontAwesome name="user" size={18} color={colors.textSecondary} />
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
@@ -64,14 +72,18 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="envelope" size={18} color="#8B8B8B" />
+              <FontAwesome
+                name="envelope"
+                size={18}
+                color={colors.textSecondary}
+              />
               <TextInput
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
@@ -79,13 +91,17 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Broj telefona</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="phone" size={18} color="#8B8B8B" />
+              <FontAwesome
+                name="phone"
+                size={18}
+                color={colors.textSecondary}
+              />
               <TextInput
                 style={styles.input}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
@@ -93,12 +109,16 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Datum rođenja</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="calendar" size={18} color="#8B8B8B" />
+              <FontAwesome
+                name="calendar"
+                size={18}
+                color={colors.textSecondary}
+              />
               <TextInput
                 style={styles.input}
                 value={birthDate}
                 onChangeText={setBirthDate}
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
@@ -106,12 +126,16 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Lokacija</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="map-marker" size={18} color="#8B8B8B" />
+              <FontAwesome
+                name="map-marker"
+                size={18}
+                color={colors.textSecondary}
+              />
               <TextInput
                 style={styles.input}
                 value={location}
                 onChangeText={setLocation}
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
           </View>
@@ -124,19 +148,19 @@ export default function ProfileInfoScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Lozinka</Text>
             <View style={styles.inputCard}>
-              <FontAwesome name="lock" size={18} color="#8B8B8B" />
+              <FontAwesome name="lock" size={18} color={colors.textSecondary} />
               <TextInput
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                placeholderTextColor="#8B8B8B"
+                placeholderTextColor={colors.textSecondary}
               />
               <Pressable onPress={() => setShowPassword(!showPassword)}>
                 <FontAwesome
                   name={showPassword ? "eye" : "eye-slash"}
                   size={18}
-                  color="#8B8B8B"
+                  color={colors.textSecondary}
                 />
               </Pressable>
             </View>
@@ -144,7 +168,7 @@ export default function ProfileInfoScreen() {
 
           <Pressable style={styles.changePasswordLink}>
             <Text style={styles.changePasswordText}>Promeni lozinku</Text>
-            <FontAwesome name="chevron-right" size={14} color="#B8FF00" />
+            <FontAwesome name="chevron-right" size={14} color={accentColor} />
           </Pressable>
         </View>
 
@@ -154,17 +178,17 @@ export default function ProfileInfoScreen() {
 
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <FontAwesome name="trophy" size={24} color="#B8FF00" />
+              <FontAwesome name="trophy" size={24} color={accentColor} />
               <Text style={styles.statValue}>47</Text>
               <Text style={styles.statLabel}>Mečeva</Text>
             </View>
             <View style={styles.statCard}>
-              <FontAwesome name="star" size={24} color="#B8FF00" />
+              <FontAwesome name="star" size={24} color={accentColor} />
               <Text style={styles.statValue}>4.5</Text>
               <Text style={styles.statLabel}>Rejting</Text>
             </View>
             <View style={styles.statCard}>
-              <FontAwesome name="percent" size={24} color="#B8FF00" />
+              <FontAwesome name="percent" size={24} color={accentColor} />
               <Text style={styles.statValue}>68%</Text>
               <Text style={styles.statLabel}>Win rate</Text>
             </View>
@@ -193,153 +217,154 @@ export default function ProfileInfoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: 32,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
-    borderWidth: 3,
-    borderColor: "#B8FF00",
-  },
-  changeAvatarButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#B8FF00",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  changeAvatarText: {
-    color: "#0B0B0B",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  inputCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    color: "#F2F2F2",
-    fontSize: 16,
-  },
-  changePasswordLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginTop: 8,
-  },
-  changePasswordText: {
-    color: "#B8FF00",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  statsGrid: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    gap: 8,
-  },
-  statValue: {
-    color: "#F2F2F2",
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  statLabel: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  dangerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#1E1F23",
-    borderRadius: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "#FF4444",
-  },
-  dangerButtonText: {
-    color: "#FF4444",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: "#0B0B0B",
-    borderTopWidth: 1,
-    borderTopColor: "#1E1F23",
-  },
-  saveButton: {
-    backgroundColor: "#B8FF00",
-    borderRadius: 24,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: "#0B0B0B",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    avatarSection: {
+      alignItems: "center",
+      paddingVertical: 32,
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      marginBottom: 16,
+      borderWidth: 3,
+      borderColor: isDark ? "#B8FF00" : colors.blue,
+    },
+    changeAvatarButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20,
+    },
+    changeAvatarText: {
+      color: isDark ? "#0B0B0B" : "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+      marginBottom: 16,
+    },
+    inputGroup: {
+      marginBottom: 16,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+      marginBottom: 8,
+    },
+    inputCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    input: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+    },
+    changePasswordLink: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginTop: 8,
+    },
+    changePasswordText: {
+      color: isDark ? "#B8FF00" : colors.blue,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    statsGrid: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: "center",
+      gap: 8,
+    },
+    statValue: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: "700",
+    },
+    statLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    dangerButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: isDark ? "#1E1F23" : colors.surface,
+      borderRadius: 12,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: "#FF4444",
+    },
+    dangerButtonText: {
+      color: "#FF4444",
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    footer: {
+      padding: 20,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: isDark ? "#1E1F23" : colors.border,
+    },
+    saveButton: {
+      backgroundColor: isDark ? "#B8FF00" : colors.blue,
+      borderRadius: 24,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    saveButtonText: {
+      color: isDark ? "#0B0B0B" : "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "700",
+    },
+  });

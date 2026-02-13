@@ -1,6 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface CalendarProps {
   selectedDate?: Date;
@@ -13,6 +14,10 @@ export default function Calendar({
   onDateSelect,
   markedDates = [],
 }: CalendarProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+  const navIconColor = isDark ? "#F2F2F2" : colors.text;
+
   // Get today's date at midnight for comparison
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -211,10 +216,10 @@ export default function Calendar({
         </View>
         <View style={styles.headerActions}>
           <Pressable onPress={() => changeMonth(-1)} style={styles.navButton}>
-            <FontAwesome name="chevron-left" size={18} color="#F2F2F2" />
+            <FontAwesome name="chevron-left" size={18} color={navIconColor} />
           </Pressable>
           <Pressable onPress={() => changeMonth(1)} style={styles.navButton}>
-            <FontAwesome name="chevron-right" size={18} color="#F2F2F2" />
+            <FontAwesome name="chevron-right" size={18} color={navIconColor} />
           </Pressable>
         </View>
       </View>
@@ -269,107 +274,108 @@ export default function Calendar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#0B0B0B",
-    borderRadius: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 24,
-  },
-  monthYear: {
-    gap: 4,
-  },
-  monthText: {
-    color: "#F2F2F2",
-    fontSize: 32,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
-  yearText: {
-    color: "#8B8B8B",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  navButton: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayNamesRow: {
-    flexDirection: "row",
-    marginBottom: 20,
-  },
-  dayNameCell: {
-    flex: 1,
-    alignItems: "center",
-  },
-  dayNameText: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  calendarGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  dayCell: {
-    width: "14.28%", // 100% / 7 days
-    aspectRatio: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayContent: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 40,
-    height: 40,
-  },
-  dayText: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "500",
-    textAlign: "center",
-    zIndex: 1,
-  },
-  dayTextInactive: {
-    color: "#3C3C3C",
-  },
-  dayTextDisabled: {
-    color: "#2A2A2A",
-    textDecorationLine: "line-through",
-    textDecorationColor: "#2A2A2A",
-  },
-  dayTextSelected: {
-    color: "#0B0B0B",
-    fontWeight: "600",
-  },
-  selectedCircle: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F2F2F2",
-    zIndex: 0,
-  },
-  markerDot: {
-    position: "absolute",
-    bottom: 6,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#F2F2F2",
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: isDark ? "#0B0B0B" : "#FFFFFF",
+      borderRadius: 16,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 24,
+    },
+    monthYear: {
+      gap: 4,
+    },
+    monthText: {
+      color: isDark ? "#F2F2F2" : colors.text,
+      fontSize: 32,
+      fontWeight: "700",
+      letterSpacing: -0.5,
+    },
+    yearText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    headerActions: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    navButton: {
+      width: 32,
+      height: 32,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayNamesRow: {
+      flexDirection: "row",
+      marginBottom: 20,
+    },
+    dayNameCell: {
+      flex: 1,
+      alignItems: "center",
+    },
+    dayNameText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+      letterSpacing: 0.5,
+    },
+    calendarGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    dayCell: {
+      width: "14.28%",
+      aspectRatio: 1,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayContent: {
+      position: "relative",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 40,
+      height: 40,
+    },
+    dayText: {
+      color: isDark ? "#F2F2F2" : colors.text,
+      fontSize: 18,
+      fontWeight: "500",
+      textAlign: "center",
+      zIndex: 1,
+    },
+    dayTextInactive: {
+      color: isDark ? "#3C3C3C" : "#A0A0A0",
+    },
+    dayTextDisabled: {
+      color: isDark ? "#2A2A2A" : "#B8B8B8",
+      textDecorationLine: "line-through",
+      textDecorationColor: isDark ? "#2A2A2A" : "#B8B8B8",
+    },
+    dayTextSelected: {
+      color: isDark ? "#0B0B0B" : "#FFFFFF",
+      fontWeight: "600",
+    },
+    selectedCircle: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDark ? "#F2F2F2" : colors.blue,
+      zIndex: 0,
+    },
+    markerDot: {
+      position: "absolute",
+      bottom: 6,
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: isDark ? "#F2F2F2" : colors.blue,
+    },
+  });

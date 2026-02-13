@@ -2,17 +2,20 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    View,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function PrivacySecurityScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
   const [privateProfile, setPrivateProfile] = useState(false);
   const [showOnlineStatus, setShowOnlineStatus] = useState(true);
   const [showMatchHistory, setShowMatchHistory] = useState(true);
@@ -26,7 +29,7 @@ export default function PrivacySecurityScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          <FontAwesome name="chevron-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Privatnost i bezbednost</Text>
         <View style={{ width: 20 }} />
@@ -40,7 +43,11 @@ export default function PrivacySecurityScreen() {
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="lock" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="lock"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Privatni profil</Text>
                   <Text style={styles.settingDescription}>
@@ -51,8 +58,6 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={privateProfile}
                 onValueChange={setPrivateProfile}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
               />
             </View>
           </View>
@@ -63,7 +68,13 @@ export default function PrivacySecurityScreen() {
                 <FontAwesome
                   name="circle"
                   size={20}
-                  color={showOnlineStatus ? "#B8FF00" : "#8B8B8B"}
+                  color={
+                    showOnlineStatus
+                      ? isDark
+                        ? "#B8FF00"
+                        : colors.blue
+                      : colors.textSecondary
+                  }
                 />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Online status</Text>
@@ -75,8 +86,6 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={showOnlineStatus}
                 onValueChange={setShowOnlineStatus}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
               />
             </View>
           </View>
@@ -84,7 +93,11 @@ export default function PrivacySecurityScreen() {
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="trophy" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="trophy"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Istorija mečeva</Text>
                   <Text style={styles.settingDescription}>
@@ -95,8 +108,6 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={showMatchHistory}
                 onValueChange={setShowMatchHistory}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
               />
             </View>
           </View>
@@ -109,7 +120,11 @@ export default function PrivacySecurityScreen() {
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="envelope" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="envelope"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Poruke</Text>
                   <Text style={styles.settingDescription}>
@@ -117,23 +132,22 @@ export default function PrivacySecurityScreen() {
                   </Text>
                 </View>
               </View>
-              <Switch
-                value={allowMessages}
-                onValueChange={setAllowMessages}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
-              />
+              <Switch value={allowMessages} onValueChange={setAllowMessages} />
             </View>
           </View>
 
           <Pressable style={styles.linkCard}>
             <View style={styles.linkLeft}>
-              <FontAwesome name="ban" size={20} color="#8B8B8B" />
+              <FontAwesome name="ban" size={20} color={colors.textSecondary} />
               <Text style={styles.linkTitle}>Blokirani korisnici</Text>
             </View>
             <View style={styles.linkRight}>
               <Text style={styles.linkCount}>3</Text>
-              <FontAwesome name="chevron-right" size={16} color="#8B8B8B" />
+              <FontAwesome
+                name="chevron-right"
+                size={16}
+                color={colors.textSecondary}
+              />
             </View>
           </Pressable>
         </View>
@@ -145,7 +159,11 @@ export default function PrivacySecurityScreen() {
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="shield" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="shield"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>
                     Dvofaktorska autentifikacija
@@ -155,19 +173,18 @@ export default function PrivacySecurityScreen() {
                   </Text>
                 </View>
               </View>
-              <Switch
-                value={twoFactorAuth}
-                onValueChange={setTwoFactorAuth}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
-              />
+              <Switch value={twoFactorAuth} onValueChange={setTwoFactorAuth} />
             </View>
           </View>
 
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="camera" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="camera"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Biometrijska prijava</Text>
                   <Text style={styles.settingDescription}>
@@ -178,28 +195,42 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={biometricLogin}
                 onValueChange={setBiometricLogin}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
               />
             </View>
           </View>
 
           <Pressable style={styles.linkCard}>
             <View style={styles.linkLeft}>
-              <FontAwesome name="history" size={20} color="#8B8B8B" />
+              <FontAwesome
+                name="history"
+                size={20}
+                color={colors.textSecondary}
+              />
               <Text style={styles.linkTitle}>Istorija prijavljivanja</Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color="#8B8B8B" />
+            <FontAwesome
+              name="chevron-right"
+              size={16}
+              color={colors.textSecondary}
+            />
           </Pressable>
 
           <Pressable style={styles.linkCard}>
             <View style={styles.linkLeft}>
-              <FontAwesome name="mobile" size={20} color="#8B8B8B" />
+              <FontAwesome
+                name="mobile"
+                size={20}
+                color={colors.textSecondary}
+              />
               <Text style={styles.linkTitle}>Aktivni uređaji</Text>
             </View>
             <View style={styles.linkRight}>
               <Text style={styles.linkCount}>2</Text>
-              <FontAwesome name="chevron-right" size={16} color="#8B8B8B" />
+              <FontAwesome
+                name="chevron-right"
+                size={16}
+                color={colors.textSecondary}
+              />
             </View>
           </Pressable>
         </View>
@@ -211,7 +242,11 @@ export default function PrivacySecurityScreen() {
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <FontAwesome name="search" size={20} color="#8B8B8B" />
+                <FontAwesome
+                  name="search"
+                  size={20}
+                  color={colors.textSecondary}
+                />
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>
                     Istorija pretraživanja
@@ -224,18 +259,24 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={saveSearchHistory}
                 onValueChange={setSaveSearchHistory}
-                trackColor={{ false: "#2C2C2C", true: "#3867FF" }}
-                thumbColor="#F2F2F2"
               />
             </View>
           </View>
 
           <Pressable style={styles.linkCard}>
             <View style={styles.linkLeft}>
-              <FontAwesome name="download" size={20} color="#8B8B8B" />
+              <FontAwesome
+                name="download"
+                size={20}
+                color={colors.textSecondary}
+              />
               <Text style={styles.linkTitle}>Preuzmi moje podatke</Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color="#8B8B8B" />
+            <FontAwesome
+              name="chevron-right"
+              size={16}
+              color={colors.textSecondary}
+            />
           </Pressable>
 
           <Pressable style={styles.linkCard}>
@@ -251,7 +292,7 @@ export default function PrivacySecurityScreen() {
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <FontAwesome name="info-circle" size={16} color="#3867FF" />
+          <FontAwesome name="info-circle" size={16} color={colors.blue} />
           <Text style={styles.infoText}>
             Ove postavke kontrolišu kako drugi vide tvoj profil i kako možeš da
             koristiš aplikaciju. Saznaj više o privatnosti.
@@ -262,108 +303,109 @@ export default function PrivacySecurityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  settingCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  },
-  settingText: {
-    flex: 1,
-  },
-  settingTitle: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  settingDescription: {
-    color: "#8B8B8B",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  linkCard: {
-    backgroundColor: "#121418",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  linkLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  linkTitle: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  linkRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  linkCount: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  infoCard: {
-    backgroundColor: "#1E1F23",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 32,
-  },
-  infoText: {
-    flex: 1,
-    color: "#8B8B8B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "700",
+      marginBottom: 16,
+    },
+    settingCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    },
+    settingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    settingLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      flex: 1,
+    },
+    settingText: {
+      flex: 1,
+    },
+    settingTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    settingDescription: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    linkCard: {
+      backgroundColor: isDark ? "#121418" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    linkLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    linkTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    linkRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    linkCount: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    infoCard: {
+      backgroundColor: isDark ? "#1E1F23" : colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 32,
+    },
+    infoText: {
+      flex: 1,
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+  });

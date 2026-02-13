@@ -1,4 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface PlayerCardProps {
   name: string;
@@ -15,6 +16,9 @@ export default function PlayerCard({
   avatar,
   onAddPress,
 }: PlayerCardProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.card}>
       {avatar ? (
@@ -38,62 +42,63 @@ export default function PlayerCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    width: 160,
-    marginRight: 12,
-    borderRadius: 16,
-    backgroundColor: "#1E1F23",
-    padding: 12,
-    alignItems: "center",
-  },
-  image: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  percentageBadge: {
-    position: "absolute",
-    top: 20,
-    right: 12,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#111111",
-    borderWidth: 2,
-    borderColor: "#B8FF00",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  percentageText: {
-    color: "#B8FF00",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  name: {
-    color: "#F2F2F2",
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
-    marginTop: 4,
-  },
-  friendsText: {
-    color: "#8B8B8B",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  addButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#3867FF",
-  },
-  addButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    card: {
+      width: 160,
+      marginRight: 12,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      padding: 12,
+      alignItems: "center",
+    },
+    image: {
+      width: 120,
+      height: 120,
+      borderRadius: 12,
+      marginBottom: 8,
+    },
+    percentageBadge: {
+      position: "absolute",
+      top: 20,
+      right: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: "#111111",
+      borderWidth: 2,
+      borderColor: "#B8FF00",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    percentageText: {
+      color: "#B8FF00",
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    name: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      textAlign: "center",
+      marginTop: 4,
+    },
+    friendsText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: "center",
+      marginTop: 4,
+      marginBottom: 8,
+    },
+    addButton: {
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: "#3867FF",
+    },
+    addButtonText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  });

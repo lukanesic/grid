@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable, StyleSheet } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface IconButtonProps {
   icon: string;
@@ -7,27 +8,21 @@ interface IconButtonProps {
   size?: number;
   color?: string;
   backgroundColor?: string;
-  withBorder?: boolean;
 }
 
 export default function IconButton({
   icon,
   onPress,
   size = 20,
-  color = "#E6E6E6",
+  color,
   backgroundColor = "transparent",
-  withBorder = true,
 }: IconButtonProps) {
+  const { colors } = useTheme();
+  const iconColor = color || colors.text;
+
   return (
-    <Pressable
-      style={[
-        styles.button,
-        { backgroundColor },
-        withBorder && styles.withBorder,
-      ]}
-      onPress={onPress}
-    >
-      <FontAwesome name={icon as any} size={size} color={color} />
+    <Pressable style={[styles.button, { backgroundColor }]} onPress={onPress}>
+      <FontAwesome name={icon as any} size={size} color={iconColor} />
     </Pressable>
   );
 }
@@ -39,9 +34,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-  },
-  withBorder: {
-    borderWidth: 1,
-    borderColor: "#2C2C2C",
   },
 });

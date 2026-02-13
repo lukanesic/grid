@@ -13,9 +13,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SUGGESTED_USERS } from "../../constants/data";
 import { useChats } from "../../contexts/ChatContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function AddMembersScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
   const { groupName, currentMembers, chatId } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
@@ -82,13 +85,13 @@ export default function AddMembersScreen() {
         <FontAwesome
           name="search"
           size={16}
-          color="#8B8B8B"
+          color={colors.textSecondary}
           style={styles.searchIcon}
         />
         <TextInput
           style={styles.searchInput}
           placeholder="Pretraži kontakte"
-          placeholderTextColor="#5E5E5E"
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoFocus
@@ -98,7 +101,11 @@ export default function AddMembersScreen() {
             onPress={() => setSearchQuery("")}
             style={styles.clearButton}
           >
-            <FontAwesome name="times-circle" size={16} color="#8B8B8B" />
+            <FontAwesome
+              name="times-circle"
+              size={16}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -133,7 +140,11 @@ export default function AddMembersScreen() {
                 style={[styles.checkbox, isSelected && styles.checkboxSelected]}
               >
                 {isSelected && (
-                  <FontAwesome name="check" size={14} color="#0B0B0B" />
+                  <FontAwesome
+                    name="check"
+                    size={14}
+                    color={colors.background}
+                  />
                 )}
               </View>
             </TouchableOpacity>
@@ -143,7 +154,7 @@ export default function AddMembersScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <FontAwesome name="users" size={48} color="#5E5E5E" />
+            <FontAwesome name="users" size={48} color={colors.textSecondary} />
             <Text style={styles.emptyText}>Nema dostupnih korisnika</Text>
             <Text style={styles.emptySubtext}>
               {searchQuery
@@ -157,139 +168,140 @@ export default function AddMembersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0B0B",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1A1A1A",
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: "center",
-  },
-  headerTitle: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  headerSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    marginTop: 2,
-  },
-  button: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  cancelText: {
-    color: "#007AFF",
-    fontSize: 16,
-  },
-  doneText: {
-    color: "#B8FF00",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  doneTextDisabled: {
-    color: "#5E5E5E",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1A1A1A",
-    borderRadius: 10,
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#F2F2F2",
-    fontSize: 16,
-    paddingVertical: 4,
-  },
-  clearButton: {
-    padding: 4,
-  },
-  selectedContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  selectedText: {
-    color: "#B8FF00",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  userItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: "#F2F2F2",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  userSubtitle: {
-    color: "#8B8B8B",
-    fontSize: 14,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#5E5E5E",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxSelected: {
-    backgroundColor: "#B8FF00",
-    borderColor: "#B8FF00",
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    color: "#F2F2F2",
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    color: "#8B8B8B",
-    fontSize: 14,
-    textAlign: "center",
-  },
-});
+const getStyles = (colors: any, isDark: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerCenter: {
+      flex: 1,
+      alignItems: "center",
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    headerSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 2,
+    },
+    button: {
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+    },
+    cancelText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 16,
+    },
+    doneText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    doneTextDisabled: {
+      color: colors.textSecondary,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      marginHorizontal: 20,
+      marginTop: 16,
+      marginBottom: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+      paddingVertical: 4,
+    },
+    clearButton: {
+      padding: 4,
+    },
+    selectedContainer: {
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+    },
+    selectedText: {
+      color: isDark ? colors.accent : colors.blue,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    listContent: {
+      paddingBottom: 20,
+    },
+    userItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      marginRight: 12,
+    },
+    userInfo: {
+      flex: 1,
+    },
+    userName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    userSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.textSecondary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    checkboxSelected: {
+      backgroundColor: isDark ? colors.accent : colors.blue,
+      borderColor: isDark ? colors.accent : colors.blue,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 60,
+      paddingHorizontal: 40,
+    },
+    emptyText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+    },
+  });

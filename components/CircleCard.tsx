@@ -1,6 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface CircleCardProps {
   id: string;
@@ -13,6 +14,7 @@ interface CircleCardProps {
   description: string;
   isCreator: boolean;
   onPress: () => void;
+  isActiveCircle?: boolean;
 }
 
 const getTypeIcon = (type: string) => {
@@ -70,9 +72,37 @@ export default function CircleCard({
   description,
   isCreator,
   onPress,
+  isActiveCircle = false,
 }: CircleCardProps) {
+  const { colors, isDark } = useTheme();
+
+  // Inverted theme for active circles in light mode
+  const cardColors =
+    isActiveCircle && !isDark
+      ? {
+          background: colors.text, // Dark background in light mode
+          text: colors.background, // Light text in light mode
+          textSecondary: colors.surface,
+          border: colors.textSecondary,
+        }
+      : {
+          background: colors.surface,
+          text: colors.text,
+          textSecondary: colors.textSecondary,
+          border: colors.border,
+        };
+
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable
+      style={[
+        styles.card,
+        {
+          backgroundColor: cardColors.background,
+          borderColor: cardColors.border,
+        },
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.header}>
         <View style={styles.imageContainer}>
           <Image source={{ uri: image }} style={styles.circleImage} />
@@ -88,7 +118,10 @@ export default function CircleCard({
 
         <View style={styles.info}>
           <View style={styles.nameRow}>
-            <Text style={styles.circleName} numberOfLines={1}>
+            <Text
+              style={[styles.circleName, { color: cardColors.text }]}
+              numberOfLines={1}
+            >
               {name}
             </Text>
             {isCreator && (
@@ -98,14 +131,28 @@ export default function CircleCard({
             )}
           </View>
 
-          <Text style={styles.description} numberOfLines={1}>
+          <Text
+            style={[styles.description, { color: cardColors.textSecondary }]}
+            numberOfLines={1}
+          >
             {description}
           </Text>
 
           <View style={styles.statsRow}>
             <View style={styles.membersStat}>
-              <FontAwesome name="users" size={12} color="#8B8B8B" />
-              <Text style={styles.membersCount}>{members} članova</Text>
+              <FontAwesome
+                name="users"
+                size={12}
+                color={cardColors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.membersCount,
+                  { color: cardColors.textSecondary },
+                ]}
+              >
+                {members} članova
+              </Text>
             </View>
 
             <View
@@ -120,15 +167,29 @@ export default function CircleCard({
         </View>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: cardColors.border }]}>
         <View style={styles.activityRow}>
-          <FontAwesome name="clock-o" size={12} color="#8B8B8B" />
-          <Text style={styles.lastActivityText} numberOfLines={1}>
+          <FontAwesome
+            name="clock-o"
+            size={12}
+            color={cardColors.textSecondary}
+          />
+          <Text
+            style={[
+              styles.lastActivityText,
+              { color: cardColors.textSecondary },
+            ]}
+            numberOfLines={1}
+          >
             {lastActivity}
           </Text>
         </View>
 
-        <FontAwesome name="chevron-right" size={14} color="#8B8B8B" />
+        <FontAwesome
+          name="chevron-right"
+          size={14}
+          color={cardColors.textSecondary}
+        />
       </View>
     </Pressable>
   );
@@ -136,12 +197,10 @@ export default function CircleCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#1E1F23",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#2C2C2C",
   },
   header: {
     flexDirection: "row",
@@ -178,7 +237,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   circleName: {
-    color: "#F2F2F2",
     fontSize: 16,
     fontWeight: "700",
     flex: 1,
@@ -187,7 +245,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   description: {
-    color: "#8B8B8B",
     fontSize: 13,
     marginBottom: 8,
   },
@@ -201,7 +258,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   membersCount: {
-    color: "#8B8B8B",
     fontSize: 12,
     marginLeft: 4,
   },
@@ -221,7 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#2C2C2C",
   },
   activityRow: {
     flexDirection: "row",
@@ -229,7 +284,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lastActivityText: {
-    color: "#8B8B8B",
     fontSize: 12,
     marginLeft: 6,
     flex: 1,

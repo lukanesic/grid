@@ -1,6 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface MenuRowProps {
   icon: string;
@@ -22,23 +23,35 @@ export default function MenuRow({
   subtitle,
   right,
   onPress,
-  iconColor = "#8B8B8B",
-  titleColor = "#F2F2F2",
-  subtitleColor = "#6F6F6F",
+  iconColor,
+  titleColor,
+  subtitleColor,
   showChevron = false,
   iconSize = 30,
   chevronSize = 20,
 }: MenuRowProps) {
+  const { colors } = useTheme();
   const Container = onPress ? Pressable : View;
 
   return (
     <Container style={styles.row} onPress={onPress}>
       <View style={styles.left}>
-        <FontAwesome name={icon as any} size={iconSize} color={iconColor} />
+        <FontAwesome
+          name={icon as any}
+          size={iconSize}
+          color={iconColor || colors.textSecondary}
+        />
         <View style={styles.textGroup}>
-          <Text style={[styles.title, { color: titleColor }]}>{title}</Text>
+          <Text style={[styles.title, { color: titleColor || colors.text }]}>
+            {title}
+          </Text>
           {subtitle ? (
-            <Text style={[styles.subtitle, { color: subtitleColor }]}>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: subtitleColor || colors.textSecondary },
+              ]}
+            >
               {subtitle}
             </Text>
           ) : null}
@@ -47,7 +60,11 @@ export default function MenuRow({
       {right ? (
         <View style={styles.right}>{right}</View>
       ) : showChevron ? (
-        <FontAwesome name="chevron-right" size={chevronSize} color="#8B8B8B" />
+        <FontAwesome
+          name="chevron-right"
+          size={chevronSize}
+          color={colors.textSecondary}
+        />
       ) : null}
     </Container>
   );
