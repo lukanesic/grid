@@ -2,7 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { USER_CIRCLES } from "../constants/data";
-import { CircleCard } from "./index";
+import CircleCard from "./CircleCard";
 
 interface KrugoviTabContentProps {
   styles: any;

@@ -158,6 +158,21 @@ export const CLUBS = [
 export const CHATS = [
   {
     id: 1,
+    name: "Padel ekipa",
+    message: "Igramo danas u 18h?",
+    time: "10:15 AM",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    unreadCount: 2,
+    isOnline: false,
+    isGroup: true,
+    members: [1, 2, 5, 8],
+    groupAvatars: [
+      "https://i.pravatar.cc/150?img=12",
+      "https://i.pravatar.cc/150?img=5",
+    ],
+  },
+  {
+    id: 2,
     name: "Ross Thompson",
     message: "Hi, how are u?",
     time: "08:24 AM",
@@ -166,7 +181,7 @@ export const CHATS = [
     isOnline: false,
   },
   {
-    id: 2,
+    id: 3,
     name: "Janet Hernandez",
     message: "What is best year of your life?",
     time: "08:24 AM",
@@ -175,7 +190,7 @@ export const CHATS = [
     isRead: true,
   },
   {
-    id: 3,
+    id: 4,
     name: "Patricia Martinez",
     message: "What is best year of your life?",
     time: "08:24 AM",
@@ -183,7 +198,7 @@ export const CHATS = [
     isOnline: false,
   },
   {
-    id: 4,
+    id: 5,
     name: "Donna Wilson",
     message: "What are you doing tonight? 💗",
     time: "08:24 AM",
@@ -191,7 +206,7 @@ export const CHATS = [
     isOnline: false,
   },
   {
-    id: 5,
+    id: 6,
     name: "Laura Brown",
     message: "Hi, how are u?",
     time: "08:24 AM",
@@ -199,7 +214,7 @@ export const CHATS = [
     isOnline: false,
   },
   {
-    id: 6,
+    id: 7,
     name: "Herbert Gonzalez",
     message: "Hi, how are u?",
     time: "08:24 AM",
@@ -207,12 +222,212 @@ export const CHATS = [
     isOnline: false,
   },
   {
-    id: 7,
+    id: 8,
     name: "Marcus Lee",
     message: "Hi, how are u?",
     time: "08:24 AM",
     avatar: "https://i.pravatar.cc/150?img=52",
     isOnline: false,
+  },
+];
+
+// ============================================
+// CHAT MESSAGES DATA
+// ============================================
+export const CHAT_MESSAGES = [
+  {
+    id: "1",
+    text: "Hej! Kako si?",
+    timestamp: "09:15",
+    isMine: false,
+  },
+  {
+    id: "2",
+    text: "Dobro sam hvala! A ti?",
+    timestamp: "09:16",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "3",
+    text: "Super! Bas mi je drago sto se cujem s tobom",
+    timestamp: "09:17",
+    isMine: false,
+  },
+  {
+    id: "4",
+    text: "I meni! Dugo se nismo videli",
+    timestamp: "09:18",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "5",
+    text: "E da, nesto te htedoh da pitam",
+    timestamp: "09:20",
+    isMine: false,
+  },
+  {
+    id: "6",
+    text: "Jesi li slobodan danas popodne za padel?",
+    timestamp: "09:20",
+    isMine: false,
+  },
+  {
+    id: "7",
+    text: "Hmm, pusti da vidim... 🤔",
+    timestamp: "09:22",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "8",
+    text: "Da, oko 17h bi bilo super! Gde?",
+    timestamp: "09:23",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "9",
+    text: "CN Montjuïc? Imam rezervaciju.",
+    timestamp: "09:24",
+    isMine: false,
+  },
+  {
+    id: "10",
+    text: "Odlično! Vidimo se tamo 👍",
+    timestamp: "09:25",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "11",
+    text: "Super! Btw, jesi li video Markovu novu raketu?",
+    timestamp: "09:26",
+    isMine: false,
+  },
+  {
+    id: "12",
+    text: "Ne jos, kakva je?",
+    timestamp: "09:27",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "13",
+    text: "Uzeo je neku Wilson Pro Staff. Izgleda fantasticno!",
+    timestamp: "09:28",
+    isMine: false,
+  },
+  {
+    id: "14",
+    text: "A koliko je platio?",
+    timestamp: "09:29",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "15",
+    text: "Oko 180 eura ako se dobro secam",
+    timestamp: "09:30",
+    isMine: false,
+  },
+  {
+    id: "16",
+    text: "Nije lose. Mozda bih i ja uzeo novu uskoro",
+    timestamp: "09:32",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "17",
+    text: "Preporucujem! Njegova igra se popravila otkad je uzeo",
+    timestamp: "09:33",
+    isMine: false,
+  },
+  {
+    id: "18",
+    text: "A jel idete na onaj turnir sledeceg meseca?",
+    timestamp: "09:35",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "19",
+    text: "Da! Vec smo se prijavili, Ana i ja idemo zajedno",
+    timestamp: "09:36",
+    isMine: false,
+  },
+  {
+    id: "20",
+    text: "Odlicno! I mi sa Petrom razmisljamo da se prijavimo",
+    timestamp: "09:38",
+    isMine: true,
+    status: "delivered" as const,
+  },
+  {
+    id: "21",
+    text: "Mogli bismo da imamo zajednicki trening pre turnira?",
+    timestamp: "09:40",
+    isMine: false,
+  },
+  {
+    id: "22",
+    text: "Odlicna ideja! Mozda ovaj vikend?",
+    timestamp: "09:41",
+    isMine: true,
+    status: "delivered" as const,
+  },
+  {
+    id: "23",
+    text: "Da, u subotu ujutro bi bilo idealno",
+    timestamp: "09:42",
+    isMine: false,
+  },
+  {
+    id: "24",
+    text: "Dogovoreno! 💪",
+    timestamp: "09:43",
+    isMine: true,
+    status: "delivered" as const,
+  },
+];
+
+// ============================================
+// OLDER CHAT MESSAGES (for load more)
+// ============================================
+export const OLDER_CHAT_MESSAGES = [
+  {
+    id: "old-1",
+    text: "Ej, sećaš se prošlog meseca?",
+    timestamp: "09:00",
+    isMine: false,
+  },
+  {
+    id: "old-2",
+    text: "Da, naravno! Šta je bilo?",
+    timestamp: "09:01",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "old-3",
+    text: "Kada smo igrali onaj turnir...",
+    timestamp: "09:03",
+    isMine: false,
+  },
+  {
+    id: "old-4",
+    text: "Da, bio je fantasticno iskustvo!",
+    timestamp: "09:05",
+    isMine: true,
+    status: "read" as const,
+  },
+  {
+    id: "old-5",
+    text: "Trebali bismo opet!",
+    timestamp: "09:07",
+    isMine: false,
   },
 ];
 
@@ -1169,5 +1384,38 @@ export const SUGGESTED_FRIENDS = [
       "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
     mutualFriends: 1,
     isConnected: false,
+  },
+];
+
+export const SUGGESTED_USERS = [
+  {
+    id: 1,
+    name: "Marko Petrović",
+    avatar: "https://i.pravatar.cc/150?img=13",
+    subtitle: "Igra padel",
+  },
+  {
+    id: 2,
+    name: "Ana Jovanović",
+    avatar: "https://i.pravatar.cc/150?img=25",
+    subtitle: "Aktivna u grupi",
+  },
+  {
+    id: 3,
+    name: "Nikola Đorđević",
+    avatar: "https://i.pravatar.cc/150?img=32",
+    subtitle: "Često igra vikendima",
+  },
+  {
+    id: 4,
+    name: "Jelena Stojanović",
+    avatar: "https://i.pravatar.cc/150?img=44",
+    subtitle: "Padel entuzijasta",
+  },
+  {
+    id: 5,
+    name: "Stefan Nikolić",
+    avatar: "https://i.pravatar.cc/150?img=56",
+    subtitle: "Pro igrač",
   },
 ];

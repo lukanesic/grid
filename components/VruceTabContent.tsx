@@ -7,12 +7,10 @@ import {
     SUGGESTED_CLUBS,
     TRENDING_MATCHES,
 } from "../constants/data";
-import {
-    HotEventCard,
-    HotPlayerCard,
-    TrendingClubCard,
-    TrendingMatchCard,
-} from "./index";
+import HotEventCard from "./HotEventCard";
+import HotPlayerCard from "./HotPlayerCard";
+import TrendingClubCard from "./TrendingClubCard";
+import TrendingMatchCard from "./TrendingMatchCard";
 
 interface VruceTabContentProps {
   styles: any;

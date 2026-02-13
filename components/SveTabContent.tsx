@@ -8,7 +8,10 @@ import {
     SUGGESTED_PLAYERS,
     UPCOMING_MATCHES,
 } from "../constants/data";
-import { Button, ClubCard, MatchCard, PlayerCard } from "./index";
+import Button from "./Button";
+import ClubCard from "./ClubCard";
+import MatchCard from "./MatchCard";
+import PlayerCard from "./PlayerCard";
 
 interface SveTabContentProps {
   styles: any;

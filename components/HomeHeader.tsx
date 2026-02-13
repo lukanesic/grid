@@ -2,7 +2,8 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
-import { Badge, IconButton } from "./index";
+import Badge from "./Badge";
+import IconButton from "./IconButton";
 
 interface HomeHeaderProps {
   styles: any;

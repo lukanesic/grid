@@ -9,6 +9,8 @@ interface ChatItemProps {
   unreadCount?: number;
   isOnline?: boolean;
   isRead?: boolean;
+  isGroup?: boolean;
+  groupAvatars?: string[];
   onPress?: () => void;
 }
 
@@ -20,24 +22,41 @@ export default function ChatItem({
   unreadCount,
   isOnline = false,
   isRead = false,
+  isGroup = false,
+  groupAvatars,
   onPress,
 }: ChatItemProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: avatar }} style={styles.avatar} />
-        <View
-          style={[
-            styles.statusBorder,
-            { borderColor: isOnline ? "#B8FF00" : "#FFD700" },
-          ]}
-        />
+        {isGroup && groupAvatars && groupAvatars.length >= 2 ? (
+          <View style={styles.groupAvatarContainer}>
+            <Image
+              source={{ uri: groupAvatars[0] }}
+              style={styles.groupAvatar1}
+            />
+            <Image
+              source={{ uri: groupAvatars[1] }}
+              style={styles.groupAvatar2}
+            />
+          </View>
+        ) : (
+          <>
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+            <View
+              style={[
+                styles.statusBorder,
+                { borderColor: isOnline ? "#B8FF00" : "#FFD700" },
+              ]}
+            />
+          </>
+        )}
       </View>
 
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.time}>{time}</Text>
+          <Text style={styles.name}>{name || "Unknown"}</Text>
+          <Text style={styles.time}>{time || ""}</Text>
         </View>
         <View style={styles.bottomRow}>
           <View style={styles.messageContainer}>
@@ -58,7 +77,7 @@ export default function ChatItem({
               </View>
             )}
             <Text style={styles.message} numberOfLines={1}>
-              {message}
+              {message || ""}
             </Text>
           </View>
           {unreadCount && unreadCount > 0 && (
@@ -83,6 +102,31 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: "relative",
     marginRight: 12,
+  },
+  groupAvatarContainer: {
+    width: 56,
+    height: 56,
+    position: "relative",
+  },
+  groupAvatar1: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    borderWidth: 2,
+    borderColor: "#0B0B0B",
+  },
+  groupAvatar2: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    borderWidth: 2,
+    borderColor: "#0B0B0B",
   },
   avatar: {
     width: 56,
