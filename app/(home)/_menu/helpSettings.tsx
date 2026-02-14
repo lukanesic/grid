@@ -1,7 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MenuCard, MenuHeader } from "../../../components/menu";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 const SETTINGS_GROUPS = [
@@ -26,29 +27,23 @@ export default function HelpSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Podešavanja</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      <MenuHeader title="Podešavanja" onBack={() => router.back()} />
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        <View style={styles.introCard}>
+        <MenuCard style={styles.introCard}>
           <Text style={styles.introTitle}>Brzo podešavanje aplikacije</Text>
           <Text style={styles.introText}>
             U nastavku su najvažnije sekcije podešavanja koje treba proveriti
             nakon registracije.
           </Text>
-        </View>
+        </MenuCard>
 
         {SETTINGS_GROUPS.map((group, groupIndex) => (
-          <View key={group.title} style={styles.groupCard}>
+          <MenuCard key={group.title} style={styles.groupCard}>
             <View style={styles.groupHeader}>
               <View style={styles.groupBadge}>
                 <Text style={styles.groupBadgeText}>{groupIndex + 1}</Text>
@@ -66,16 +61,16 @@ export default function HelpSettingsScreen() {
                 <Text style={styles.itemText}>{item}</Text>
               </View>
             ))}
-          </View>
+          </MenuCard>
         ))}
 
-        <View style={styles.footerNote}>
+        <MenuCard style={styles.footerNote} tone="soft">
           <FontAwesome name="info-circle" size={14} color={colors.blue} />
           <Text style={styles.footerNoteText}>
             Za veću sigurnost, preporučujemo da jednom mesečno proveriš aktivne
             uređaje i istoriju prijavljivanja.
           </Text>
-        </View>
+        </MenuCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -87,26 +82,12 @@ const getStyles = (colors: any, isDark: boolean) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "700",
-    },
     content: {
       flex: 1,
       paddingHorizontal: 20,
     },
     introCard: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 12,
-      padding: 14,
       marginBottom: 14,
     },
     introTitle: {
@@ -121,9 +102,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       lineHeight: 18,
     },
     groupCard: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 12,
-      padding: 14,
       marginBottom: 12,
     },
     groupHeader: {
@@ -164,9 +143,7 @@ const getStyles = (colors: any, isDark: boolean) =>
     },
     footerNote: {
       marginTop: 2,
-      backgroundColor: isDark ? "#1E1F23" : colors.surface,
       borderRadius: 12,
-      padding: 12,
       flexDirection: "row",
       gap: 8,
     },

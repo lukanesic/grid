@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MenuHeader, MenuInfoCard } from "../../../components/menu";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 const INITIAL_DEVICES = [
@@ -54,21 +55,13 @@ export default function ActiveDevicesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Aktivni uređaji</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      <MenuHeader title="Aktivni uređaji" onBack={() => router.back()} />
 
       <View style={styles.content}>
-        <View style={styles.infoCard}>
-          <FontAwesome name="mobile" size={16} color={colors.blue} />
-          <Text style={styles.infoText}>
-            Prikazani su uređaji koji su trenutno prijavljeni na tvoj nalog.
-          </Text>
-        </View>
+        <MenuInfoCard
+          icon="mobile"
+          text="Prikazani su uređaji koji su trenutno prijavljeni na tvoj nalog."
+        />
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {devices.map((device) => (
@@ -154,35 +147,9 @@ const getStyles = (colors: any, isDark: boolean) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "700",
-    },
     content: {
       flex: 1,
       paddingHorizontal: 20,
-    },
-    infoCard: {
-      backgroundColor: isDark ? "#1E1F23" : colors.surface,
-      borderRadius: 12,
-      padding: 14,
-      flexDirection: "row",
-      gap: 10,
-      marginBottom: 16,
-    },
-    infoText: {
-      flex: 1,
-      color: colors.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
     },
     deviceCard: {
       backgroundColor: isDark ? "#121418" : colors.surface,

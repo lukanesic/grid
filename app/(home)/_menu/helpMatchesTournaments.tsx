@@ -1,7 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MenuCard, MenuHeader } from "../../../components/menu";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 const MATCH_FLOW = [
@@ -25,20 +26,14 @@ export default function HelpMatchesTournamentsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Mečevi i turniri</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      <MenuHeader title="Mečevi i turniri" onBack={() => router.back()} />
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        <View style={styles.heroCard}>
+        <MenuCard style={styles.heroCard}>
           <FontAwesome
             name="trophy"
             size={18}
@@ -48,9 +43,9 @@ export default function HelpMatchesTournamentsScreen() {
             Vodič za kreiranje mečeva, upravljanje prijavama i osnovna pravila
             turnira.
           </Text>
-        </View>
+        </MenuCard>
 
-        <View style={styles.sectionCard}>
+        <MenuCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Kako kreirati meč</Text>
           {MATCH_FLOW.map((step, index) => (
             <View key={index} style={styles.stepRow}>
@@ -60,9 +55,9 @@ export default function HelpMatchesTournamentsScreen() {
               <Text style={styles.stepText}>{step}</Text>
             </View>
           ))}
-        </View>
+        </MenuCard>
 
-        <View style={styles.sectionCard}>
+        <MenuCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Pravila turnira</Text>
           {TOURNAMENT_RULES.map((rule, index) => (
             <View key={index} style={styles.ruleRow}>
@@ -74,15 +69,15 @@ export default function HelpMatchesTournamentsScreen() {
               <Text style={styles.ruleText}>{rule}</Text>
             </View>
           ))}
-        </View>
+        </MenuCard>
 
-        <View style={styles.tipCard}>
+        <MenuCard style={styles.tipCard}>
           <FontAwesome name="lightbulb-o" size={16} color="#FFB020" />
           <Text style={styles.tipText}>
             Za bolji odaziv igrača, objavi meč minimum 48h unapred i jasno
             naznači nivo igre.
           </Text>
-        </View>
+        </MenuCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -94,26 +89,12 @@ const getStyles = (colors: any, isDark: boolean) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "700",
-    },
     content: {
       flex: 1,
       paddingHorizontal: 20,
     },
     heroCard: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 12,
-      padding: 14,
       flexDirection: "row",
       gap: 10,
       marginBottom: 14,
@@ -125,9 +106,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       lineHeight: 18,
     },
     sectionCard: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 12,
-      padding: 14,
       marginBottom: 12,
       gap: 10,
     },
@@ -178,7 +157,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       borderWidth: 1,
       borderColor: "rgba(255,176,32,0.35)",
       borderRadius: 12,
-      padding: 12,
       flexDirection: "row",
       gap: 10,
     },

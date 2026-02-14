@@ -1,7 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MenuCard, MenuHeader } from "../../../components/menu";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 const SECURITY_CHECKLIST = [
@@ -28,20 +29,14 @@ export default function HelpSecurityScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Bezbednost</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      <MenuHeader title="Bezbednost" onBack={() => router.back()} />
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        <View style={styles.scoreCard}>
+        <MenuCard style={styles.scoreCard}>
           <View style={styles.scoreIconWrap}>
             <FontAwesome name="shield" size={20} color={colors.blue} />
           </View>
@@ -49,13 +44,13 @@ export default function HelpSecurityScreen() {
             <Text style={styles.scoreTitle}>Security Health</Text>
             <Text style={styles.scoreValue}>{percent}%</Text>
           </View>
-        </View>
+        </MenuCard>
 
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${percent}%` }]} />
         </View>
 
-        <View style={styles.block}>
+        <MenuCard style={styles.block}>
           <Text style={styles.blockTitle}>Kontrolna lista</Text>
           {SECURITY_CHECKLIST.map((item, index) => (
             <View key={index} style={styles.checkRow}>
@@ -73,7 +68,7 @@ export default function HelpSecurityScreen() {
               <Text style={styles.checkLabel}>{item.label}</Text>
             </View>
           ))}
-        </View>
+        </MenuCard>
 
         <View style={styles.alertCard}>
           <FontAwesome name="exclamation-triangle" size={16} color="#FFB020" />
@@ -86,7 +81,7 @@ export default function HelpSecurityScreen() {
           </View>
         </View>
 
-        <View style={styles.block}>
+        <MenuCard style={styles.block}>
           <Text style={styles.blockTitle}>Koraci u incidentu</Text>
           {INCIDENT_STEPS.map((step, index) => (
             <View key={index} style={styles.incidentRow}>
@@ -96,7 +91,7 @@ export default function HelpSecurityScreen() {
               <Text style={styles.incidentText}>{step}</Text>
             </View>
           ))}
-        </View>
+        </MenuCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -108,18 +103,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "700",
-    },
     content: {
       flex: 1,
       paddingHorizontal: 20,
@@ -128,9 +111,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 14,
-      padding: 14,
       borderWidth: 1,
       borderColor: colors.border,
       marginBottom: 10,
@@ -174,9 +155,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       borderRadius: 99,
     },
     block: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
       borderRadius: 14,
-      padding: 14,
       borderWidth: 1,
       borderColor: colors.border,
       marginBottom: 12,

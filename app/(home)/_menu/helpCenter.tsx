@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MenuHeader } from "../../../components/menu";
 import {
   FAQ_ITEMS,
   HELP_CONTACT_OPTIONS,
@@ -37,14 +38,7 @@ export default function HelpCenterScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="chevron-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Centar za pomoć</Text>
-        <View style={{ width: 20 }} />
-      </View>
+      <MenuHeader title="Centar za pomoć" onBack={() => router.back()} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Search */}
@@ -261,18 +255,6 @@ const getStyles = (colors: any, isDark: boolean) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    headerTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "700",
     },
     content: {
       flex: 1,
