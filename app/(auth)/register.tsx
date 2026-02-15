@@ -5,12 +5,74 @@ import AuthInput from "@/components/auth/AuthInput";
 import AuthSocialButton from "@/components/auth/AuthSocialButton";
 import AuthSubtitle from "@/components/auth/AuthSubtitle";
 import AuthTitle from "@/components/auth/AuthTitle";
+import { supabase } from "@/lib/supabase";
+import { isValidEmail } from "@/utils/validation";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+      Alert.alert("Greska", "Popunite sva polja za registraciju.");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      Alert.alert("Greska", "Unesite ispravnu email adresu.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Greska", "Lozinke se ne poklapaju.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const { data, error } = await supabase.auth.signUp({
+      email: trimmedEmail,
+      password,
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      Alert.alert("Greska", error.message);
+      return;
+    }
+
+    if (!data.user) {
+      Alert.alert("Greska", "Neuspesna registracija.");
+      return;
+    }
+
+    // Note: Profile is automatically created by Supabase trigger (handle_new_user)
+
+    if (!data.session) {
+      Alert.alert(
+        "Uspeh",
+        "Nalogu je poslata potvrda na email. Potvrdite email adresu da nastavite.",
+      );
+      return;
+    }
+
+    // User will be redirected to /createProfile by AuthContext guard
+    // since profile_completed is false
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -26,6 +88,8 @@ export default function RegisterScreen() {
             placeholder="Email"
             autoCapitalize="none"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
 
           <AuthInput
@@ -33,6 +97,8 @@ export default function RegisterScreen() {
             iconSize={18}
             placeholder="Lozinka"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
 
           <AuthInput
@@ -40,9 +106,11 @@ export default function RegisterScreen() {
             iconSize={18}
             placeholder="Potvrdi lozinku"
             secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
 
-          <AuthButton onPress={() => router.push("/createProfile")}>
+          <AuthButton onPress={handleRegister} loading={isSubmitting}>
             Registruj se
           </AuthButton>
 

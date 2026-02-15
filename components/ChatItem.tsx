@@ -59,8 +59,8 @@ export default function ChatItem({
 
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={styles.name}>{name || "Unknown"}</Text>
-          <Text style={styles.time}>{time || ""}</Text>
+          <Text style={styles.name}>{String(name || "Unknown")}</Text>
+          <Text style={styles.time}>{String(time || "")}</Text>
         </View>
         <View style={styles.bottomRow}>
           <View style={styles.messageContainer}>
@@ -81,12 +81,12 @@ export default function ChatItem({
               </View>
             )}
             <Text style={styles.message} numberOfLines={1}>
-              {message || ""}
+              {String(message || "")}
             </Text>
           </View>
-          {unreadCount && unreadCount > 0 && (
+          {unreadCount != null && unreadCount > 0 && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount}</Text>
+              <Text style={styles.badgeText}>{String(unreadCount)}</Text>
             </View>
           )}
         </View>

@@ -1,5 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface NotificationItemProps {
@@ -9,6 +9,9 @@ interface NotificationItemProps {
   statusColor: string;
   statusIcon: string;
   showDivider?: boolean;
+  isRead?: boolean;
+  avatarUrl?: string | null;
+  onPress?: () => void;
 }
 
 export default function NotificationItem({
@@ -18,6 +21,9 @@ export default function NotificationItem({
   statusColor,
   statusIcon,
   showDivider = false,
+  isRead = false,
+  avatarUrl,
+  onPress,
 }: NotificationItemProps) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -28,11 +34,22 @@ export default function NotificationItem({
     .join("");
 
   return (
-    <View style={[styles.row, showDivider && styles.rowDivider]}>
+    <Pressable
+      style={[
+        styles.row,
+        showDivider && styles.rowDivider,
+        isRead && styles.rowRead,
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.avatarWrap}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+        {avatarUrl ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+        )}
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
           <FontAwesome name={statusIcon as any} size={10} color="#111111" />
         </View>
@@ -45,8 +62,8 @@ export default function NotificationItem({
         <Text style={styles.rowTime}>{timeLabel}</Text>
       </View>
 
-      <View style={styles.unreadDot} />
-    </View>
+      {!isRead && <View style={styles.unreadDot} />}
+    </Pressable>
   );
 }
 
@@ -62,6 +79,9 @@ const getStyles = (colors: any) =>
     rowDivider: {
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+    },
+    rowRead: {
+      opacity: 0.6,
     },
     avatarWrap: {
       width: 48,

@@ -1,13 +1,15 @@
+import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuRow, MenuSection } from "../../components";
@@ -18,6 +20,14 @@ export default function MenuScreen() {
   const { colors, toggleTheme, isDark } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [saveHistory, setSaveHistory] = useState(true);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      Alert.alert("Greska", error.message);
+    }
+  };
 
   const styles = getStyles(colors, isDark);
 
@@ -145,6 +155,7 @@ export default function MenuScreen() {
             subtitle="Odjavi nalog"
             iconColor="#FF6B6B"
             titleColor="#FF6B6B"
+            onPress={handleLogout}
           />
         </MenuSection>
       </ScrollView>
@@ -161,6 +172,7 @@ const getStyles = (colors: any, isDark: boolean) =>
     scrollContent: {
       paddingHorizontal: 20,
       paddingTop: 16,
+
       paddingBottom: 32,
     },
     header: {

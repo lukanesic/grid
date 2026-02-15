@@ -1,8 +1,10 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
+import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { supabase } from "../lib/supabase";
 import Badge from "./Badge";
 import IconButton from "./IconButton";
 
@@ -19,6 +21,63 @@ export default function HomeHeader({
 }: HomeHeaderProps) {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const firstName = profile?.full_name?.split(" ")[0] || "Tamo";
+  const userLocation = profile?.location || "Srbija";
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    loadUnreadCount();
+
+    const channel = supabase
+      .channel("home-header-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          console.log("🔔 New notification received!");
+          loadUnreadCount();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          console.log("✅ Notification marked as read!");
+          loadUnreadCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_unread_notifications_count",
+      );
+      if (error) throw error;
+      setUnreadCount(data || 0);
+    } catch (error) {
+      console.error("Error loading unread count:", error);
+    }
+  };
 
   return (
     <>
@@ -36,7 +95,7 @@ export default function HomeHeader({
               color={colors.text}
               backgroundColor="transparent"
             />
-            <Badge count={20} />
+            {unreadCount > 0 && <Badge count={unreadCount} />}
           </View>
           <IconButton
             icon="bars"
@@ -49,8 +108,8 @@ export default function HomeHeader({
 
       {/* Greeting */}
       <View style={styles.greetingSection}>
-        <Text style={styles.greetingText}>Dobro jutro, Ana!</Text>
-        <Text style={styles.weatherText}>24°C • Oblačno • Madrid, Španija</Text>
+        <Text style={styles.greetingText}>Dobro jutro, {firstName}!</Text>
+        <Text style={styles.weatherText}>24°C • Oblačno • {userLocation}</Text>
       </View>
 
       {/* Actions */}

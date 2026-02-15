@@ -6,6 +6,7 @@ export { default as ChatItem } from "./ChatItem";
 export { default as CircleCard } from "./CircleCard";
 export { default as ClubCard } from "./ClubCard";
 export { default as EmptyState } from "./EmptyState";
+export { FollowButton } from "./FollowButton";
 export { default as FriendCard } from "./FriendCard";
 export { default as HomeHeader } from "./HomeHeader";
 export { default as HotEventCard } from "./HotEventCard";

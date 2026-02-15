@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
     HomeHeader,
@@ -13,14 +13,30 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<"sve" | "vruce" | "krugovi">(
     "sve",
   );
+  const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
   const styles = getStyles(colors);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    // Simulate refresh - in a real app, this would reload data
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.refreshIndicator}
+            colors={[colors.refreshIndicator]}
+          />
+        }
       >
         <HomeHeader
           styles={styles}

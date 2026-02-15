@@ -1,13 +1,17 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -16,13 +20,40 @@ export default function PrivacySecurityScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const [privateProfile, setPrivateProfile] = useState(false);
-  const [showOnlineStatus, setShowOnlineStatus] = useState(true);
-  const [showMatchHistory, setShowMatchHistory] = useState(true);
-  const [allowMessages, setAllowMessages] = useState(true);
-  const [twoFactorAuth, setTwoFactorAuth] = useState(false);
-  const [biometricLogin, setBiometricLogin] = useState(true);
-  const [saveSearchHistory, setSaveSearchHistory] = useState(true);
+  const accentColor = isDark ? "#B8FF00" : colors.blue;
+  const { profile, user, refreshProfile } = useAuth();
+
+  const [isPrivate, setIsPrivate] = useState(profile?.is_private || false);
+  const [showOnlineStatus, setShowOnlineStatus] = useState(
+    profile?.show_online_status ?? true,
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const updatePrivacySettings = async (updates: any) => {
+    setIsUpdating(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", user?.id);
+
+    if (error) {
+      Alert.alert("Greška", "Nije moguće ažurirati podešavanja");
+      console.error("Privacy update error:", error);
+    } else {
+      await refreshProfile();
+    }
+    setIsUpdating(false);
+  };
+
+  const handleTogglePrivate = async (value: boolean) => {
+    setIsPrivate(value);
+    await updatePrivacySettings({ is_private: value });
+  };
+
+  const handleToggleOnlineStatus = async (value: boolean) => {
+    setShowOnlineStatus(value);
+    await updatePrivacySettings({ show_online_status: value });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -35,10 +66,14 @@ export default function PrivacySecurityScreen() {
         <View style={{ width: 20 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privatnost profila</Text>
+          <Text style={styles.sectionTitle}>Privatnost</Text>
 
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
@@ -51,13 +86,19 @@ export default function PrivacySecurityScreen() {
                 <View style={styles.settingText}>
                   <Text style={styles.settingTitle}>Privatni profil</Text>
                   <Text style={styles.settingDescription}>
-                    Samo odobreni mogu videti profil
+                    Samo vaši prijatelji mogu videti vaš profil
                   </Text>
                 </View>
               </View>
               <Switch
-                value={privateProfile}
-                onValueChange={setPrivateProfile}
+                value={isPrivate}
+                onValueChange={handleTogglePrivate}
+                trackColor={{
+                  false: isDark ? "#3A3A3A" : "#E6E6E6",
+                  true: accentColor,
+                }}
+                thumbColor="#FFFFFF"
+                disabled={isUpdating}
               />
             </View>
           </View>
@@ -68,143 +109,47 @@ export default function PrivacySecurityScreen() {
                 <FontAwesome
                   name="circle"
                   size={20}
-                  color={
-                    showOnlineStatus
-                      ? isDark
-                        ? "#B8FF00"
-                        : colors.blue
-                      : colors.textSecondary
-                  }
+                  color={showOnlineStatus ? accentColor : colors.textSecondary}
                 />
                 <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>Online status</Text>
+                  <Text style={styles.settingTitle}>Prikaži status</Text>
                   <Text style={styles.settingDescription}>
-                    Prikaži kada si aktivan
+                    Drugi mogu videti kada ste online
                   </Text>
                 </View>
               </View>
               <Switch
                 value={showOnlineStatus}
-                onValueChange={setShowOnlineStatus}
+                onValueChange={handleToggleOnlineStatus}
+                trackColor={{
+                  false: isDark ? "#3A3A3A" : "#E6E6E6",
+                  true: accentColor,
+                }}
+                thumbColor="#FFFFFF"
+                disabled={isUpdating}
               />
             </View>
           </View>
-
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <FontAwesome
-                  name="trophy"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-                <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>Istorija mečeva</Text>
-                  <Text style={styles.settingDescription}>
-                    Prikaži prethodne mečeve
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={showMatchHistory}
-                onValueChange={setShowMatchHistory}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Communication Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Komunikacija</Text>
-
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <FontAwesome
-                  name="envelope"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-                <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>Poruke</Text>
-                  <Text style={styles.settingDescription}>
-                    Ko može da ti šalje poruke
-                  </Text>
-                </View>
-              </View>
-              <Switch value={allowMessages} onValueChange={setAllowMessages} />
-            </View>
-          </View>
-
-          <Pressable
-            style={styles.linkCard}
-            onPress={() => router.push("/_menu/blockedUsers")}
-          >
-            <View style={styles.linkLeft}>
-              <FontAwesome name="ban" size={20} color={colors.textSecondary} />
-              <Text style={styles.linkTitle}>Blokirani korisnici</Text>
-            </View>
-            <View style={styles.linkRight}>
-              <Text style={styles.linkCount}>3</Text>
-              <FontAwesome
-                name="chevron-right"
-                size={16}
-                color={colors.textSecondary}
-              />
-            </View>
-          </Pressable>
         </View>
 
         {/* Security Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Bezbednost</Text>
 
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <FontAwesome
-                  name="shield"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-                <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>
-                    Dvofaktorska autentifikacija
-                  </Text>
-                  <Text style={styles.settingDescription}>
-                    Dodatna zaštita naloga
-                  </Text>
-                </View>
-              </View>
-              <Switch value={twoFactorAuth} onValueChange={setTwoFactorAuth} />
+          <Pressable
+            style={styles.linkCard}
+            onPress={() => router.push("/(home)/_menu/changePassword")}
+          >
+            <View style={styles.linkLeft}>
+              <FontAwesome name="lock" size={20} color={colors.textSecondary} />
+              <Text style={styles.linkTitle}>Promeni lozinku</Text>
             </View>
-          </View>
-
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <FontAwesome
-                  name="camera"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-                <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>Biometrijska prijava</Text>
-                  <Text style={styles.settingDescription}>
-                    Face ID / Touch ID
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={biometricLogin}
-                onValueChange={setBiometricLogin}
-              />
-            </View>
-          </View>
+            <FontAwesome name="chevron-right" size={16} color={accentColor} />
+          </Pressable>
 
           <Pressable
             style={styles.linkCard}
-            onPress={() => router.push("/_menu/loginHistory")}
+            onPress={() => router.push("/(home)/_menu/loginHistory")}
           >
             <View style={styles.linkLeft}>
               <FontAwesome
@@ -214,16 +159,12 @@ export default function PrivacySecurityScreen() {
               />
               <Text style={styles.linkTitle}>Istorija prijavljivanja</Text>
             </View>
-            <FontAwesome
-              name="chevron-right"
-              size={16}
-              color={colors.textSecondary}
-            />
+            <FontAwesome name="chevron-right" size={16} color={accentColor} />
           </Pressable>
 
           <Pressable
             style={styles.linkCard}
-            onPress={() => router.push("/_menu/activeDevices")}
+            onPress={() => router.push("/(home)/_menu/activeDevices")}
           >
             <View style={styles.linkLeft}>
               <FontAwesome
@@ -233,81 +174,38 @@ export default function PrivacySecurityScreen() {
               />
               <Text style={styles.linkTitle}>Aktivni uređaji</Text>
             </View>
-            <View style={styles.linkRight}>
-              <Text style={styles.linkCount}>2</Text>
-              <FontAwesome
-                name="chevron-right"
-                size={16}
-                color={colors.textSecondary}
-              />
-            </View>
-          </Pressable>
-        </View>
-
-        {/* Data Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Podaci</Text>
-
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingLeft}>
-                <FontAwesome
-                  name="search"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-                <View style={styles.settingText}>
-                  <Text style={styles.settingTitle}>
-                    Istorija pretraživanja
-                  </Text>
-                  <Text style={styles.settingDescription}>
-                    Čuvaj pretraživanja
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={saveSearchHistory}
-                onValueChange={setSaveSearchHistory}
-              />
-            </View>
-          </View>
-
-          <Pressable style={styles.linkCard}>
-            <View style={styles.linkLeft}>
-              <FontAwesome
-                name="download"
-                size={20}
-                color={colors.textSecondary}
-              />
-              <Text style={styles.linkTitle}>Preuzmi moje podatke</Text>
-            </View>
-            <FontAwesome
-              name="chevron-right"
-              size={16}
-              color={colors.textSecondary}
-            />
+            <FontAwesome name="chevron-right" size={16} color={accentColor} />
           </Pressable>
 
-          <Pressable style={styles.linkCard}>
+          <Pressable
+            style={styles.linkCard}
+            onPress={() => router.push("/(home)/_menu/blockedUsers")}
+          >
             <View style={styles.linkLeft}>
-              <FontAwesome name="trash" size={20} color="#FF4444" />
-              <Text style={[styles.linkTitle, { color: "#FF4444" }]}>
-                Obriši sve podatke
-              </Text>
+              <FontAwesome name="ban" size={20} color={colors.textSecondary} />
+              <Text style={styles.linkTitle}>Blokirani korisnici</Text>
             </View>
-            <FontAwesome name="chevron-right" size={16} color="#FF4444" />
+            <FontAwesome name="chevron-right" size={16} color={accentColor} />
           </Pressable>
         </View>
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <FontAwesome name="info-circle" size={16} color={colors.blue} />
+          <FontAwesome name="info-circle" size={16} color={accentColor} />
           <Text style={styles.infoText}>
-            Ove postavke kontrolišu kako drugi vide tvoj profil i kako možeš da
-            koristiš aplikaciju. Saznaj više o privatnosti.
+            Čuvamo vaše podatke u skladu sa GDPR propisima. Za više informacija
+            o tome kako koristimo vaše podatke, pogledajte našu politiku
+            privatnosti.
           </Text>
         </View>
       </ScrollView>
+
+      {/* Loading Overlay */}
+      {isUpdating && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="small" color={accentColor} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -416,5 +314,15 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 20,
+    },
+    loadingOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
+      justifyContent: "center",
+      alignItems: "center",
     },
   });

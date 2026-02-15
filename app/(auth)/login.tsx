@@ -6,12 +6,52 @@ import AuthLink from "@/components/auth/AuthLink";
 import AuthSocialButton from "@/components/auth/AuthSocialButton";
 import AuthSubtitle from "@/components/auth/AuthSubtitle";
 import AuthTitle from "@/components/auth/AuthTitle";
+import { supabase } from "@/lib/supabase";
+import { isValidEmail } from "@/utils/validation";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleLogin = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Greska", "Unesite email i lozinku.");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      Alert.alert("Greska", "Unesite ispravnu email adresu.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password,
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      Alert.alert("Greska", error.message);
+      return;
+    }
+
+    router.push("/(home)");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -27,6 +67,8 @@ export default function LoginScreen() {
             placeholder="Email"
             autoCapitalize="none"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
 
           <AuthInput
@@ -34,13 +76,15 @@ export default function LoginScreen() {
             iconSize={18}
             placeholder="Lozinka"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
 
           <AuthLink onPress={() => router.push("/(auth)/reset-password")}>
             Zaboravljena lozinka?
           </AuthLink>
 
-          <AuthButton onPress={() => router.push("/(home)")}>
+          <AuthButton onPress={handleLogin} loading={isSubmitting}>
             Prijavi se
           </AuthButton>
 

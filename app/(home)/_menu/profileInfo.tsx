@@ -1,14 +1,19 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { uploadImage } from "@/utils/uploadImage";
 import { FontAwesome } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -16,16 +21,151 @@ import { useTheme } from "../../../contexts/ThemeContext";
 export default function ProfileInfoScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { profile, user, refreshProfile } = useAuth();
   const styles = getStyles(colors, isDark);
   const accentColor = isDark ? "#B8FF00" : colors.blue;
-  const [name, setName] = useState("Marko Petrović");
-  const [email, setEmail] = useState("marko.petrovic@email.com");
-  const [phone, setPhone] = useState("+381 64 123 4567");
-  const [password, setPassword] = useState("••••••••");
-  const [birthDate, setBirthDate] = useState("15.03.1995");
-  const [location, setLocation] = useState("Beograd, Srbija");
+
+  // Current values
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [location, setLocation] = useState("");
+  const [avatar, setAvatar] = useState("https://i.pravatar.cc/150?img=47");
+
+  // Original values for comparison
+  const [originalValues, setOriginalValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    birthDate: "",
+    location: "",
+    avatar: "",
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [avatar] = useState("https://i.pravatar.cc/150?img=47");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      const initialValues = {
+        name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone_number || "",
+        birthDate: profile.birth_date || "",
+        location: profile.location || "",
+        avatar: profile.avatar_url || "https://i.pravatar.cc/150?img=47",
+      };
+
+      setName(initialValues.name);
+      setEmail(initialValues.email);
+      setPhone(initialValues.phone);
+      setBirthDate(initialValues.birthDate);
+      setLocation(initialValues.location);
+      setAvatar(initialValues.avatar);
+      setOriginalValues(initialValues);
+    }
+  }, [profile]);
+
+  // Check if any value has changed
+  const hasChanges =
+    name !== originalValues.name ||
+    email !== originalValues.email ||
+    phone !== originalValues.phone ||
+    birthDate !== originalValues.birthDate ||
+    location !== originalValues.location ||
+    avatar !== originalValues.avatar;
+
+  const handleSaveProfile = async () => {
+    if (!user || !hasChanges) return;
+
+    setIsUpdating(true);
+
+    let finalAvatarUrl = avatar;
+
+    // Upload new avatar if changed and is a local URI (not a URL)
+    if (avatar !== originalValues.avatar && avatar.startsWith("file://")) {
+      const uploadedUrl = await uploadImage(avatar, user.id, "avatars");
+      if (uploadedUrl) {
+        finalAvatarUrl = uploadedUrl;
+      } else {
+        Alert.alert("Upozorenje", "Slika nije uspešno upload-ovana.");
+        setIsUpdating(false);
+        return;
+      }
+    }
+
+    // Update email if changed (requires verification)
+    if (email !== originalValues.email) {
+      const { error: emailError } = await supabase.auth.updateUser({
+        email: email,
+      });
+
+      if (emailError) {
+        Alert.alert(
+          "Greška",
+          "Došlo je do greške pri promeni email-a. Proverite novu email adresu.",
+        );
+        setIsUpdating(false);
+        return;
+      }
+    }
+
+    // Update profile data
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: name,
+        phone_number: phone,
+        birth_date: birthDate || null,
+        location: location,
+        avatar_url: finalAvatarUrl,
+        email: email, // Update email in profiles table too
+      })
+      .eq("id", user.id);
+
+    setIsUpdating(false);
+
+    if (error) {
+      Alert.alert("Greška", "Došlo je do greške pri čuvanju profila.");
+      return;
+    }
+
+    if (email !== originalValues.email) {
+      Alert.alert(
+        "Email promena",
+        "Poslat je email na novu adresu za potvrdu. Molimo proverite inbox.",
+      );
+    } else {
+      Alert.alert("Uspeh", "Profil je uspešno ažuriran.");
+    }
+
+    await refreshProfile();
+  };
+
+  const handlePickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Dozvola potrebna",
+        "Potrebna je dozvola za pristup galeriji.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,7 +182,10 @@ export default function ProfileInfoScreen() {
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <Image source={{ uri: avatar }} style={styles.avatar} />
-          <Pressable style={styles.changeAvatarButton}>
+          <Pressable
+            style={styles.changeAvatarButton}
+            onPress={handlePickImage}
+          >
             <FontAwesome
               name="camera"
               size={16}
@@ -145,29 +288,31 @@ export default function ProfileInfoScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sigurnost</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Lozinka</Text>
-            <View style={styles.inputCard}>
-              <FontAwesome name="lock" size={18} color={colors.textSecondary} />
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                placeholderTextColor={colors.textSecondary}
-              />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
-                <FontAwesome
-                  name={showPassword ? "eye" : "eye-slash"}
-                  size={18}
-                  color={colors.textSecondary}
-                />
-              </Pressable>
+          <Pressable
+            style={styles.changePasswordLink}
+            onPress={() => router.push("/(home)/_menu/changePassword")}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.changePasswordText}>Promeni lozinku</Text>
+              <Text style={styles.changePasswordSubtext}>
+                Kliknite da promenite vašu lozinku
+              </Text>
             </View>
-          </View>
+            <FontAwesome name="chevron-right" size={14} color={accentColor} />
+          </Pressable>
 
-          <Pressable style={styles.changePasswordLink}>
-            <Text style={styles.changePasswordText}>Promeni lozinku</Text>
+          <Pressable
+            style={styles.changePasswordLink}
+            onPress={() => router.push("/(home)/_menu/privacySecurity")}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.changePasswordText}>
+                Privatnost i bezbednost
+              </Text>
+              <Text style={styles.changePasswordSubtext}>
+                Upravljajte privatnošću i sigurnošću naloga
+              </Text>
+            </View>
             <FontAwesome name="chevron-right" size={14} color={accentColor} />
           </Pressable>
         </View>
@@ -179,17 +324,23 @@ export default function ProfileInfoScreen() {
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <FontAwesome name="trophy" size={24} color={accentColor} />
-              <Text style={styles.statValue}>47</Text>
+              <Text style={styles.statValue}>
+                {profile?.matches_played || 0}
+              </Text>
               <Text style={styles.statLabel}>Mečeva</Text>
             </View>
             <View style={styles.statCard}>
               <FontAwesome name="star" size={24} color={accentColor} />
-              <Text style={styles.statValue}>4.5</Text>
+              <Text style={styles.statValue}>
+                {profile?.rating?.toFixed(1) || "0.0"}
+              </Text>
               <Text style={styles.statLabel}>Rejting</Text>
             </View>
             <View style={styles.statCard}>
               <FontAwesome name="percent" size={24} color={accentColor} />
-              <Text style={styles.statValue}>68%</Text>
+              <Text style={styles.statValue}>
+                {profile?.win_rate?.toFixed(0) || "0"}%
+              </Text>
               <Text style={styles.statLabel}>Win rate</Text>
             </View>
           </View>
@@ -198,7 +349,26 @@ export default function ProfileInfoScreen() {
         {/* Danger Zone */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Zona opasnosti</Text>
-          <Pressable style={styles.dangerButton}>
+          <Pressable
+            style={styles.dangerButton}
+            onPress={() => {
+              Alert.alert(
+                "Obriši nalog",
+                "Da li ste sigurni da želite da obrišete nalog? Ova akcija je trajna i ne može se poništiti.",
+                [
+                  {
+                    text: "Otkaži",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Nastavi",
+                    style: "destructive",
+                    onPress: () => router.push("/(home)/_menu/deleteAccount"),
+                  },
+                ],
+              );
+            }}
+          >
             <FontAwesome name="trash" size={16} color="#FF4444" />
             <Text style={styles.dangerButtonText}>Obriši nalog</Text>
           </Pressable>
@@ -209,8 +379,17 @@ export default function ProfileInfoScreen() {
 
       {/* Save Button */}
       <View style={styles.footer}>
-        <Pressable style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Sačuvaj izmene</Text>
+        <Pressable
+          style={[
+            styles.saveButton,
+            (!hasChanges || isUpdating) && styles.saveButtonDisabled,
+          ]}
+          onPress={handleSaveProfile}
+          disabled={!hasChanges || isUpdating}
+        >
+          <Text style={styles.saveButtonText}>
+            {isUpdating ? "Čuvanje..." : "Sačuvaj izmene"}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -312,6 +491,11 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 15,
       fontWeight: "600",
     },
+    changePasswordSubtext: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginTop: 4,
+    },
     statsGrid: {
       flexDirection: "row",
       gap: 12,
@@ -361,6 +545,9 @@ const getStyles = (colors: any, isDark: boolean) =>
       borderRadius: 24,
       paddingVertical: 16,
       alignItems: "center",
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
     },
     saveButtonText: {
       color: isDark ? "#0B0B0B" : "#FFFFFF",

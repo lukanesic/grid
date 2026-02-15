@@ -1,54 +1,130 @@
+import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuHeader, MenuInfoCard } from "../../../components/menu";
 import { useTheme } from "../../../contexts/ThemeContext";
 
-const LOGIN_HISTORY = [
-  {
-    id: "1",
-    device: "iPhone 16 Pro Max",
-    location: "Barcelona, Spain",
-    ip: "85.223.44.191",
-    time: "Danas, 21:54",
-    current: true,
-  },
-  {
-    id: "2",
-    device: "MacBook Pro (Safari)",
-    location: "Barcelona, Spain",
-    ip: "85.223.44.191",
-    time: "Danas, 18:11",
-    current: false,
-  },
-  {
-    id: "3",
-    device: "iPhone 14 (App)",
-    location: "Madrid, Spain",
-    ip: "185.121.8.72",
-    time: "Juče, 09:42",
-    current: false,
-  },
-  {
-    id: "4",
-    device: "Windows Chrome",
-    location: "Valencia, Spain",
-    ip: "91.77.18.14",
-    time: "Pre 3 dana, 22:07",
-    current: false,
-  },
-];
+interface LoginHistoryItem {
+  logged_at: string;
+  ip_address: string;
+  action: string;
+  device_info: string;
+}
 
 export default function LoginHistoryScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const [sessions, setSessions] = useState(LOGIN_HISTORY);
+  const accentColor = isDark ? "#B8FF00" : colors.blue;
 
-  const handleSignOutOtherSessions = () => {
-    setSessions((prev) => prev.filter((session) => session.current));
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<LoginHistoryItem[]>([]);
+
+  useEffect(() => {
+    loadLoginHistory();
+  }, []);
+
+  const loadLoginHistory = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("get_login_history", {
+        limit_count: 50,
+      });
+
+      if (error) {
+        console.error("Login history error:", error);
+        Alert.alert("Greška", "Nije moguće učitati istoriju prijavljivanja");
+      } else {
+        setHistory(data || []);
+      }
+    } catch (err) {
+      console.error("Login history exception:", err);
+      Alert.alert("Greška", "Došlo je do problema pri učitavanju podataka");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Upravo";
+    if (diffMins < 60) return `Pre ${diffMins} min`;
+    if (diffHours < 24) return `Pre ${diffHours}h`;
+    if (diffDays < 7) return `Pre ${diffDays}d`;
+
+    return date.toLocaleDateString("sr-RS", {
+      day: "numeric",
+      month: "short",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("sr-RS", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getActionText = (action: string) => {
+    switch (action) {
+      case "login":
+        return "Prijavljivanje";
+      case "logout":
+        return "Odjavljivanje";
+      case "token_refreshed":
+        return "Sesija osvežena";
+      default:
+        return action;
+    }
+  };
+
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case "login":
+        return "sign-in";
+      case "logout":
+        return "sign-out";
+      case "token_refreshed":
+        return "refresh";
+      default:
+        return "circle";
+    }
+  };
+
+  const getDeviceIcon = (deviceInfo: string) => {
+    const lower = deviceInfo.toLowerCase();
+    if (lower.includes("iphone") || lower.includes("ios")) return "apple";
+    if (lower.includes("android")) return "android";
+    if (lower.includes("windows")) return "windows";
+    if (lower.includes("mac")) return "apple";
+    return "mobile";
+  };
+
+  const parseDeviceInfo = (deviceInfo: string) => {
+    try {
+      const data = JSON.parse(deviceInfo);
+      return data.device || "Nepoznat uređaj";
+    } catch {
+      return deviceInfo || "Nepoznat uređaj";
+    }
   };
 
   return (
@@ -58,73 +134,96 @@ export default function LoginHistoryScreen() {
         onBack={() => router.back()}
       />
 
-      <View style={styles.content}>
-        <MenuInfoCard
-          icon="shield"
-          text="Ako primetiš nepoznatu prijavu, odmah promeni lozinku i isključi aktivne sesije."
-        />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={accentColor} />
+          <Text style={styles.loadingText}>Učitavanje...</Text>
+        </View>
+      ) : (
+        <View style={styles.content}>
+          <MenuInfoCard
+            icon="shield"
+            text="Istorija prijavljivanja prikazuje nedavne prijave na vaš nalog. Ako primetite nepoznatu prijavu, odmah promenite lozinku."
+          />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {sessions.map((session) => (
-            <View key={session.id} style={styles.sessionCard}>
-              <View style={styles.sessionTop}>
-                <View style={styles.sessionTitleWrap}>
-                  <Text style={styles.sessionDevice}>{session.device}</Text>
-                  {session.current && (
-                    <View style={styles.currentBadge}>
-                      <Text style={styles.currentBadgeText}>Trenutna</Text>
-                    </View>
-                  )}
-                </View>
-                <FontAwesome
-                  name="check-circle"
-                  size={16}
-                  color={session.current ? colors.blue : colors.textSecondary}
-                />
-              </View>
-
-              <View style={styles.row}>
-                <FontAwesome
-                  name="map-marker"
-                  size={14}
-                  color={colors.textSecondary}
-                />
-                <Text style={styles.metaText}>{session.location}</Text>
-              </View>
-
-              <View style={styles.row}>
-                <FontAwesome
-                  name="globe"
-                  size={14}
-                  color={colors.textSecondary}
-                />
-                <Text style={styles.metaText}>IP: {session.ip}</Text>
-              </View>
-
-              <View style={styles.row}>
-                <FontAwesome
-                  name="clock-o"
-                  size={14}
-                  color={colors.textSecondary}
-                />
-                <Text style={styles.metaText}>{session.time}</Text>
-              </View>
+          {history.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <FontAwesome
+                name="history"
+                size={48}
+                color={colors.textSecondary}
+                style={{ opacity: 0.3 }}
+              />
+              <Text style={styles.emptyTitle}>Nema istorije</Text>
+              <Text style={styles.emptyDescription}>
+                Istorija prijavljivanja će se prikazati ovde
+              </Text>
             </View>
-          ))}
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
+              {history.map((item, index) => (
+                <View key={index} style={styles.sessionCard}>
+                  <View style={styles.sessionTop}>
+                    <View style={styles.sessionTitleWrap}>
+                      <FontAwesome
+                        name={getActionIcon(item.action)}
+                        size={16}
+                        color={
+                          item.action === "login"
+                            ? accentColor
+                            : colors.textSecondary
+                        }
+                      />
+                      <Text style={styles.sessionDevice}>
+                        {getActionText(item.action)}
+                      </Text>
+                    </View>
+                    <Text style={styles.timeText}>
+                      {formatDate(item.logged_at)}
+                    </Text>
+                  </View>
 
-          <Pressable
-            style={styles.signOutOthersButton}
-            onPress={handleSignOutOtherSessions}
-          >
-            <FontAwesome name="sign-out" size={14} color="#FFFFFF" />
-            <Text style={styles.signOutOthersButtonText}>
-              Odjavi sve ostale sesije
-            </Text>
-          </Pressable>
+                  <View style={styles.row}>
+                    <FontAwesome
+                      name={getDeviceIcon(item.device_info)}
+                      size={14}
+                      color={colors.textSecondary}
+                    />
+                    <Text style={styles.metaText}>
+                      {parseDeviceInfo(item.device_info)}
+                    </Text>
+                  </View>
 
-          <View style={{ height: 16 }} />
-        </ScrollView>
-      </View>
+                  <View style={styles.row}>
+                    <FontAwesome
+                      name="map-marker"
+                      size={14}
+                      color={colors.textSecondary}
+                    />
+                    <Text style={styles.metaText}>
+                      {item.ip_address || "Nepoznata lokacija"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.row}>
+                    <FontAwesome
+                      name="clock-o"
+                      size={14}
+                      color={colors.textSecondary}
+                    />
+                    <Text style={styles.metaText}>
+                      {formatTime(item.logged_at)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -135,9 +234,39 @@ const getStyles = (colors: any, isDark: boolean) =>
       flex: 1,
       backgroundColor: colors.background,
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 12,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
     content: {
       flex: 1,
       paddingHorizontal: 20,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 40,
+      gap: 12,
+      marginTop: 60,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: colors.text,
+      marginTop: 16,
+    },
+    emptyDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 20,
     },
     sessionCard: {
       backgroundColor: isDark ? "#121418" : colors.surface,
@@ -165,18 +294,9 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontWeight: "700",
       flexShrink: 1,
     },
-    currentBadge: {
-      backgroundColor: isDark
-        ? "rgba(184,255,0,0.15)"
-        : "rgba(56,103,255,0.12)",
-      borderRadius: 10,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    currentBadgeText: {
-      color: isDark ? "#B8FF00" : colors.blue,
-      fontSize: 11,
-      fontWeight: "700",
+    timeText: {
+      color: colors.textSecondary,
+      fontSize: 13,
     },
     row: {
       flexDirection: "row",
@@ -186,21 +306,5 @@ const getStyles = (colors: any, isDark: boolean) =>
     metaText: {
       color: colors.textSecondary,
       fontSize: 13,
-    },
-    signOutOthersButton: {
-      marginTop: 8,
-      marginBottom: 4,
-      backgroundColor: "#FF3B30",
-      borderRadius: 12,
-      paddingVertical: 12,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-    },
-    signOutOthersButtonText: {
-      color: "#FFFFFF",
-      fontSize: 14,
-      fontWeight: "700",
     },
   });

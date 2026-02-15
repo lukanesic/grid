@@ -1,7 +1,11 @@
+import { supabase } from "@/lib/supabase";
+import { BlockedUser } from "@/types/blockedUser";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     Image,
     Pressable,
     ScrollView,
@@ -12,26 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuHeader, MenuInfoCard } from "../../../components/menu";
-import { SUGGESTED_USERS } from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
-
-const INITIAL_BLOCKED_USERS = [
-  {
-    id: 2,
-    reason: "Neželjene poruke",
-    blockedAt: "Pre 2 dana",
-  },
-  {
-    id: 4,
-    reason: "Spam sadržaj",
-    blockedAt: "Pre 1 nedelje",
-  },
-  {
-    id: 5,
-    reason: "Neprimerena komunikacija",
-    blockedAt: "Pre 3 nedelje",
-  },
-];
 
 export default function BlockedUsersScreen() {
   const router = useRouter();
@@ -39,37 +24,93 @@ export default function BlockedUsersScreen() {
   const styles = getStyles(colors, isDark);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [blockedUsers, setBlockedUsers] = useState(INITIAL_BLOCKED_USERS);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadBlockedUsers();
+  }, []);
+
+  const loadBlockedUsers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.rpc("get_blocked_users");
+
+      if (error) throw error;
+      setBlockedUsers(data || []);
+    } catch (error) {
+      console.error("Error loading blocked users:", error);
+      Alert.alert("Greška", "Nije moguće učitati blokirane korisnike");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTimeLabel = (blockedAt: string): string => {
+    const now = new Date();
+    const blocked = new Date(blockedAt);
+    const diffMs = now.getTime() - blocked.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+
+    if (diffDays < 1) return "Danas";
+    if (diffDays === 1) return "Pre 1 dan";
+    if (diffDays < 7) return `Pre ${diffDays} dana`;
+    if (diffWeeks === 1) return "Pre 1 nedelju";
+    if (diffWeeks < 4) return `Pre ${diffWeeks} nedelje`;
+    if (diffMonths === 1) return "Pre 1 mesec";
+    return `Pre ${diffMonths} meseci`;
+  };
 
   const blockedList = useMemo(() => {
-    return blockedUsers
-      .map((blocked) => {
-        const user = SUGGESTED_USERS.find((item) => item.id === blocked.id);
-        if (!user) {
-          return null;
-        }
+    return blockedUsers.filter((item) => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
 
-        return {
-          ...blocked,
-          ...user,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .filter((item) => {
-        const query = searchQuery.trim().toLowerCase();
-        if (!query) {
-          return true;
-        }
-
-        return (
-          item.name.toLowerCase().includes(query) ||
-          item.subtitle.toLowerCase().includes(query)
-        );
-      });
+      return (
+        item.blocked_user_name?.toLowerCase().includes(query) ||
+        item.reason?.toLowerCase().includes(query)
+      );
+    });
   }, [blockedUsers, searchQuery]);
 
-  const handleUnblock = (userId: number) => {
-    setBlockedUsers((prev) => prev.filter((item) => item.id !== userId));
+  const handleUnblock = async (userId: string) => {
+    Alert.alert(
+      "Odblokiraj korisnika",
+      "Da li si siguran da želiš da odblokiraš ovog korisnika?",
+      [
+        { text: "Otkaži", style: "cancel" },
+        {
+          text: "Odblokiraj",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const { data, error } = await supabase.rpc("unblock_user", {
+                target_user_id: userId,
+              });
+
+              if (error) throw error;
+
+              if (data.success) {
+                setBlockedUsers((prev) =>
+                  prev.filter((item) => item.blocked_user_id !== userId),
+                );
+                Alert.alert("Uspešno", "Korisnik je odblokiran");
+              } else {
+                Alert.alert(
+                  "Greška",
+                  data.error || "Nije moguće odblokirti korisnika",
+                );
+              }
+            } catch (error) {
+              console.error("Error unblocking user:", error);
+              Alert.alert("Greška", "Nije moguće odblokirti korisnika");
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -102,42 +143,69 @@ export default function BlockedUsersScreen() {
           text="Blokirani korisnici ne mogu da ti šalju poruke niti vide tvoj online status."
         />
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {blockedList.map((user) => (
-            <View key={user.id} style={styles.userCard}>
-              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {blockedList.map((user) => (
+              <View key={user.id} style={styles.userCard}>
+                {user.blocked_user_avatar ? (
+                  <Image
+                    source={{ uri: user.blocked_user_avatar }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                    <Text style={styles.avatarInitials}>
+                      {user.blocked_user_name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase() || "?"}
+                    </Text>
+                  </View>
+                )}
 
-              <View style={styles.userText}>
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userMeta}>{user.reason}</Text>
-                <Text style={styles.userMetaSmall}>{user.blockedAt}</Text>
+                <View style={styles.userText}>
+                  <Text style={styles.userName}>
+                    {user.blocked_user_name || "Nepoznato"}
+                  </Text>
+                  {user.reason && (
+                    <Text style={styles.userMeta}>{user.reason}</Text>
+                  )}
+                  <Text style={styles.userMetaSmall}>
+                    {getTimeLabel(user.blocked_at)}
+                  </Text>
+                </View>
+
+                <Pressable
+                  style={styles.unblockButton}
+                  onPress={() => handleUnblock(user.blocked_user_id)}
+                >
+                  <Text style={styles.unblockButtonText}>Odblokiraj</Text>
+                </Pressable>
               </View>
+            ))}
 
-              <Pressable
-                style={styles.unblockButton}
-                onPress={() => handleUnblock(user.id)}
-              >
-                <Text style={styles.unblockButtonText}>Odblokiraj</Text>
-              </Pressable>
-            </View>
-          ))}
+            {blockedList.length === 0 && !loading && (
+              <View style={styles.emptyState}>
+                <FontAwesome
+                  name="check-circle"
+                  size={30}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.emptyTitle}>Nema blokiranih korisnika</Text>
+                <Text style={styles.emptySubtitle}>
+                  Trenutno nema korisnika na tvojoj block listi.
+                </Text>
+              </View>
+            )}
 
-          {blockedList.length === 0 && (
-            <View style={styles.emptyState}>
-              <FontAwesome
-                name="check-circle"
-                size={30}
-                color={colors.textSecondary}
-              />
-              <Text style={styles.emptyTitle}>Nema blokiranih korisnika</Text>
-              <Text style={styles.emptySubtitle}>
-                Trenutno nema korisnika na tvojoj block listi.
-              </Text>
-            </View>
-          )}
-
-          <View style={{ height: 20 }} />
-        </ScrollView>
+            <View style={{ height: 20 }} />
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -181,6 +249,22 @@ const getStyles = (colors: any, isDark: boolean) =>
       width: 52,
       height: 52,
       borderRadius: 26,
+    },
+    avatarPlaceholder: {
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    avatarInitials: {
+      color: "#FFFFFF",
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 100,
     },
     userText: {
       flex: 1,

@@ -1,34 +1,24 @@
+import { supabase } from "@/lib/supabase";
+import { Message } from "@/types/chat";
 import { FontAwesome } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    FlatList,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-    CHAT_MESSAGES,
-    OLDER_CHAT_MESSAGES,
-    SUGGESTED_USERS,
-} from "../../constants/data";
-import { useChats } from "../../contexts/ChatContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-
-interface Message {
-  id: string;
-  text: string;
-  timestamp: string;
-  isMine: boolean;
-  status?: "sent" | "delivered" | "read";
-}
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -36,152 +26,250 @@ export default function ChatScreen() {
   const styles = getStyles(colors, isDark);
   const pendingStatusColor = isDark ? colors.textSecondary : "#C3C9D3";
   const readStatusColor = isDark ? colors.blue : colors.accent;
-  const { id, name, avatar, isOnline, isGroup, groupAvatars, members } =
-    useLocalSearchParams();
-  const { chats } = useChats();
+  const { chatId, otherUserId, name, avatar } = useLocalSearchParams();
+  const { profile } = useAuth();
   const [inputText, setInputText] = useState("");
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
-  const [messages, setMessages] = useState<Message[]>(CHAT_MESSAGES);
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
-  // Get current chat from context to get live member count
-  const currentChat = chats.find((chat) => chat.id === parseInt(id as string));
-  const memberIds = currentChat?.members || [];
-  const actualMembers = SUGGESTED_USERS.filter((user) =>
-    memberIds.includes(user.id),
-  );
-  const memberCount = actualMembers.length;
+  // Convert params to strings
+  const avatarUrl = Array.isArray(avatar) ? avatar[0] : avatar;
+  const userName = Array.isArray(name) ? name[0] : name;
 
-  const handleGroupInfoPress = () => {
-    if (isGroup === "true") {
-      router.push({
-        pathname: "/(home)/groupInfo",
-        params: {
-          chatId: id || "",
-          name: name || "",
-          groupAvatars: groupAvatars || "",
-          members: members || "",
+  useEffect(() => {
+    if (chatId && typeof chatId === "string") {
+      setMessages([]);
+      setOffset(0);
+      setHasMore(true);
+      loadMessages(chatId, 0);
+      markChatAsRead(chatId);
+    }
+  }, [chatId]);
+
+  // Reload messages when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (chatId && typeof chatId === "string") {
+        setMessages([]);
+        setOffset(0);
+        setHasMore(true);
+        loadMessages(chatId, 0);
+        markChatAsRead(chatId);
+      }
+    }, [chatId]),
+  );
+
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!chatId || typeof chatId !== "string") return;
+
+    const channel = supabase
+      .channel(`chat-${chatId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${chatId}`,
         },
+        (payload) => {
+          console.log("📨 New message received in real-time!");
+          const newMessage = {
+            message_id: payload.new.id,
+            sender_id: payload.new.sender_id,
+            sender_name: null,
+            sender_avatar: null,
+            content: payload.new.content,
+            is_read: payload.new.is_read,
+            created_at: payload.new.created_at,
+          };
+          // Add new message at the beginning (DESC order) only if it doesn't exist
+          setMessages((prev) => {
+            const exists = prev.some(
+              (msg) => msg.message_id === newMessage.message_id,
+            );
+            if (exists) return prev;
+            setOffset((prevOffset) => prevOffset + 1);
+            return [newMessage as Message, ...prev];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId]);
+
+  const loadMessages = async (chatIdParam: string, currentOffset: number) => {
+    try {
+      const { data, error } = await supabase.rpc("get_chat_messages", {
+        p_chat_id: chatIdParam,
+        page_limit: 10,
+        page_offset: currentOffset,
       });
+
+      if (error) throw error;
+
+      const newMessages = data || [];
+      if (newMessages.length < 10) {
+        setHasMore(false);
+      }
+
+      if (currentOffset === 0) {
+        // First load: messages are in DESC order (newest first)
+        setMessages(newMessages);
+      } else {
+        // Load more: append older messages to the end
+        setMessages((prev) => [...prev, ...newMessages]);
+      }
+
+      setOffset(currentOffset + newMessages.length);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const loadMoreMessages = () => {
-    if (isLoadingMore || !hasMoreMessages) return;
+  const loadMoreMessages = async () => {
+    if (!hasMore || loadingMore || loading) return;
 
-    setIsLoadingMore(true);
-
-    // Simulate loading older messages
-    setTimeout(() => {
-      setMessages([...OLDER_CHAT_MESSAGES, ...messages]);
-      setIsLoadingMore(false);
-
-      // After 2 loads, no more messages
-      if (messages.length > 30) {
-        setHasMoreMessages(false);
-      }
-    }, 1000);
+    setLoadingMore(true);
+    if (chatId && typeof chatId === "string") {
+      await loadMessages(chatId, offset);
+    }
   };
 
-  const handleSend = () => {
-    if (inputText.trim() === "") return;
+  const markChatAsRead = async (chatIdParam: string) => {
+    try {
+      const { error } = await supabase.rpc("mark_chat_as_read", {
+        p_chat_id: chatIdParam,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error marking chat as read:", error);
+    }
+  };
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      timestamp: new Date().toLocaleTimeString("sr-RS", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      isMine: true,
-      status: "sent",
-    };
+  const handleSend = async () => {
+    if (inputText.trim() === "" || !chatId || typeof chatId !== "string")
+      return;
 
-    setMessages([...messages, newMessage]);
+    const messageContent = inputText.trim();
     setInputText("");
+
+    try {
+      const { data, error } = await supabase.rpc("send_message", {
+        p_chat_id: chatId,
+        p_content: messageContent,
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        // Message will be added via real-time subscription
+        console.log("✅ Message sent successfully");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setInputText(messageContent); // Restore message on error
+    }
+  };
+
+  const getTimeLabel = (timestamp: string): string => {
+    const messageDate = new Date(timestamp);
+    return messageDate.toLocaleTimeString("sr-RS", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleChatOptions = () => {
+    router.push({
+      pathname: "/(home)/chatInfo",
+      params: {
+        chatId: chatId,
+        otherUserId: otherUserId,
+        name: userName || "Unknown",
+        avatar: avatarUrl || "https://i.pravatar.cc/150?img=1",
+      },
+    });
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
+    const isMine = item.sender_id === profile?.id;
+
     return (
       <View
         style={[
           styles.messageContainer,
-          item.isMine
-            ? styles.myMessageContainer
-            : styles.theirMessageContainer,
+          isMine ? styles.myMessageContainer : styles.theirMessageContainer,
         ]}
       >
-        {!item.isMine && (
+        {!isMine && (
           <Image
-            source={{ uri: avatar as string }}
+            source={{
+              uri:
+                item.sender_avatar ||
+                avatarUrl ||
+                "https://i.pravatar.cc/150?img=1",
+            }}
             style={styles.messageAvatar}
           />
         )}
         <View
           style={[
             styles.messageBubble,
-            item.isMine ? styles.myMessageBubble : styles.theirMessageBubble,
+            isMine ? styles.myMessageBubble : styles.theirMessageBubble,
           ]}
         >
           <Text
             style={[
               styles.messageText,
-              item.isMine ? styles.myMessageText : styles.theirMessageText,
+              isMine ? styles.myMessageText : styles.theirMessageText,
             ]}
           >
-            {item.text}
+            {item.content}
           </Text>
           <View style={styles.messageFooter}>
             <Text
               style={[
                 styles.timestamp,
-                item.isMine ? styles.myTimestamp : styles.theirTimestamp,
+                isMine ? styles.myTimestamp : styles.theirTimestamp,
               ]}
             >
-              {item.timestamp}
+              {getTimeLabel(item.created_at)}
             </Text>
-            {item.isMine && item.status && (
+            {isMine && (
               <View style={styles.statusIcon}>
-                {item.status === "sent" && (
+                {item.is_read ? (
+                  <View style={styles.doubleCheck}>
+                    <FontAwesome
+                      name="check"
+                      size={12}
+                      color={readStatusColor}
+                      style={styles.checkIcon}
+                    />
+                    <FontAwesome
+                      name="check"
+                      size={12}
+                      color={readStatusColor}
+                      style={styles.checkIcon2}
+                    />
+                  </View>
+                ) : (
                   <FontAwesome
                     name="check"
                     size={12}
                     color={pendingStatusColor}
                   />
-                )}
-                {item.status === "delivered" && (
-                  <View style={styles.doubleCheck}>
-                    <FontAwesome
-                      name="check"
-                      size={12}
-                      color={pendingStatusColor}
-                      style={styles.checkIcon}
-                    />
-                    <FontAwesome
-                      name="check"
-                      size={12}
-                      color={pendingStatusColor}
-                      style={styles.checkIcon2}
-                    />
-                  </View>
-                )}
-                {item.status === "read" && (
-                  <View style={styles.doubleCheck}>
-                    <FontAwesome
-                      name="check"
-                      size={12}
-                      color={readStatusColor}
-                      style={styles.checkIcon}
-                    />
-                    <FontAwesome
-                      name="check"
-                      size={12}
-                      color={readStatusColor}
-                      style={styles.checkIcon2}
-                    />
-                  </View>
                 )}
               </View>
             )}
@@ -209,75 +297,72 @@ export default function ChatScreen() {
 
           <TouchableOpacity
             style={styles.headerCenter}
-            onPress={handleGroupInfoPress}
-            disabled={isGroup !== "true"}
+            onPress={handleChatOptions}
           >
             <View style={styles.avatarContainer}>
-              {isGroup === "true" &&
-              groupAvatars &&
-              (groupAvatars as string).split(",").length >= 2 ? (
-                <View style={styles.groupAvatarContainer}>
-                  <Image
-                    source={{ uri: (groupAvatars as string).split(",")[0] }}
-                    style={styles.groupAvatar1}
-                  />
-                  <Image
-                    source={{ uri: (groupAvatars as string).split(",")[1] }}
-                    style={styles.groupAvatar2}
-                  />
-                </View>
-              ) : (
-                <>
-                  <Image
-                    source={{ uri: avatar as string }}
-                    style={styles.headerAvatar}
-                  />
-                  {isOnline === "true" && (
-                    <View style={styles.onlineIndicator} />
-                  )}
-                </>
-              )}
+              <Image
+                source={{
+                  uri: avatarUrl || "https://i.pravatar.cc/150?img=1",
+                }}
+                style={styles.headerAvatar}
+              />
             </View>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.headerName}>{name}</Text>
-              <Text style={styles.headerStatus}>
-                {isGroup === "true" && memberCount > 0
-                  ? `${memberCount} ${memberCount === 1 ? "član" : "članova"}`
-                  : isOnline === "true"
-                    ? "Online"
-                    : "Offline"}
-              </Text>
+              <Text style={styles.headerName}>{userName || "Unknown"}</Text>
             </View>
           </TouchableOpacity>
 
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerButton}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={handleChatOptions}
+            >
               <FontAwesome name="ellipsis-v" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Messages List */}
-        <FlatList
-          ref={flatListRef}
-          data={[...messages].reverse()}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          inverted
-          onEndReached={loadMoreMessages}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            isLoadingMore ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Učitavanje...</Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.message_id}
+            contentContainerStyle={styles.messagesList}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+            inverted
+            onEndReached={loadMoreMessages}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.loadingMoreContainer}>
+                  <ActivityIndicator
+                    size="small"
+                    color={colors.textSecondary}
+                  />
+                </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <FontAwesome
+                  name="comments-o"
+                  size={48}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.emptyText}>Nema poruka</Text>
+                <Text style={styles.emptySubtext}>Pošaljite prvu poruku</Text>
               </View>
-            ) : null
-          }
-        />
+            }
+          />
+        )}
 
         {/* Input Area */}
         <View style={styles.inputContainer}>
@@ -354,46 +439,10 @@ const getStyles = (colors: any, isDark: boolean) =>
     avatarContainer: {
       position: "relative",
     },
-    groupAvatarContainer: {
-      width: 40,
-      height: 40,
-      position: "relative",
-    },
-    groupAvatar1: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      position: "absolute",
-      top: 0,
-      left: 0,
-      borderWidth: 2,
-      borderColor: colors.background,
-    },
-    groupAvatar2: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      position: "absolute",
-      bottom: 0,
-      right: 0,
-      borderWidth: 2,
-      borderColor: colors.background,
-    },
     headerAvatar: {
       width: 40,
       height: 40,
       borderRadius: 20,
-    },
-    onlineIndicator: {
-      position: "absolute",
-      bottom: 0,
-      right: 0,
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      backgroundColor: colors.accent,
-      borderWidth: 2,
-      borderColor: colors.background,
     },
     headerTextContainer: {
       marginLeft: 12,
@@ -404,11 +453,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 16,
       fontWeight: "600",
     },
-    headerStatus: {
-      color: colors.text,
-      fontSize: 12,
-      marginTop: 2,
-    },
     headerActions: {
       flexDirection: "row",
       alignItems: "center",
@@ -416,6 +460,11 @@ const getStyles = (colors: any, isDark: boolean) =>
     },
     headerButton: {
       padding: 4,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
     },
     messagesList: {
       paddingHorizontal: 16,
@@ -477,7 +526,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       opacity: 0.6,
     },
     theirTimestamp: {
-      color: colors.text,
+      color: colors.textSecondary,
     },
     statusIcon: {
       marginLeft: 2,
@@ -543,12 +592,26 @@ const getStyles = (colors: any, isDark: boolean) =>
     sendButtonDisabled: {
       backgroundColor: colors.surface,
     },
-    loadingContainer: {
-      paddingVertical: 16,
+    emptyContainer: {
+      flex: 1,
       alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 60,
     },
-    loadingText: {
+    emptyText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+      marginTop: 16,
+    },
+    emptySubtext: {
       color: colors.textSecondary,
       fontSize: 14,
+      marginTop: 8,
+    },
+    loadingMoreContainer: {
+      paddingVertical: 16,
+      alignItems: "center",
+      justifyContent: "center",
     },
   });

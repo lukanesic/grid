@@ -1,21 +1,28 @@
+import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SUGGESTED_USERS } from "../../constants/data";
-import { useChats } from "../../contexts/ChatContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+
+interface FollowingUser {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -25,15 +32,23 @@ export default function NewChatScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
-  const { addChat, chats } = useChats();
+  const { profile } = useAuth();
   const [currentView, setCurrentView] = useState<ViewState>("options");
   const [groupName, setGroupName] = useState("");
   const [optionsSearchQuery, setOptionsSearchQuery] = useState("");
   const [newChatSearchQuery, setNewChatSearchQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<FollowingUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (profile?.id) {
+      loadFollowingUsers();
+    }
+  }, [profile?.id]);
 
   useEffect(() => {
     const toValue =
@@ -45,6 +60,24 @@ export default function NewChatScreen() {
     }).start();
   }, [currentView, slideAnim]);
 
+  const loadFollowingUsers = async () => {
+    if (!profile?.id) return;
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.rpc("get_following_list", {
+        target_user_id: profile.id,
+      });
+
+      if (error) throw error;
+      setFollowingUsers((data || []).slice(0, 10));
+    } catch (error) {
+      console.error("Error loading following users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNewChat = () => {
     setCurrentView("newChat");
   };
@@ -53,7 +86,7 @@ export default function NewChatScreen() {
     setCurrentView("groupChat");
   };
 
-  const toggleUserSelection = (userId: number) => {
+  const toggleUserSelection = (userId: string) => {
     setSelectedUsers((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
@@ -76,105 +109,45 @@ export default function NewChatScreen() {
   };
 
   const handleNext = () => {
-    if (selectedUsers.length === 0) return;
-
-    // Get selected user details
-    const selectedUsersData = SUGGESTED_USERS.filter((user) =>
-      selectedUsers.includes(user.id),
-    );
-
-    // Generate group name if not provided
-    const finalGroupName =
-      groupName.trim() ||
-      selectedUsersData.map((u) => u.name.split(" ")[0]).join(", ");
-
-    // Create group chat avatars (first two users)
-    const groupAvatar =
-      selectedUsersData[0]?.avatar || "https://i.pravatar.cc/150?img=1";
-    const groupAvatars = selectedUsersData.slice(0, 2).map((u) => u.avatar);
-
-    // Get current time
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const time = `${hours}:${minutes}`;
-
-    // Create new group chat
-    const newGroupChat = {
-      name: finalGroupName,
-      message: "Grupa je kreirana",
-      time,
-      avatar: groupAvatar,
-      isOnline: false,
-      isGroup: true,
-      members: selectedUsers,
-      groupAvatars,
-      unreadCount: 0,
-      isRead: false,
-    };
-
-    addChat(newGroupChat);
-
-    // Close modal and return to inbox where the new group chat is visible
+    // TODO: Implement group chat creation with database
+    // For now, just go back
     router.back();
   };
 
-  const handleUserSelect = (user: any) => {
-    // Check if chat already exists
-    const existingChat = chats.find(
-      (chat) => !chat.isGroup && chat.name === user.name,
-    );
-
-    if (!existingChat) {
-      // Get current time
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, "0");
-      const minutes = now.getMinutes().toString().padStart(2, "0");
-      const time = `${hours}:${minutes}`;
-
-      // Create new individual chat
-      addChat({
-        name: user.name,
-        message: "Započet chat",
-        time,
-        avatar: user.avatar,
-        isOnline: Math.random() > 0.5,
-        isGroup: false,
-        unreadCount: 0,
-        isRead: false,
+  const handleUserSelect = async (user: FollowingUser) => {
+    try {
+      // Get or create chat with this user
+      const { data: chatId, error } = await supabase.rpc("get_or_create_chat", {
+        other_user_id: user.user_id,
       });
-    }
 
-    // Reset search and navigate to chat
-    setNewChatSearchQuery("");
-    setCurrentView("options");
-    router.back();
+      if (error) throw error;
 
-    // Navigate to chat after a small delay to allow modal to close
-    setTimeout(() => {
+      // Navigate to chat screen
       router.push({
         pathname: "/(home)/chat",
         params: {
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
-          isOnline: "false",
-          isGroup: "false",
+          chatId: chatId,
+          otherUserId: user.user_id,
+          name: user.full_name || "Unknown",
+          avatar: user.avatar_url || "https://i.pravatar.cc/150?img=1",
         },
       });
-    }, 100);
+    } catch (error) {
+      console.error("Error opening chat:", error);
+    }
   };
 
-  const filteredOptionsUsers = SUGGESTED_USERS.filter((user) =>
-    user.name.toLowerCase().includes(optionsSearchQuery.toLowerCase()),
+  const filteredOptionsUsers = followingUsers.filter((user) =>
+    user.full_name?.toLowerCase().includes(optionsSearchQuery.toLowerCase()),
   );
 
-  const filteredNewChatUsers = SUGGESTED_USERS.filter((user) =>
-    user.name.toLowerCase().includes(newChatSearchQuery.toLowerCase()),
+  const filteredNewChatUsers = followingUsers.filter((user) =>
+    user.full_name?.toLowerCase().includes(newChatSearchQuery.toLowerCase()),
   );
 
-  const filteredGroupUsers = SUGGESTED_USERS.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredGroupUsers = followingUsers.filter((user) =>
+    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const optionsTranslateX = slideAnim.interpolate({
@@ -285,29 +258,49 @@ export default function NewChatScreen() {
           <View style={styles.suggestedSection}>
             <Text style={styles.sectionTitle}>Predloženi</Text>
 
-            {filteredOptionsUsers.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                style={styles.userItem}
-                onPress={() => handleUserSelect(user)}
-              >
-                <Image
-                  source={{ uri: user.avatar }}
-                  style={styles.userAvatar}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user.name}</Text>
-                  <Text style={styles.userSubtitle}>{user.subtitle}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-
-            {filteredOptionsUsers.length === 0 && (
+            {loading && (
               <View style={styles.emptyContainer}>
-                <FontAwesome name="search" size={48} color="#5E5E5E" />
-                <Text style={styles.emptyText}>Nema pronađenih korisnika</Text>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.emptyText}>Učitavanje...</Text>
               </View>
             )}
+
+            {!loading && followingUsers.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome name="users" size={48} color="#5E5E5E" />
+                <Text style={styles.emptyText}>Ne pratite nijednog igrača</Text>
+              </View>
+            )}
+
+            {!loading &&
+              filteredOptionsUsers.map((user) => (
+                <TouchableOpacity
+                  key={user.user_id}
+                  style={styles.userItem}
+                  onPress={() => handleUserSelect(user)}
+                >
+                  <Image
+                    source={{
+                      uri: user.avatar_url || "https://i.pravatar.cc/150?img=1",
+                    }}
+                    style={styles.userAvatar}
+                  />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{user.full_name}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+
+            {!loading &&
+              filteredOptionsUsers.length === 0 &&
+              followingUsers.length > 0 && (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome name="search" size={48} color="#5E5E5E" />
+                  <Text style={styles.emptyText}>
+                    Nema pronađenih korisnika
+                  </Text>
+                </View>
+              )}
           </View>
         </ScrollView>
       </Animated.View>
@@ -364,29 +357,49 @@ export default function NewChatScreen() {
           <View style={styles.suggestedSection}>
             <Text style={styles.sectionTitle}>Kontakti</Text>
 
-            {filteredNewChatUsers.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                style={styles.userItem}
-                onPress={() => handleUserSelect(user)}
-              >
-                <Image
-                  source={{ uri: user.avatar }}
-                  style={styles.userAvatar}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user.name}</Text>
-                  <Text style={styles.userSubtitle}>{user.subtitle}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-
-            {filteredNewChatUsers.length === 0 && (
+            {loading && (
               <View style={styles.emptyContainer}>
-                <FontAwesome name="search" size={48} color="#5E5E5E" />
-                <Text style={styles.emptyText}>Nema pronađenih korisnika</Text>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.emptyText}>Učitavanje...</Text>
               </View>
             )}
+
+            {!loading && followingUsers.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome name="users" size={48} color="#5E5E5E" />
+                <Text style={styles.emptyText}>Ne pratite nijednog igrača</Text>
+              </View>
+            )}
+
+            {!loading &&
+              filteredNewChatUsers.map((user) => (
+                <TouchableOpacity
+                  key={user.user_id}
+                  style={styles.userItem}
+                  onPress={() => handleUserSelect(user)}
+                >
+                  <Image
+                    source={{
+                      uri: user.avatar_url || "https://i.pravatar.cc/150?img=1",
+                    }}
+                    style={styles.userAvatar}
+                  />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{user.full_name}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+
+            {!loading &&
+              filteredNewChatUsers.length === 0 &&
+              followingUsers.length > 0 && (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome name="search" size={48} color="#5E5E5E" />
+                  <Text style={styles.emptyText}>
+                    Nema pronađenih korisnika
+                  </Text>
+                </View>
+              )}
           </View>
         </ScrollView>
       </Animated.View>
@@ -474,47 +487,66 @@ export default function NewChatScreen() {
 
           {/* Users List with Checkboxes */}
           <View style={styles.suggestedSection}>
-            {filteredGroupUsers.map((user) => {
-              const isSelected = selectedUsers.includes(user.id);
-              return (
-                <TouchableOpacity
-                  key={user.id}
-                  style={styles.userItem}
-                  onPress={() => toggleUserSelection(user.id)}
-                >
-                  <Image
-                    source={{ uri: user.avatar }}
-                    style={styles.userAvatar}
-                  />
-                  <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{user.name}</Text>
-                    <Text style={styles.userSubtitle}>{user.subtitle}</Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.checkbox,
-                      isSelected && styles.checkboxSelected,
-                    ]}
+            {loading && (
+              <View style={styles.emptyContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.emptyText}>Učitavanje...</Text>
+              </View>
+            )}
+
+            {!loading && followingUsers.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome name="users" size={48} color="#5E5E5E" />
+                <Text style={styles.emptyText}>Ne pratite nijednog igrača</Text>
+              </View>
+            )}
+
+            {!loading &&
+              filteredGroupUsers.map((user) => {
+                const isSelected = selectedUsers.includes(user.user_id);
+                return (
+                  <TouchableOpacity
+                    key={user.user_id}
+                    style={styles.userItem}
+                    onPress={() => toggleUserSelection(user.user_id)}
                   >
-                    {isSelected && (
-                      <FontAwesome
-                        name="check"
-                        size={14}
-                        color={isDark ? "#0B0B0B" : "#FFFFFF"}
-                      />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+                    <Image
+                      source={{
+                        uri:
+                          user.avatar_url || "https://i.pravatar.cc/150?img=1",
+                      }}
+                      style={styles.userAvatar}
+                    />
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{user.full_name}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        isSelected && styles.checkboxSelected,
+                      ]}
+                    >
+                      {isSelected && (
+                        <FontAwesome
+                          name="check"
+                          size={14}
+                          color={isDark ? "#0B0B0B" : "#FFFFFF"}
+                        />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
           </View>
 
-          {filteredGroupUsers.length === 0 && (
-            <View style={styles.emptyContainer}>
-              <FontAwesome name="users" size={48} color="#5E5E5E" />
-              <Text style={styles.emptyText}>Nema pronađenih korisnika</Text>
-            </View>
-          )}
+          {!loading &&
+            filteredGroupUsers.length === 0 &&
+            followingUsers.length > 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome name="users" size={48} color="#5E5E5E" />
+                <Text style={styles.emptyText}>Nema pronađenih korisnika</Text>
+              </View>
+            )}
         </ScrollView>
       </Animated.View>
     </SafeAreaView>

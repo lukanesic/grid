@@ -3,12 +3,50 @@ import AuthButton from "@/components/auth/AuthButton";
 import AuthInput from "@/components/auth/AuthInput";
 import AuthSubtitle from "@/components/auth/AuthSubtitle";
 import AuthTitle from "@/components/auth/AuthTitle";
+import { supabase } from "@/lib/supabase";
+import { isValidEmail } from "@/utils/validation";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleResetPassword = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+
+    if (!email.trim()) {
+      Alert.alert("Greska", "Unesite email adresu.");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      Alert.alert("Greska", "Unesite ispravnu email adresu.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      Alert.alert("Greska", error.message);
+      return;
+    }
+
+    Alert.alert("Uspeh", "Link za reset lozinke je poslat na email.");
+
+    router.push("/(home)");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -26,9 +64,11 @@ export default function ResetPasswordScreen() {
             placeholder="Email"
             autoCapitalize="none"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
 
-          <AuthButton onPress={() => router.push("/(home)")}>
+          <AuthButton onPress={handleResetPassword} loading={isSubmitting}>
             Posalji link
           </AuthButton>
         </View>

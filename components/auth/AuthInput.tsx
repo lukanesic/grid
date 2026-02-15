@@ -1,14 +1,26 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
+import {
+    Pressable,
+    StyleSheet,
+    TextInput,
+    TextInputProps,
+    View,
+} from "react-native";
 
 interface AuthInputProps extends TextInputProps {
   icon: keyof typeof FontAwesome.glyphMap;
   iconSize?: number;
+  showPasswordToggle?: boolean;
+  isPasswordVisible?: boolean;
+  onTogglePassword?: () => void;
 }
 
 export default function AuthInput({
   icon,
   iconSize = 16,
+  showPasswordToggle = false,
+  isPasswordVisible = false,
+  onTogglePassword,
   ...textInputProps
 }: AuthInputProps) {
   return (
@@ -19,6 +31,15 @@ export default function AuthInput({
         style={styles.input}
         {...textInputProps}
       />
+      {showPasswordToggle && (
+        <Pressable onPress={onTogglePassword} hitSlop={10}>
+          <FontAwesome
+            name={isPasswordVisible ? "eye" : "eye-slash"}
+            size={16}
+            color="#8B8B8B"
+          />
+        </Pressable>
+      )}
     </View>
   );
 }

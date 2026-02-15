@@ -432,74 +432,10 @@ export const OLDER_CHAT_MESSAGES = [
 ];
 
 // ============================================
-// NOTIFICATIONS DATA
+// NOTIFICATIONS DATA (DEPRECATED - Now using database)
 // ============================================
-export const NOTIFICATION_SECTIONS = [
-  {
-    title: "Novo",
-    items: [
-      {
-        name: "Gabriella Spencer",
-        message: 'prihvatila je poziv za "Karaoke night"',
-        time: "4m",
-        type: "accepted",
-      },
-      {
-        name: "Kate Johnson",
-        message: 'pozvala vas da se pridruzite "Michaelovom rodjendanu"',
-        time: "8m",
-        type: "invite",
-      },
-    ],
-  },
-  {
-    title: "Danas",
-    items: [
-      {
-        name: "Matthew Kinney",
-        message: 'prihvatio je poziv za "Karaoke night"',
-        time: "2h",
-        type: "accepted",
-      },
-      {
-        name: "Kara Foster",
-        message: 'odbila je poziv za "Karaoke night"',
-        time: "3h",
-        type: "declined",
-      },
-      {
-        name: "Peter Hermann",
-        message: 'pozvao vas da se pridruzite "Emily"',
-        time: "7h",
-        type: "invite",
-      },
-    ],
-  },
-  {
-    title: "Juce",
-    items: [
-      {
-        name: "Alicia Medina",
-        message: 'prihvatila je poziv za "After work padel"',
-        time: "1d",
-        type: "accepted",
-      },
-      {
-        name: "Daniel Ortiz",
-        message: "poslao je novu poruku",
-        time: "1d",
-        type: "message",
-      },
-    ],
-  },
-];
-
-export const NOTIFICATION_STATUS = {
-  accepted: { color: "#34C759", icon: "check" },
-  invite: { color: "#4F7DFF", icon: "plus" },
-  declined: { color: "#FF6B6B", icon: "times" },
-  message: { color: "#B8FF00", icon: "comment" },
-} as const;
+// Notifications are now loaded from the database via notifications table
+// See: /NOTIFICATIONS_SETUP.sql and app/(home)/notification.tsx
 
 // ============================================
 // HOME SCREEN DATA

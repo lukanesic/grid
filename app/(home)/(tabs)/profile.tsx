@@ -1,37 +1,126 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Image,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Badge, IconButton } from "../../../components";
-import {
-  PROFILE_INFO,
-  PROFILE_INFO_STATS,
-  PROFILE_POSTS,
-  PROFILE_SPORTS,
-} from "../../../constants/data";
+import { PROFILE_POSTS, PROFILE_SPORTS } from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function ProfileScreen() {
   const { colors, isDark } = useTheme();
+  const { profile, refreshProfile } = useAuth();
   const styles = getStyles(colors, isDark);
   const accentColor = isDark ? "#B8FF00" : colors.blue;
   const [activeTab, setActiveTab] = useState<"activity" | "info" | "stats">(
     "activity",
   );
+  const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
+
+  // Load unread notifications count
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    loadUnreadCount();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel("user-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          console.log("🔔 New notification received!");
+          loadUnreadCount();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          console.log("✅ Notification marked as read!");
+          loadUnreadCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_unread_notifications_count",
+      );
+
+      if (error) throw error;
+      setUnreadCount(data || 0);
+    } catch (error) {
+      console.error("Error loading unread count:", error);
+    }
+  };
+
+  // Handle pull-to-refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    console.log(
+      "🔄 Profile refresh - refreshIndicator:",
+      colors.refreshIndicator,
+    );
+    await Promise.all([refreshProfile(), loadUnreadCount()]);
+    setRefreshing(false);
+  };
+
+  // Fallback values if profile not loaded
+  const userName = profile?.full_name || "Korisnik";
+  const userLocation = profile?.location || "Srbija";
+  const userAge = profile?.birth_date
+    ? new Date().getFullYear() - new Date(profile.birth_date).getFullYear()
+    : null;
+  const userAvatar = profile?.avatar_url || "https://i.pravatar.cc/150?img=47";
+  const userRating = profile?.rating?.toFixed(1) || "0.0";
+  const userMatches = profile?.matches_played || 0;
+  const userWinRate = profile?.win_rate?.toFixed(0) || "0";
+  const userFollowers = profile?.followers_count || 0;
+  const userFollowing = profile?.following_count || 0;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.refreshIndicator}
+            colors={[colors.refreshIndicator]}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -46,7 +135,7 @@ export default function ProfileScreen() {
                 icon="bell"
                 onPress={() => router.push("/notification")}
               />
-              <Badge count={20} />
+              {unreadCount > 0 && <Badge count={unreadCount} />}
             </View>
             <IconButton icon="bars" onPress={() => router.push("/menu")} />
           </View>
@@ -55,64 +144,77 @@ export default function ProfileScreen() {
         {/* Profile Image & Match Percentage */}
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
-            <Image
-              source={{ uri: PROFILE_INFO.avatar }}
-              style={styles.profileImage}
-            />
+            <Image source={{ uri: userAvatar }} style={styles.profileImage} />
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{PROFILE_INFO.level}</Text>
+              <Text style={styles.levelText}>{userRating}</Text>
             </View>
             <View style={styles.matchCircle}>
-              <Text style={styles.matchPercentage}>
-                {PROFILE_INFO.matchPercentage}%
-              </Text>
+              <Text style={styles.matchPercentage}>{userWinRate}%</Text>
             </View>
           </View>
         </View>
 
         {/* Name */}
-        <Text style={styles.name}>{PROFILE_INFO.name}</Text>
+        <Text style={styles.name}>{userName}</Text>
 
         {/* Username & Info */}
         <Text style={styles.userInfo}>
-          @{PROFILE_INFO.username} · {PROFILE_INFO.age} god ·{" "}
-          {PROFILE_INFO.location}
+          @{profile?.email?.split("@")[0] || "user"}
+          {userAge ? ` · ${userAge} god` : ""} · {userLocation}
         </Text>
 
         {/* Bio */}
         <View style={styles.bioSection}>
-          <Text style={styles.bioText}>{PROFILE_INFO.bio}</Text>
-          <Pressable>
-            <Text style={styles.seeMoreLink}>Vidi više</Text>
-          </Pressable>
+          <Text style={styles.bioText}>
+            Strastveni padel igrač koji voli competitive mečeve i druženje na
+            terenu. 🎾
+          </Text>
         </View>
 
         {/* Stats */}
         <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{PROFILE_INFO.stats.matches}</Text>
+          <Pressable
+            style={styles.statItem}
+            onPress={() => {
+              // TODO: Navigate to matches list
+            }}
+          >
+            <Text style={styles.statNumber}>{userMatches}</Text>
             <Text style={styles.statLabel}>Mečevi</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {PROFILE_INFO.stats.followers}
-            </Text>
+          </Pressable>
+          <Pressable
+            style={styles.statItem}
+            onPress={() => {
+              if (profile?.id) {
+                router.push(`/(home)/followers?userId=${profile.id}`);
+              }
+            }}
+          >
+            <Text style={styles.statNumber}>{userFollowers}</Text>
             <Text style={styles.statLabel}>Pratioci</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {PROFILE_INFO.stats.following}
-            </Text>
+          </Pressable>
+          <Pressable
+            style={styles.statItem}
+            onPress={() => {
+              if (profile?.id) {
+                router.push(`/(home)/following?userId=${profile.id}`);
+              }
+            }}
+          >
+            <Text style={styles.statNumber}>{userFollowing}</Text>
             <Text style={styles.statLabel}>Praćenje</Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <View style={styles.buttonHalf}>
-            <Pressable style={styles.followingButton}>
-              <FontAwesome name="users" size={16} color={accentColor} />
-              <Text style={styles.followingButtonText}>Zapratite</Text>
+            <Pressable
+              style={styles.followingButton}
+              onPress={() => router.push("/menu")}
+            >
+              <FontAwesome name="cog" size={16} color={accentColor} />
+              <Text style={styles.followingButtonText}>Podešavanja</Text>
             </Pressable>
           </View>
           <View style={styles.buttonHalf}>
