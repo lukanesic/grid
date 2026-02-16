@@ -1,0 +1,111 @@
+{
+  "menu": {
+    "account": "Account",
+    "upgrade": {
+      "title": "GRID",
+      "badge": "Free",
+      "description": "Unlock all premium features.",
+      "button": "Upgrade"
+    },
+    "profile": "Profile Information",
+    "profileSub": "Personal data and account",
+    "privacy": "Privacy & Security",
+    "privacySub": "Password and protection",
+    "subscription": "Subscription & Billing",
+    "subscriptionSub": "Plan and payments",
+    "darkMode": "Dark Mode",
+    "darkModeSub": "App theme",
+    "notifications": "Notifications",
+    "notificationsSub": "Push and email",
+    "language": "Language",
+    "languageSub": "Choose language",
+    "helpCenter": "Help Center",
+    "helpCenterSub": "FAQ and support",
+    "about": "About App",
+    "aboutSub": "Version and details",
+    "logout": "Log Out",
+    "logoutSub": "Sign out from account"
+  },
+  "languages": {
+    "sr": "Srpski",
+    "en": "English",
+    "hr": "Hrvatski",
+    "bs": "Bosanski",
+    "mk": "Македонски",
+    "sl": "Slovenščina"
+  },
+  "subscription": {
+    "title": "Subscription & Billing",
+    "currentPlan": "Current Plan",
+    "freePlan": "Free Plan",
+    "premiumPlan": "Premium Plan",
+    "monthly": "monthly",
+    "upgradePlan": "Upgrade Plan",
+    "comingSoon": "COMING SOON"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "changePhoto": "Change Photo",
+    "subscriptionPlan": "Subscription Plan",
+    "upgradePrompt": "Click to upgrade to Premium",
+    "validUntil": "Valid until",
+    "trialPeriod": "Trial period until",
+    "personalInfo": "Personal Information",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "birthDate": "Birth Date",
+    "location": "Location",
+    "accountSecurity": "Account & Security",
+    "password": "Password",
+    "changePassword": "Change Password",
+    "stats": "Statistics",
+    "matchesPlayed": "Matches Played",
+    "winRate": "Win Rate",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "save": "Save"
+  },
+  "upgrade": {
+    "title": "Upgrade",
+    "hero": {
+      "title": "Unlock All Features",
+      "subtitle": "Stand out and activate advanced options for a professional experience."
+    },
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "monthly": "monthly",
+      "savings": "Save {{amount}}%"
+    },
+    "features": {
+      "title": "What You Get",
+      "unlimitedReservations": "Unlimited Reservations",
+      "premiumBadge": "Premium Badge on Profile",
+      "prioritySupport": "Priority Support",
+      "advancedStats": "Advanced Statistics",
+      "adFree": "Ad-Free",
+      "exclusiveEvents": "Exclusive Events"
+    },
+    "testimonials": {
+      "title": "What Users Say"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions"
+    },
+    "cta": {
+      "button": "Upgrade to Premium",
+      "terms": "By subscribing you agree to our terms of service and privacy policy."
+    }
+  },
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success"
+  }
+}

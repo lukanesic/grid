@@ -1,7 +1,9 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Pressable,
@@ -14,20 +16,191 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components";
 import { OPEN_MATCHES, UPCOMING_MATCHES } from "../../constants/data";
 import { useTheme } from "../../contexts/ThemeContext";
+import {
+  cancelReservation,
+  fetchReservationById,
+  joinReservation,
+  leaveReservation,
+  removePlayerFromReservation,
+} from "../../lib/courtApi";
+import { supabase } from "../../lib/supabase";
 
 export default function MatchScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams();
   const [isJoined, setIsJoined] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors);
   const iconColor = isDark ? colors.accent : colors.blue;
 
-  // Combine both upcoming and open matches to find the match by ID
-  const allMatches = [...UPCOMING_MATCHES, ...OPEN_MATCHES];
-  const match = allMatches.find((m) => m.id === id);
+  // Get current user ID
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
-  if (!match) {
+  // Check if ID is a UUID (from database) or a sample ID (from constants)
+  const isUUID =
+    typeof id === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  // Fetch reservation from database if it's a UUID
+  const {
+    data: reservation,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["reservation", id],
+    queryFn: () => fetchReservationById(id as string),
+    enabled: isUUID,
+    staleTime: 0, // Always consider data stale for real-time updates
+    refetchInterval: 1000 * 3, // Auto-refresh every 3 seconds
+    refetchOnFocus: true,
+    refetchOnMount: true,
+  });
+
+  // For sample data, find in hardcoded arrays
+  const allMatches = [...UPCOMING_MATCHES, ...OPEN_MATCHES];
+  const sampleMatch = !isUUID ? allMatches.find((m) => m.id === id) : null;
+
+  // Transform reservation to match format for UI compatibility
+  let match: any = null;
+  let isOpenMatch = false;
+  let openMatch: any = null;
+  let isCreator = false;
+  let hasJoinedMatch = false;
+
+  if (isUUID && reservation) {
+    // Helper function to shorten name
+    const shortenName = (fullName: string) => {
+      if (!fullName) return "Korisnik";
+      const parts = fullName.trim().split(" ");
+      if (parts.length === 1) return parts[0];
+      const firstName = parts[0];
+      const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+      return `${firstName} ${lastInitial}.`;
+    };
+
+    // Format date
+    const resDate = new Date(
+      `${reservation.reservation_date}T${reservation.start_time}`,
+    );
+    const dayNames = ["Ned", "Pon", "Uto", "Sre", "Čet", "Pet", "Sub"];
+    const monthNames = [
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "maj",
+      "jun",
+      "jul",
+      "avg",
+      "sep",
+      "okt",
+      "nov",
+      "dec",
+    ];
+
+    // Build participants array (creator + invited players)
+    const participants: any[] = [];
+
+    // Add creator
+    participants.push({
+      name: shortenName(reservation.user?.full_name),
+      level: "1.0",
+      avatar: reservation.user?.avatar_url || null,
+      userId: reservation.user_id,
+    });
+
+    // Add invited players
+    if (reservation.invited_players_profiles) {
+      reservation.invited_players_profiles.forEach((player: any) => {
+        participants.push({
+          name: shortenName(player.full_name),
+          level: "1.0",
+          avatar: player.avatar_url || null,
+          userId: player.id,
+        });
+      });
+    }
+
+    // Fill remaining slots (max 4 total)
+    while (participants.length < 4) {
+      participants.push({ name: "", level: "+", avatar: null, userId: null });
+    }
+
+    const formattedDate = `${dayNames[resDate.getDay()]} ${resDate.getDate()}. ${monthNames[resDate.getMonth()]} · ${reservation.start_time.substring(0, 5)} - ${reservation.end_time.substring(0, 5)}h`;
+
+    match = {
+      id: reservation.id,
+      type: "OTVORENI MEČ",
+      date: formattedDate,
+      location: `${reservation.court?.clubs?.name || "Klub"} · ${reservation.court?.clubs?.address || ""}`,
+      duration: `${reservation.duration_minutes} MIN`,
+      level: "1.0-2.0",
+      author: shortenName(reservation.user?.full_name),
+      participants: participants,
+      price: `${Math.round(reservation.total_price || 0)} RSD`,
+      user_id: reservation.user_id,
+      club_id: reservation.court?.club_id,
+      start_time: reservation.start_time,
+      end_time: reservation.end_time,
+      invited_players: reservation.invited_players || [],
+      creator: {
+        full_name: reservation.user?.full_name || "Korisnik",
+        avatar_url: reservation.user?.avatar_url || null,
+      },
+    };
+
+    isOpenMatch = "author" in match;
+    openMatch = isOpenMatch ? match : null;
+    isCreator = currentUserId && match.user_id === currentUserId;
+    hasJoinedMatch =
+      currentUserId && openMatch?.invited_players?.includes(currentUserId);
+  } else if (sampleMatch) {
+    match = sampleMatch;
+    isOpenMatch = "author" in match;
+    openMatch = isOpenMatch ? match : null;
+    isCreator = false;
+    hasJoinedMatch = false;
+  }
+
+  // Use state to track UI changes, but initialize from match data
+  useEffect(() => {
+    if (hasJoinedMatch !== undefined) {
+      setIsJoined(hasJoinedMatch);
+    }
+  }, [hasJoinedMatch]);
+
+  // Loading state
+  if (isUUID && isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()}>
+            <FontAwesome name="chevron-left" size={20} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Učitavanje...</Text>
+          <View style={{ width: 20 }} />
+        </View>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="#3867FF" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error or not found
+  if ((isUUID && error) || (!isUUID && !sampleMatch) || !match) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -37,14 +210,51 @@ export default function MatchScreen() {
           <Text style={styles.headerTitle}>Meč nije pronađen</Text>
           <View style={{ width: 20 }} />
         </View>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: colors.textSecondary, fontSize: 16 }}>
+            Ovaj meč više nije dostupan.
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
-  const isOpenMatch = "author" in match;
-  const openMatch = isOpenMatch ? (match as any) : null;
+  const handleCancelReservation = () => {
+    Alert.alert(
+      "Otkaži rezervaciju",
+      "Da li si siguran da želiš da otkažeš rezervaciju? Ova akcija se ne može poništiti.",
+      [
+        { text: "Ne", style: "cancel" },
+        {
+          text: "Otkaži rezervaciju",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await cancelReservation(id as string);
+              queryClient.invalidateQueries({ queryKey: ["openReservations"] });
+              queryClient.invalidateQueries({ queryKey: ["userReservations"] });
+              Alert.alert("Uspešno", "Rezervacija je otkazana.", [
+                {
+                  text: "OK",
+                  onPress: () => router.back(),
+                },
+              ]);
+            } catch (error: any) {
+              Alert.alert(
+                "Greška",
+                error.message ||
+                  "Došlo je do greške prilikom otkazivanja rezervacije.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (isJoined) {
       Alert.alert(
         "Napusti meč",
@@ -54,7 +264,33 @@ export default function MatchScreen() {
           {
             text: "Napusti",
             style: "destructive",
-            onPress: () => setIsJoined(false),
+            onPress: async () => {
+              try {
+                await leaveReservation(id as string);
+                setIsJoined(false);
+                // Invalidate queries to refresh data
+                queryClient.invalidateQueries({
+                  queryKey: ["reservation", id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["openReservations"],
+                });
+                Alert.alert("Uspešno", "Napustili ste meč.", [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      // Return to home screen after leaving match
+                      router.replace("/(home)/(tabs)");
+                    },
+                  },
+                ]);
+              } catch (error: any) {
+                Alert.alert(
+                  "Greška",
+                  error.message || "Nije moguće napustiti meč",
+                );
+              }
+            },
           },
         ],
       );
@@ -66,11 +302,61 @@ export default function MatchScreen() {
           { text: "Otkaži", style: "cancel" },
           {
             text: "Priključi se",
-            onPress: () => setIsJoined(true),
+            onPress: async () => {
+              try {
+                await joinReservation(id as string);
+                setIsJoined(true);
+                // Invalidate queries to refresh data
+                queryClient.invalidateQueries({
+                  queryKey: ["reservation", id],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["openReservations"],
+                });
+                Alert.alert("Uspešno", "Pridružili ste se meču!");
+              } catch (error: any) {
+                Alert.alert(
+                  "Greška",
+                  error.message || "Nije moguće priključiti se meču",
+                );
+              }
+            },
           },
         ],
       );
     }
+  };
+
+  const handleRemovePlayer = (playerId: string, playerName: string) => {
+    Alert.alert(
+      "Ukloni igrača",
+      `Da li želiš da ukloniš ${playerName} iz meča?`,
+      [
+        { text: "Otkaži", style: "cancel" },
+        {
+          text: "Ukloni",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await removePlayerFromReservation(id as string, playerId);
+              // Invalidate queries to refresh data
+              queryClient.invalidateQueries({
+                queryKey: ["reservation", id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["openReservations"],
+              });
+              Alert.alert("Uspešno", "Igrač je uklonjen iz meča.");
+            } catch (error: any) {
+              Alert.alert(
+                "Greška",
+                error.message || "Nije moguće ukloniti igrača",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleStartMatch = () => {
@@ -83,6 +369,24 @@ export default function MatchScreen() {
     ]);
   };
 
+  const handleInvitePlayer = () => {
+    if (!isCreator) return;
+
+    // Get list of current players (creator + invited)
+    const currentPlayerIds = [match.user_id];
+    if (openMatch?.invited_players) {
+      currentPlayerIds.push(...openMatch.invited_players);
+    }
+
+    router.push({
+      pathname: "/(home)/addPlayers",
+      params: {
+        reservationId: id,
+        currentPlayers: currentPlayerIds.join(","),
+      },
+    });
+  };
+
   const getSportIcon = (type: string) => {
     if (type.includes("🎾")) return "circle";
     if (type.includes("🏐")) return "circle-o";
@@ -90,9 +394,9 @@ export default function MatchScreen() {
   };
 
   const getSportName = (type: string) => {
-    if (type.includes("🎾")) return "Tenis";
+    if (type.includes("🎾")) return "Padel";
     if (type.includes("🏐")) return "Padel";
-    return "Sport";
+    return "Padel";
   };
 
   return (
@@ -109,26 +413,12 @@ export default function MatchScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Match Header */}
-        <View style={styles.matchHeader}>
-          <View style={styles.matchIcon}>
-            <FontAwesome
-              name={getSportIcon(match.type)}
-              size={32}
-              color={iconColor}
-            />
-          </View>
-          <View style={styles.matchTitleSection}>
-            <Text style={styles.matchType}>{match.type}</Text>
-            <Text style={[styles.sportName, { color: iconColor }]}>
-              {getSportName(match.type)}
-            </Text>
-            {openMatch && (
-              <Text style={styles.matchAuthor}>
-                Kreirao {openMatch.author} • {openMatch.time}
-              </Text>
-            )}
-          </View>
+        {/* Match Title */}
+        <View style={styles.matchTitleContainer}>
+          <Text style={styles.matchTypeTitle}>{match.type}</Text>
+          <Text style={[styles.sportLabel, { color: iconColor }]}>
+            {getSportName(match.type)}
+          </Text>
         </View>
 
         {/* Match Details */}
@@ -169,12 +459,46 @@ export default function MatchScreen() {
             <View style={styles.detailCard}>
               <FontAwesome name="credit-card" size={20} color={iconColor} />
               <View style={styles.detailContent}>
-                <Text style={styles.detailTitle}>Cena po igraču</Text>
+                <Text style={styles.detailTitle}>Cena za termin</Text>
                 <Text style={styles.detailValue}>{openMatch.price}</Text>
               </View>
             </View>
           )}
         </View>
+
+        {/* Creator Section */}
+        {openMatch && match.creator && (
+          <View style={styles.creatorSection}>
+            <Text style={styles.sectionTitle}>Kreirao</Text>
+            <View style={styles.creatorCard}>
+              {match.creator.avatar_url ? (
+                <Image
+                  source={{ uri: match.creator.avatar_url }}
+                  style={styles.creatorAvatar}
+                />
+              ) : (
+                <View
+                  style={[styles.creatorAvatar, { backgroundColor: "#3867FF" }]}
+                >
+                  <Text style={styles.creatorInitials}>
+                    {match.creator.full_name
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.creatorInfo}>
+                <Text style={styles.creatorName}>
+                  {match.creator.full_name}
+                </Text>
+                {openMatch.time && (
+                  <Text style={styles.creatorTime}>{openMatch.time}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Participants Section */}
         {openMatch && (
@@ -185,40 +509,98 @@ export default function MatchScreen() {
               /4)
             </Text>
             <View style={styles.participantsList}>
-              {openMatch.participants.map((participant: any, index: number) => (
-                <View key={index} style={styles.participantCard}>
-                  {participant.name === "" ? (
-                    <>
-                      <View style={styles.emptySlot}>
-                        <FontAwesome
-                          name="plus"
-                          size={16}
-                          color={colors.blue}
-                        />
-                      </View>
-                      <Text style={styles.emptySlotText}>Slobodno mesto</Text>
-                      <Text style={styles.participantLevel}>
-                        Nivo: {participant.level}
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <Image
-                        source={{
-                          uri: `https://i.pravatar.cc/80?name=${participant.name}`,
-                        }}
-                        style={styles.participantAvatar}
-                      />
-                      <Text style={styles.participantName}>
-                        {participant.name}
-                      </Text>
-                      <Text style={styles.participantLevel}>
-                        Nivo: {participant.level}
-                      </Text>
-                    </>
-                  )}
-                </View>
-              ))}
+              {openMatch.participants.map((participant: any, index: number) => {
+                const isEmptySlot = participant.name === "";
+                const ParticipantWrapper =
+                  isEmptySlot && isCreator ? Pressable : View;
+
+                return (
+                  <ParticipantWrapper
+                    key={index}
+                    style={styles.participantCard}
+                    {...(isEmptySlot && isCreator
+                      ? { onPress: handleInvitePlayer }
+                      : {})}
+                  >
+                    {participant.name === "" ? (
+                      <>
+                        <View style={styles.emptySlot}>
+                          <FontAwesome
+                            name="plus"
+                            size={16}
+                            color={colors.blue}
+                          />
+                        </View>
+                        <Text style={styles.emptySlotText}>Slobodno mesto</Text>
+                        <Text style={styles.participantLevel}>
+                          Nivo: {participant.level}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        {participant.avatar ? (
+                          <Image
+                            source={{ uri: participant.avatar }}
+                            style={styles.participantAvatar}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.participantAvatar,
+                              {
+                                backgroundColor: "#3867FF",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={{
+                                color: "#FFFFFF",
+                                fontSize: 20,
+                                fontWeight: "700",
+                              }}
+                            >
+                              {participant.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.participantName}>
+                          {participant.name}
+                        </Text>
+                        <Text style={styles.participantLevel}>
+                          Nivo: {participant.level}
+                        </Text>
+                        {isCreator &&
+                          participant.userId &&
+                          participant.userId !== match.user_id && (
+                            <Pressable
+                              style={styles.removePlayerButton}
+                              onPress={() =>
+                                handleRemovePlayer(
+                                  participant.userId,
+                                  participant.name,
+                                )
+                              }
+                            >
+                              <FontAwesome
+                                name="times-circle"
+                                size={14}
+                                color="#FF3B30"
+                              />
+                              <Text style={styles.removePlayerText}>
+                                Ukloni
+                              </Text>
+                            </Pressable>
+                          )}
+                      </>
+                    )}
+                  </ParticipantWrapper>
+                );
+              })}
             </View>
           </View>
         )}
@@ -240,7 +622,14 @@ export default function MatchScreen() {
         {/* Location Info */}
         <View style={styles.locationSection}>
           <Text style={styles.sectionTitle}>Informacije o objektu</Text>
-          <View style={styles.locationCard}>
+          <Pressable
+            style={styles.locationCard}
+            onPress={() => {
+              if (match.club_id) {
+                router.push(`/(home)/clubProfile?id=${match.club_id}`);
+              }
+            }}
+          >
             <Image
               source={{
                 uri: "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
@@ -272,14 +661,20 @@ export default function MatchScreen() {
                 />
               </View>
             </View>
-            <Pressable>
+            <Pressable
+              onPress={() => {
+                if (match.club_id) {
+                  router.push(`/(home)/clubProfile?id=${match.club_id}`);
+                }
+              }}
+            >
               <FontAwesome
                 name="chevron-right"
                 size={16}
                 color={colors.textSecondary}
               />
             </Pressable>
-          </View>
+          </Pressable>
         </View>
 
         {/* Rules Section */}
@@ -318,11 +713,14 @@ export default function MatchScreen() {
 
       {/* Bottom Action */}
       <View style={styles.bottomAction}>
-        {isJoined ? (
+        {isCreator ? (
           <View style={styles.buttonContainer}>
             <View style={styles.buttonRow}>
-              <Pressable style={styles.secondaryButton} onPress={handleJoin}>
-                <Text style={styles.secondaryButtonText}>Napusti meč</Text>
+              <Pressable
+                style={styles.secondaryButton}
+                onPress={handleCancelReservation}
+              >
+                <Text style={styles.secondaryButtonText}>Otkaži</Text>
               </Pressable>
               <View style={styles.buttonSpacer} />
               <Pressable
@@ -334,6 +732,12 @@ export default function MatchScreen() {
               </Pressable>
             </View>
           </View>
+        ) : isJoined ? (
+          <Button
+            title="Napusti meč"
+            onPress={handleJoin}
+            variant="secondary"
+          />
         ) : (
           <Button
             title={
@@ -372,40 +776,21 @@ const getStyles = (colors: any) =>
       flex: 1,
       paddingHorizontal: 20,
     },
-    matchHeader: {
-      flexDirection: "row",
-      alignItems: "center",
+    matchTitleContainer: {
       marginBottom: 32,
       paddingBottom: 24,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    matchIcon: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      backgroundColor: colors.surface,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 16,
-    },
-    matchTitleSection: {
-      flex: 1,
-    },
-    matchType: {
+    matchTypeTitle: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: 24,
       fontWeight: "700",
-      marginBottom: 4,
+      marginBottom: 8,
     },
-    sportName: {
-      fontSize: 14,
+    sportLabel: {
+      fontSize: 16,
       fontWeight: "600",
-      marginBottom: 4,
-    },
-    matchAuthor: {
-      color: colors.textSecondary,
-      fontSize: 14,
     },
     detailsSection: {
       marginBottom: 32,
@@ -431,6 +816,42 @@ const getStyles = (colors: any) =>
       color: colors.text,
       fontSize: 16,
       fontWeight: "600",
+    },
+    creatorSection: {
+      marginBottom: 32,
+    },
+    creatorCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+    },
+    creatorAvatar: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      marginRight: 16,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    creatorInitials: {
+      color: "#FFFFFF",
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    creatorInfo: {
+      flex: 1,
+    },
+    creatorName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 4,
+    },
+    creatorTime: {
+      color: colors.textSecondary,
+      fontSize: 14,
     },
     participantsSection: {
       marginBottom: 32,
@@ -486,6 +907,21 @@ const getStyles = (colors: any) =>
     participantLevel: {
       color: colors.textSecondary,
       fontSize: 12,
+    },
+    removePlayerButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      backgroundColor: "rgba(255, 59, 48, 0.1)",
+      borderRadius: 6,
+      gap: 4,
+    },
+    removePlayerText: {
+      color: "#FF3B30",
+      fontSize: 12,
+      fontWeight: "600",
     },
     infoSection: {
       marginBottom: 32,

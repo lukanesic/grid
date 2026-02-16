@@ -1,23 +1,104 @@
+import { createCourtReservation } from "@/lib/courtApi";
 import { FontAwesome } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ReservationSummaryScreen() {
   const router = useRouter();
-  const { clubName, clubAddress, clubPrice, date, time, court, playerNames } =
-    useLocalSearchParams();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    clubName,
+    clubAddress,
+    clubPrice,
+    date,
+    time,
+    courtId,
+    courtName,
+    playerNames,
+    playerIds,
+    reservationDate,
+  } = useLocalSearchParams();
 
   const players = playerNames ? (playerNames as string).split(",") : [];
-  const EUR_TO_RSD = 117;
-  const serviceFeeEur = 0.2;
-  const priceEur = parseFloat((clubPrice as string) || "0");
-  const priceRsd = Math.round(priceEur * EUR_TO_RSD);
-  const serviceFeeRsd = Math.round(serviceFeeEur * EUR_TO_RSD);
-  const totalRsd = priceRsd + serviceFeeRsd;
+  const invitedPlayerIds = playerIds ? (playerIds as string).split(",") : [];
+  const serviceFeeRsd = 23; // Fixed service fee in RSD
+  const hourlyRateRsd = parseFloat((clubPrice as string) || "0");
+
+  // Calculate duration-based price
   const timeValue = String(time || "");
   const hasRange = timeValue.includes("-");
+  const hours = hasRange ? 2 : 1; // 2 hours if range, 1 hour if single slot
+  const priceRsd = Math.round(hourlyRateRsd * hours);
+  const totalRsd = priceRsd + serviceFeeRsd;
   const duration = hasRange ? "120 min" : "60 min";
+  const durationMinutes = hours * 60;
+
+  // Parse time range
+  const [startTime, endTime] = hasRange
+    ? time.toString().split(" - ")
+    : [time.toString(), ""];
+  const calculatedEndTime =
+    endTime ||
+    `${parseInt(startTime.split(":")[0]) + hours}:${startTime.split(":")[1]}`;
+
+  const handleConfirmReservation = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+
+      await createCourtReservation({
+        court_id: courtId as string,
+        reservation_date: reservationDate as string,
+        start_time: startTime,
+        end_time: calculatedEndTime,
+        duration_minutes: durationMinutes,
+        total_price: totalRsd,
+        currency: "RSD",
+        invited_players: invitedPlayerIds,
+        notes: `Meč u ${clubName}`,
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["openReservations"] });
+      queryClient.invalidateQueries({ queryKey: ["userReservations"] });
+
+      Alert.alert(
+        "Uspešno!",
+        "Rezervacija je potvrđena. Meč je sada vidljiv u otvorenim mečevima.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.dismissAll();
+              router.replace("/(home)/(tabs)");
+            },
+          },
+        ],
+      );
+    } catch (error: any) {
+      console.error("Error creating reservation:", error);
+      Alert.alert(
+        "Greška",
+        error.message || "Došlo je do greške prilikom kreiranja rezervacije.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -61,7 +142,7 @@ export default function ReservationSummaryScreen() {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Teren</Text>
-              <Text style={styles.detailValue}>Teren {court}</Text>
+              <Text style={styles.detailValue}>{courtName}</Text>
             </View>
 
             <View style={styles.detailRow}>
@@ -100,7 +181,7 @@ export default function ReservationSummaryScreen() {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Način plaćanja</Text>
-              <Text style={styles.detailValue}>Kartica</Text>
+              <Text style={styles.detailValue}>Keš</Text>
             </View>
 
             <View style={styles.totalRow}>
@@ -122,13 +203,20 @@ export default function ReservationSummaryScreen() {
         {/* Confirm Button */}
         <View style={styles.footer}>
           <Pressable
-            style={styles.confirmButton}
-            onPress={() => {
-              router.dismissAll();
-              router.replace("/(home)/(tabs)");
-            }}
+            style={[
+              styles.confirmButton,
+              isSubmitting && styles.confirmButtonDisabled,
+            ]}
+            onPress={handleConfirmReservation}
+            disabled={isSubmitting}
           >
-            <Text style={styles.confirmButtonText}>Potvrdite rezervaciju</Text>
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.confirmButtonText}>
+                Potvrdite rezervaciju
+              </Text>
+            )}
           </Pressable>
         </View>
       </View>
@@ -264,6 +352,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+  },
+  confirmButtonDisabled: {
+    backgroundColor: "#CCCCCC",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   confirmButtonText: {
     color: "#FFFFFF",

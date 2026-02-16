@@ -1,111 +1,111 @@
 import { Calendar } from "@/components";
-import { HOT_PLAYERS, MARKED_DATES, SUGGESTED_PLAYERS } from "@/constants/data";
+import { MARKED_DATES } from "@/constants/data";
+import { fetchAllClubs, fetchClubById } from "@/lib/clubApi";
+import { fetchAvailableTimeSlots, fetchCourtsByClub } from "@/lib/courtApi";
+import { fetchFollowingPlayers } from "@/lib/profileApi";
 import { FontAwesome } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Image,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const CLUBS = [
-  {
-    id: 1,
-    name: "CN Montjuïc",
-    image:
-      "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
-    distance: "3km",
-    address: "Carrer de Segura, 1, 08004 Barcelona",
-    price: 17,
-  },
-  {
-    id: 2,
-    name: "Eurofitness Vall d'Hebron",
-    image:
-      "https://images.pexels.com/photos/27151849/pexels-photo-27151849.jpeg",
-    distance: "5km",
-    address: "Passeig de la Vall d'Hebron, 171, 08035 Barcelona",
-    price: 11,
-  },
-  {
-    id: 3,
-    name: "Club Esportiu Europa",
-    image:
-      "https://images.pexels.com/photos/34116480/pexels-photo-34116480.jpeg",
-    distance: "2km",
-    address: "Carrer de Provença, 480, 08025 Barcelona",
-    price: 15,
-  },
-];
-
-const TIME_SLOTS = [
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00",
-];
-
-const COURTS = [
-  { id: 1, name: "Teren 1", available: true },
-  { id: 2, name: "Teren 2", available: true },
-  { id: 3, name: "Teren 3", available: false },
-  { id: 4, name: "Teren 4", available: true },
-];
-
-const AVAILABLE_PLAYERS = [
-  ...SUGGESTED_PLAYERS.map((player, index) => ({
-    id: `suggested-${index + 1}`,
-    name: player.name,
-    avatar: player.avatar,
-    level: player.level,
-  })),
-  ...HOT_PLAYERS.map((player) => ({
-    id: String(player.id),
-    name: player.name,
-    avatar: player.avatar,
-    level: player.level,
-  })),
-].filter(
-  (player, index, allPlayers) =>
-    index === allPlayers.findIndex((item) => item.name === player.name),
-);
-
 export default function CreateMatchScreen() {
   const router = useRouter();
-  const { clubId } = useLocalSearchParams();
+  const { clubId, clubName } = useLocalSearchParams();
   const { colors, isDark } = useTheme();
-  const [selectedClub, setSelectedClub] = useState<number | null>(
-    clubId ? Number(clubId) : null,
+  const [selectedClub, setSelectedClub] = useState<string | null>(
+    clubId ? String(clubId) : null,
   );
+
+  // Fetch clubs from database
+  const {
+    data: clubs = [],
+    isLoading: clubsLoading,
+    error: clubsError,
+  } = useQuery({
+    queryKey: ["clubs"],
+    queryFn: fetchAllClubs,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch selected club details if clubId is present
+  const { data: selectedClubData, isLoading: selectedClubLoading } = useQuery({
+    queryKey: ["club", clubId],
+    queryFn: () => fetchClubById(clubId as string),
+    enabled: !!clubId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch following players from database
+  const { data: followingPlayers = [], isLoading: playersLoading } = useQuery({
+    queryKey: ["followingPlayers"],
+    queryFn: fetchFollowingPlayers,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch courts for selected club
+  const {
+    data: courts = [],
+    isLoading: courtsLoading,
+    error: courtsError,
+  } = useQuery({
+    queryKey: ["courts", selectedClub],
+    queryFn: () => fetchCourtsByClub(selectedClub as string),
+    enabled: !!selectedClub,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
   });
   const [selectedTime, setSelectedTime] = useState<string[]>([]);
-  const [selectedCourt, setSelectedCourt] = useState<number | null>(null);
+  const [selectedCourt, setSelectedCourt] = useState<string | null>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
 
+  // Format date for API (YYYY-MM-DD)
+  const formattedDate = selectedDate
+    .toLocaleDateString("en-CA") // en-CA gives YYYY-MM-DD format
+    .split("T")[0];
+
+  // Fetch available time slots for selected court and date
+  const { data: availableTimeSlots = [], isLoading: timeSlotsLoading } =
+    useQuery({
+      queryKey: ["timeSlots", selectedCourt, formattedDate],
+      queryFn: () =>
+        fetchAvailableTimeSlots(selectedCourt as string, formattedDate, 60),
+      enabled: !!selectedCourt && !!selectedDate,
+      staleTime: 1000 * 60 * 2, // 2 minutes (shorter for availability)
+    });
+
   const styles = getStyles(colors, isDark);
   const isFormComplete =
-    !!selectedClub && selectedTime.length > 0 && !!selectedCourt;
-  const filteredPlayers = AVAILABLE_PLAYERS.filter((player) =>
-    player.name.toLowerCase().includes(playerSearchQuery.trim().toLowerCase()),
+    !!selectedClub &&
+    !!selectedDate &&
+    !!selectedCourt &&
+    selectedTime.length > 0;
+
+  // Get all time slots (available and unavailable)
+  const allTimeSlots = availableTimeSlots.map((slot) => slot.time_slot);
+
+  const filteredPlayers = followingPlayers.filter((player) =>
+    (player.full_name || "")
+      .toLowerCase()
+      .includes(playerSearchQuery.trim().toLowerCase()),
   );
 
   const togglePlayer = (playerId: string) => {
@@ -118,42 +118,59 @@ export default function CreateMatchScreen() {
     }
   };
 
-  const toggleTime = (time: string) => {
+  const toggleTime = (timeSlot: string) => {
+    // Only allow selection of available time slots
+    const slot = availableTimeSlots.find((s) => s.time_slot === timeSlot);
+    if (!slot || !slot.is_available) {
+      return;
+    }
+
     // If clicking already selected time
-    if (selectedTime.includes(time)) {
+    if (selectedTime.includes(timeSlot)) {
       // Only allow removing if it's at the start or end of selection
-      const timeIndex = TIME_SLOTS.indexOf(time);
-      const selectedIndices = selectedTime.map((t) => TIME_SLOTS.indexOf(t));
+      const timeIndex = allTimeSlots.indexOf(timeSlot);
+      const selectedIndices = selectedTime.map((t) => allTimeSlots.indexOf(t));
       const minIndex = Math.min(...selectedIndices);
       const maxIndex = Math.max(...selectedIndices);
 
       if (timeIndex === minIndex || timeIndex === maxIndex) {
-        setSelectedTime(selectedTime.filter((t) => t !== time));
+        setSelectedTime(selectedTime.filter((t) => t !== timeSlot));
       }
       return;
     }
 
     // If no times selected, add this one
     if (selectedTime.length === 0) {
-      setSelectedTime([time]);
+      setSelectedTime([timeSlot]);
       return;
     }
 
     // Get indices of all time slots
-    const clickedIndex = TIME_SLOTS.indexOf(time);
-    const selectedIndices = selectedTime.map((t) => TIME_SLOTS.indexOf(t));
+    const clickedIndex = allTimeSlots.indexOf(timeSlot);
+    const selectedIndices = selectedTime.map((t) => allTimeSlots.indexOf(t));
     const minIndex = Math.min(...selectedIndices);
     const maxIndex = Math.max(...selectedIndices);
 
     // Check if clicked time is consecutive (immediately before or after current selection)
     if (clickedIndex === minIndex - 1) {
       // Adding to the beginning
-      setSelectedTime([time, ...selectedTime]);
+      setSelectedTime([timeSlot, ...selectedTime]);
     } else if (clickedIndex === maxIndex + 1) {
       // Adding to the end
-      setSelectedTime([...selectedTime, time]);
+      setSelectedTime([...selectedTime, timeSlot]);
     }
     // If not consecutive, do nothing (ignore the click)
+  };
+
+  // Reset selected time when court or date changes
+  const handleCourtChange = (courtId: string) => {
+    setSelectedCourt(courtId);
+    setSelectedTime([]); // Clear time selection
+  };
+
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedTime([]); // Clear time selection
   };
 
   const formatDate = (date: Date) => {
@@ -180,13 +197,19 @@ export default function CreateMatchScreen() {
   };
 
   const handleCreateMatch = () => {
-    if (!selectedClub || selectedTime.length === 0 || !selectedCourt) {
+    if (
+      !selectedClub ||
+      !selectedDate ||
+      !selectedCourt ||
+      selectedTime.length === 0
+    ) {
       return;
     }
 
-    const club = CLUBS.find((c) => c.id === selectedClub);
+    const club = clubs.find((c) => c.id === selectedClub);
+    const court = courts.find((c) => c.id === selectedCourt);
     const playerNamesStr = selectedPlayers
-      .map((id) => AVAILABLE_PLAYERS.find((p) => p.id === id)?.name)
+      .map((id) => followingPlayers.find((p) => p.id === id)?.full_name)
       .filter(Boolean)
       .join(",");
 
@@ -201,11 +224,14 @@ export default function CreateMatchScreen() {
         clubId: selectedClub,
         clubName: club?.name || "",
         clubAddress: club?.address || "",
-        clubPrice: club?.price || 0,
+        clubPrice: court?.hourly_rate || club?.price || 0,
         date: formatDate(selectedDate),
         time: timeStr,
-        court: selectedCourt,
+        courtId: selectedCourt,
+        courtName: court?.name || "",
         playerNames: playerNamesStr,
+        playerIds: selectedPlayers.join(","),
+        reservationDate: formattedDate, // YYYY-MM-DD format for DB
       },
     });
   };
@@ -225,40 +251,98 @@ export default function CreateMatchScreen() {
         {/* Select Club */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Izaberi klub</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.clubScroll}
-          >
-            {CLUBS.map((club) => (
-              <Pressable
-                key={club.id}
-                style={[
-                  styles.clubCard,
-                  selectedClub === club.id && styles.clubCardSelected,
-                ]}
-                onPress={() => setSelectedClub(club.id)}
+          {clubId && clubName ? (
+            selectedClubLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            ) : (
+              <ImageBackground
+                source={{
+                  uri:
+                    selectedClubData?.image ||
+                    "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
+                }}
+                style={styles.selectedClubCard}
+                imageStyle={styles.selectedClubImage}
               >
-                <Image source={{ uri: club.image }} style={styles.clubImage} />
-                <View style={styles.clubOverlay}>
-                  <Text style={styles.clubName}>{club.name}</Text>
-                  <View style={styles.clubDistance}>
-                    <FontAwesome name="map-marker" size={12} color="#F2F2F2" />
-                    <Text style={styles.clubDistanceText}>{club.distance}</Text>
+                <View style={styles.selectedClubOverlay}>
+                  <View style={styles.selectedClubContent}>
+                    <View style={styles.selectedClubCheckBadge}>
+                      <FontAwesome name="check" size={16} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.selectedClubTextContainer}>
+                      <Text style={styles.selectedClubName}>
+                        {decodeURIComponent(clubName as string)}
+                      </Text>
+                      {selectedClubData?.address && (
+                        <View style={styles.selectedClubLocationRow}>
+                          <FontAwesome
+                            name="map-marker"
+                            size={12}
+                            color="rgba(255,255,255,0.9)"
+                          />
+                          <Text style={styles.selectedClubAddress}>
+                            {selectedClubData.address}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </View>
-                {selectedClub === club.id && (
-                  <View style={styles.selectedBadge}>
-                    <FontAwesome
-                      name="check"
-                      size={14}
-                      color={colors.background}
-                    />
+              </ImageBackground>
+            )
+          ) : clubsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.accent} />
+            </View>
+          ) : clubsError ? (
+            <Text style={styles.errorText}>Greška pri učitavanju klubova</Text>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.clubScroll}
+            >
+              {clubs.map((club) => (
+                <Pressable
+                  key={club.id}
+                  style={[
+                    styles.clubCard,
+                    selectedClub === club.id && styles.clubCardSelected,
+                  ]}
+                  onPress={() => setSelectedClub(club.id)}
+                >
+                  <Image
+                    source={{ uri: club.image }}
+                    style={styles.clubImage}
+                  />
+                  <View style={styles.clubOverlay}>
+                    <Text style={styles.clubName}>{club.name}</Text>
+                    <View style={styles.clubDistance}>
+                      <FontAwesome
+                        name="map-marker"
+                        size={12}
+                        color="#F2F2F2"
+                      />
+                      <Text style={styles.clubDistanceText}>
+                        {club.distance || "N/A"}
+                      </Text>
+                    </View>
                   </View>
-                )}
-              </Pressable>
-            ))}
-          </ScrollView>
+                  {selectedClub === club.id && (
+                    <View style={styles.selectedBadge}>
+                      <FontAwesome
+                        name="check"
+                        size={14}
+                        color={colors.background}
+                      />
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Select Date */}
@@ -266,102 +350,137 @@ export default function CreateMatchScreen() {
           <Text style={styles.sectionTitle}>Izaberi datum</Text>
           <Calendar
             selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
+            onDateSelect={handleDateChange}
             markedDates={MARKED_DATES}
           />
         </View>
 
-        {/* Select Time */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Izaberi vreme</Text>
-          <View style={styles.timeGrid}>
-            {TIME_SLOTS.map((time) => (
-              <Pressable
-                key={time}
-                style={[
-                  styles.timeSlot,
-                  selectedTime.includes(time) && styles.timeSlotSelected,
-                ]}
-                onPress={() => toggleTime(time)}
-              >
-                <Text
-                  style={[
-                    styles.timeText,
-                    selectedTime.includes(time) && styles.timeTextSelected,
-                  ]}
-                >
-                  {time}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          {selectedTime.length > 0 && (
-            <View style={styles.timeInfoCard}>
-              <FontAwesome
-                name="clock-o"
-                size={14}
-                color={isDark ? colors.accent : colors.blue}
-              />
-              <Text style={styles.timeInfoText}>
-                {selectedTime[0]}
-                {selectedTime.length > 1
-                  ? ` - ${selectedTime[selectedTime.length - 1]}`
-                  : ""}
-              </Text>
-            </View>
-          )}
-        </View>
-
         {/* Select Court */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Izaberi teren</Text>
-          <View style={styles.courtGrid}>
-            {COURTS.map((court) => (
-              <Pressable
-                key={court.id}
-                style={[
-                  styles.courtCard,
-                  !court.available && styles.courtCardDisabled,
-                  selectedCourt === court.id && styles.courtCardSelected,
-                ]}
-                onPress={() => court.available && setSelectedCourt(court.id)}
-                disabled={!court.available}
-              >
-                <FontAwesome
-                  name="circle"
-                  size={16}
-                  color={
-                    selectedCourt === court.id
-                      ? isDark
-                        ? colors.accent
-                        : colors.blue
-                      : court.available
-                        ? isDark
-                          ? colors.accent
-                          : colors.blue
-                        : colors.textSecondary
-                  }
-                />
-                <Text
-                  style={[
-                    styles.courtName,
-                    !court.available && styles.courtNameDisabled,
-                  ]}
-                >
-                  {court.name}
-                </Text>
-                {!court.available && (
-                  <Text style={styles.courtStatus}>Zauzet</Text>
-                )}
-              </Pressable>
-            ))}
+        {selectedClub && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Izaberi teren</Text>
+            {courtsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            ) : courtsError ? (
+              <Text style={styles.errorText}>Greška pri učitavanju terena</Text>
+            ) : courts.length === 0 ? (
+              <Text style={styles.errorText}>
+                Ovaj klub nema dostupne terene
+              </Text>
+            ) : (
+              <View style={styles.courtGrid}>
+                {courts.map((court) => (
+                  <Pressable
+                    key={court.id}
+                    style={[
+                      styles.courtCard,
+                      !court.is_available && styles.courtCardDisabled,
+                      selectedCourt === court.id && styles.courtCardSelected,
+                    ]}
+                    onPress={() =>
+                      court.is_available && handleCourtChange(court.id)
+                    }
+                    disabled={!court.is_available}
+                  >
+                    <FontAwesome
+                      name="circle"
+                      size={16}
+                      color={
+                        selectedCourt === court.id
+                          ? isDark
+                            ? colors.accent
+                            : colors.blue
+                          : court.is_available
+                            ? isDark
+                              ? colors.accent
+                              : colors.blue
+                            : colors.textSecondary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.courtName,
+                        !court.is_available && styles.courtNameDisabled,
+                      ]}
+                    >
+                      {court.name}
+                    </Text>
+                    {!court.is_available && (
+                      <Text style={styles.courtStatus}>Nedostupan</Text>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
-        </View>
+        )}
+
+        {/* Select Time */}
+        {selectedCourt && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Izaberi vreme</Text>
+            {timeSlotsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            ) : availableTimeSlots.length === 0 ? (
+              <Text style={styles.errorText}>
+                Nema dostupnih termina za ovaj datum
+              </Text>
+            ) : (
+              <>
+                <View style={styles.timeGrid}>
+                  {availableTimeSlots.map((slot) => (
+                    <Pressable
+                      key={slot.time_slot}
+                      style={[
+                        styles.timeSlot,
+                        !slot.is_available && styles.timeSlotDisabled,
+                        selectedTime.includes(slot.time_slot) &&
+                          styles.timeSlotSelected,
+                      ]}
+                      onPress={() => toggleTime(slot.time_slot)}
+                      disabled={!slot.is_available}
+                    >
+                      <Text
+                        style={[
+                          styles.timeText,
+                          !slot.is_available && styles.timeTextDisabled,
+                          selectedTime.includes(slot.time_slot) &&
+                            styles.timeTextSelected,
+                        ]}
+                      >
+                        {slot.time_slot}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {selectedTime.length > 0 && (
+                  <View style={styles.timeInfoCard}>
+                    <FontAwesome
+                      name="clock-o"
+                      size={14}
+                      color={isDark ? colors.accent : colors.blue}
+                    />
+                    <Text style={styles.timeInfoText}>
+                      {selectedTime[0]}
+                      {selectedTime.length > 1
+                        ? ` - ${selectedTime[selectedTime.length - 1]}`
+                        : ""}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        )}
 
         {/* Select Players */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Pozovi igrače ({selectedPlayers.length}/{AVAILABLE_PLAYERS.length})
+            Pozovi igrače ({selectedPlayers.length}/{followingPlayers.length})
           </Text>
           <TextInput
             style={styles.searchInput}
@@ -371,42 +490,66 @@ export default function CreateMatchScreen() {
             onChangeText={setPlayerSearchQuery}
           />
           <View style={styles.playersList}>
-            {filteredPlayers.map((player) => {
-              const isSelected = selectedPlayers.includes(player.id);
-              return (
-                <Pressable
-                  key={player.id}
-                  style={[
-                    styles.playerCard,
-                    isSelected && styles.playerCardSelected,
-                  ]}
-                  onPress={() => togglePlayer(player.id)}
-                >
-                  <Image
-                    source={{ uri: player.avatar }}
-                    style={styles.playerAvatar}
-                  />
-                  <View style={styles.playerInfo}>
-                    <Text style={styles.playerName}>{player.name}</Text>
-                    <Text style={styles.playerLevel}>Nivo: {player.level}</Text>
-                  </View>
-                  <View
+            {playersLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+              </View>
+            ) : filteredPlayers.length === 0 ? (
+              <View style={styles.emptyStateContainer}>
+                <Text style={styles.emptyStateText}>
+                  {playerSearchQuery
+                    ? `Nema rezultata za "${playerSearchQuery}"`
+                    : "Nemaš pratioce. Prati igrače da bi ih pozvao na meč."}
+                </Text>
+              </View>
+            ) : (
+              filteredPlayers.map((player) => {
+                const isSelected = selectedPlayers.includes(player.id);
+                return (
+                  <Pressable
+                    key={player.id}
                     style={[
-                      styles.playerCheckbox,
-                      isSelected && styles.playerCheckboxSelected,
+                      styles.playerCard,
+                      isSelected && styles.playerCardSelected,
                     ]}
+                    onPress={() => togglePlayer(player.id)}
                   >
-                    {isSelected && (
-                      <FontAwesome
-                        name="check"
-                        size={14}
-                        color={colors.background}
-                      />
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
+                    <Image
+                      source={{
+                        uri:
+                          player.avatar_url ||
+                          "https://i.pravatar.cc/150?img=47",
+                      }}
+                      style={styles.playerAvatar}
+                    />
+                    <View style={styles.playerInfo}>
+                      <Text style={styles.playerName}>
+                        {player.full_name || "Nepoznato ime"}
+                      </Text>
+                      {player.rating && (
+                        <Text style={styles.playerLevel}>
+                          Rejting: {player.rating.toFixed(1)}
+                        </Text>
+                      )}
+                    </View>
+                    <View
+                      style={[
+                        styles.playerCheckbox,
+                        isSelected && styles.playerCheckboxSelected,
+                      ]}
+                    >
+                      {isSelected && (
+                        <FontAwesome
+                          name="check"
+                          size={14}
+                          color={colors.background}
+                        />
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })
+            )}
           </View>
         </View>
       </ScrollView>
@@ -458,6 +601,27 @@ const getStyles = (colors: any, isDark: boolean) => {
       fontSize: 18,
       fontWeight: "700",
       marginBottom: 16,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 32,
+    },
+    emptyStateContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 32,
+    },
+    emptyStateText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    errorText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+      padding: 16,
     },
     clubScroll: {
       marginHorizontal: -20,
@@ -514,6 +678,53 @@ const getStyles = (colors: any, isDark: boolean) => {
       alignItems: "center",
       justifyContent: "center",
     },
+    selectedClubCard: {
+      height: 140,
+      borderRadius: 16,
+      overflow: "hidden",
+      marginBottom: 8,
+    },
+    selectedClubImage: {
+      borderRadius: 16,
+    },
+    selectedClubOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
+      padding: 20,
+    },
+    selectedClubContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    selectedClubCheckBadge: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    selectedClubTextContainer: {
+      flex: 1,
+    },
+    selectedClubName: {
+      color: "#FFFFFF",
+      fontSize: 20,
+      fontWeight: "700",
+      marginBottom: 4,
+    },
+    selectedClubLocationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    selectedClubAddress: {
+      color: "rgba(255,255,255,0.9)",
+      fontSize: 13,
+      flex: 1,
+    },
     inputCard: {
       flexDirection: "row",
       alignItems: "center",
@@ -544,6 +755,10 @@ const getStyles = (colors: any, isDark: boolean) => {
       backgroundColor: isDark ? colors.accent : colors.blue,
       borderColor: isDark ? colors.accent : colors.blue,
     },
+    timeSlotDisabled: {
+      opacity: 0.4,
+      backgroundColor: isDark ? "#1E1F23" : colors.border,
+    },
     timeText: {
       color: colors.text,
       fontSize: 14,
@@ -551,6 +766,9 @@ const getStyles = (colors: any, isDark: boolean) => {
     },
     timeTextSelected: {
       color: isDark ? colors.background : "#FFFFFF",
+    },
+    timeTextDisabled: {
+      color: colors.textSecondary,
     },
     timeInfoCard: {
       flexDirection: "row",

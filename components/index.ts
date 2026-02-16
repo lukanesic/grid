@@ -5,6 +5,7 @@ export { default as Calendar } from "./Calendar";
 export { default as ChatItem } from "./ChatItem";
 export { default as CircleCard } from "./CircleCard";
 export { default as ClubCard } from "./ClubCard";
+export { ClubFollowButton } from "./ClubFollowButton";
 export { default as EmptyState } from "./EmptyState";
 export { FollowButton } from "./FollowButton";
 export { default as FriendCard } from "./FriendCard";

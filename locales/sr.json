@@ -1,0 +1,111 @@
+{
+  "menu": {
+    "account": "Nalog",
+    "upgrade": {
+      "title": "GRID",
+      "badge": "Free",
+      "description": "Otključaj sve premium opcije.",
+      "button": "Nadogradi"
+    },
+    "profile": "Profil informacije",
+    "profileSub": "Lični podaci i nalog",
+    "privacy": "Privatnost i bezbednost",
+    "privacySub": "Lozinka i zaštita",
+    "subscription": "Pretplata i naplata",
+    "subscriptionSub": "Plan i plaćanja",
+    "darkMode": "Tamni režim",
+    "darkModeSub": "Tema aplikacije",
+    "notifications": "Notifikacije",
+    "notificationsSub": "Push i e-mail",
+    "language": "Jezik",
+    "languageSub": "Izaberi jezik",
+    "helpCenter": "Centar za pomoć",
+    "helpCenterSub": "FAQ i podrška",
+    "about": "O aplikaciji",
+    "aboutSub": "Verzija i detalji",
+    "logout": "Odjavi se",
+    "logoutSub": "Izloguj se sa naloga"
+  },
+  "languages": {
+    "sr": "Srpski",
+    "en": "English",
+    "hr": "Hrvatski",
+    "bs": "Bosanski",
+    "mk": "Македонски",
+    "sl": "Slovenščina"
+  },
+  "subscription": {
+    "title": "Pretplata i naplata",
+    "currentPlan": "Trenutni plan",
+    "freePlan": "Free Plan",
+    "premiumPlan": "Premium Plan",
+    "monthly": "mesečno",
+    "upgradePlan": "Nadogradi plan",
+    "comingSoon": "USKORO"
+  },
+  "profile": {
+    "title": "Profil informacije",
+    "changePhoto": "Promeni sliku",
+    "subscriptionPlan": "Plan pretplate",
+    "upgradePrompt": "Klikni da nadogradiš na Premium",
+    "validUntil": "Važi do",
+    "trialPeriod": "Probni period do",
+    "personalInfo": "Lične informacije",
+    "fullName": "Ime i prezime",
+    "email": "Email",
+    "phone": "Telefon",
+    "birthDate": "Datum rođenja",
+    "location": "Lokacija",
+    "accountSecurity": "Nalog i bezbednost",
+    "password": "Lozinka",
+    "changePassword": "Promeni lozinku",
+    "stats": "Statistika",
+    "matchesPlayed": "Odigrani mečevi",
+    "winRate": "Pobede",
+    "dangerZone": "Opasna zona",
+    "deleteAccount": "Izbriši nalog",
+    "save": "Sačuvaj"
+  },
+  "upgrade": {
+    "title": "Nadogradi",
+    "hero": {
+      "title": "Otključaj sve funkcije",
+      "subtitle": "Izdvoj se i aktiviraj napredne opcije za profesionalno iskustvo."
+    },
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "monthly": "mesečno",
+      "savings": "Ušteda {{amount}}%"
+    },
+    "features": {
+      "title": "Šta dobijaš",
+      "unlimitedReservations": "Neograničene rezervacije",
+      "premiumBadge": "Premium bedž na profilu",
+      "prioritySupport": "Prioritetna podrška",
+      "advancedStats": "Napredne statistike",
+      "adFree": "Nema reklama",
+      "exclusiveEvents": "Ekskluzivni događaji"
+    },
+    "testimonials": {
+      "title": "Šta kažu korisnici"
+    },
+    "faq": {
+      "title": "Često postavljana pitanja"
+    },
+    "cta": {
+      "button": "Nadogradi na Premium",
+      "terms": "Pretplatom prihvataš naše uslove korišćenja i politiku privatnosti."
+    }
+  },
+  "common": {
+    "back": "Nazad",
+    "save": "Sačuvaj",
+    "cancel": "Otkaži",
+    "delete": "Izbriši",
+    "edit": "Izmeni",
+    "done": "Gotovo",
+    "error": "Greška",
+    "success": "Uspešno"
+  }
+}

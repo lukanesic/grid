@@ -1,6 +1,8 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Pressable,
@@ -10,117 +12,86 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StatItem } from "../../components/playerProfile";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-
-const CLUB_DATA: { [key: string]: any } = {
-  "1": {
-    id: 1,
-    name: "CN Montjuïc",
-    image:
-      "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
-    price: "17 €",
-    distance: "3km",
-    location: "Barcelona Barcelona",
-    address: "Carrer de Segura, 1, 08004 Barcelona",
-    rating: 4.5,
-    reviews: 128,
-    description:
-      "Klub sa tradicijom i vrhunskim terenima. Idealno mesto za padel ljubitelje svih nivoa. Moderna oprema i prijatna atmosfera.",
-    courts: 8,
-    amenities: [
-      { icon: "car", label: "Parking" },
-      { icon: "coffee", label: "Kafić" },
-      { icon: "bath", label: "Tuševi" },
-      { icon: "wifi", label: "WiFi" },
-      { icon: "wheelchair", label: "Pristup" },
-    ],
-    openingHours: "Pon-Ned: 08:00 - 23:00",
-    timeSlots: ["13:30", "14:00", "14:30", "16:00", "17:00", "18:00"],
-  },
-  "2": {
-    id: 2,
-    name: "Eurofitness Vall d'Hebron",
-    image:
-      "https://images.pexels.com/photos/27151849/pexels-photo-27151849.jpeg",
-    price: "11 €",
-    distance: "5km",
-    location: "Barcelona Barcelona",
-    address: "Passeig de la Vall d'Hebron, 171, 08035 Barcelona",
-    rating: 4.3,
-    reviews: 95,
-    description:
-      "Moderan sportski centar sa odličnim terenima. Deo većeg fitness kompleksa sa svim potrebnim sadržajima.",
-    courts: 6,
-    amenities: [
-      { icon: "car", label: "Parking" },
-      { icon: "coffee", label: "Kafić" },
-      { icon: "bath", label: "Tuševi" },
-      { icon: "dumbbell", label: "Gym" },
-    ],
-    openingHours: "Pon-Ned: 07:00 - 23:00",
-    timeSlots: ["12:00", "13:00", "15:00", "17:00", "19:00"],
-  },
-  "3": {
-    id: 3,
-    name: "Club Esportiu Europa",
-    image:
-      "https://images.pexels.com/photos/34116480/pexels-photo-34116480.jpeg",
-    price: "15 €",
-    distance: "2km",
-    location: "Barcelona Barcelona",
-    address: "Carrer de Provença, 480, 08025 Barcelona",
-    rating: 4.7,
-    reviews: 156,
-    description:
-      "Premium klub sa najvišim standardima. Profesionalni treneri i vrhunska oprema dostupni svim članovima.",
-    courts: 10,
-    amenities: [
-      { icon: "car", label: "Parking" },
-      { icon: "coffee", label: "Kafić" },
-      { icon: "bath", label: "Tuševi" },
-      { icon: "wifi", label: "WiFi" },
-      { icon: "user", label: "Treneri" },
-    ],
-    openingHours: "Pon-Ned: 08:00 - 22:00",
-    timeSlots: ["10:00", "11:30", "14:00", "16:30", "18:00", "20:00"],
-  },
-  "4": {
-    id: 4,
-    name: "Padel Indoor Barcelona",
-    image:
-      "https://images.pexels.com/photos/18084429/pexels-photo-18084429.jpeg",
-    price: "20 €",
-    distance: "4km",
-    location: "Barcelona Barcelona",
-    address: "Carrer de Mallorca, 401, 08013 Barcelona",
-    rating: 4.4,
-    reviews: 89,
-    description:
-      "Specijalizovani indoor padel centar sa klimatizovanim terenima. Idealno za igru tokom cele godine.",
-    courts: 12,
-    amenities: [
-      { icon: "car", label: "Parking" },
-      { icon: "coffee", label: "Kafić" },
-      { icon: "bath", label: "Tuševi" },
-      { icon: "snowflake-o", label: "Klima" },
-      { icon: "trophy", label: "Turniri" },
-    ],
-    openingHours: "Pon-Ned: 09:00 - 24:00",
-    timeSlots: ["09:00", "10:30", "12:00", "15:00", "17:30", "19:00", "21:00"],
-  },
-};
+import {
+  fetchClubById,
+  fetchClubFollowStatus,
+  followClub,
+  unfollowClub,
+} from "../../lib/clubApi";
 
 export default function ClubProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { colors, isDark } = useTheme();
+  const { profile: currentUserProfile } = useAuth();
   const styles = getStyles(colors, isDark);
-  const club = CLUB_DATA[id as string];
+  const queryClient = useQueryClient();
 
-  if (!club) {
+  const clubId = id as string;
+
+  // Fetch club data
+  const {
+    data: club,
+    isLoading: clubLoading,
+    error: clubError,
+  } = useQuery({
+    queryKey: ["club", clubId],
+    queryFn: () => fetchClubById(clubId),
+    enabled: !!clubId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch follow status
+  const { data: followStatus, isLoading: followStatusLoading } = useQuery({
+    queryKey: ["clubFollowStatus", clubId],
+    queryFn: () => fetchClubFollowStatus(clubId),
+    enabled: !!clubId && !!currentUserProfile?.id,
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  // Follow/Unfollow mutation
+  const followMutation = useMutation({
+    mutationFn: async (isFollowing: boolean) => {
+      if (isFollowing) {
+        await unfollowClub(clubId);
+      } else {
+        await followClub(clubId);
+      }
+    },
+    onSuccess: () => {
+      // Invalidate and refetch follow status
+      queryClient.invalidateQueries({ queryKey: ["clubFollowStatus", clubId] });
+      queryClient.invalidateQueries({ queryKey: ["club", clubId] });
+    },
+    onError: (error) => {
+      console.error("Error toggling follow:", error);
+    },
+  });
+
+  const handleFollowToggle = () => {
+    if (!currentUserProfile?.id || !followStatus) return;
+    followMutation.mutate(followStatus.is_following);
+  };
+
+  const loading = clubLoading || followStatusLoading;
+
+  if (clubError) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>Klub nije pronađen</Text>
+        <Text style={styles.errorText}>Greška pri učitavanju kluba</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (clubLoading || !club) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -130,7 +101,11 @@ export default function ClubProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Image */}
         <ImageBackground
-          source={{ uri: club.image }}
+          source={{
+            uri:
+              club.image ||
+              "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
+          }}
           style={styles.headerImage}
         >
           <View style={styles.imageOverlay} />
@@ -169,6 +144,92 @@ export default function ClubProfileScreen() {
             </View>
           </View>
 
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <StatItem
+              number={club.courts || 0}
+              label="Tereni"
+              onPress={() => {
+                // Could show courts details
+              }}
+            />
+            <StatItem
+              number={followStatus?.followers_count || 0}
+              label="Pratioci"
+              onPress={() => {
+                router.push(`/(home)/followers?clubId=${club.id}`);
+              }}
+            />
+            <StatItem
+              number={followStatus?.following_count || 0}
+              label="Praćenje"
+              onPress={() => {
+                router.push(`/(home)/following?clubId=${club.id}`);
+              }}
+            />
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <View style={styles.buttonHalf}>
+              {currentUserProfile && followStatus && (
+                <Pressable
+                  style={[
+                    styles.followActionButton,
+                    followStatus.is_following && styles.followingActionButton,
+                  ]}
+                  onPress={handleFollowToggle}
+                  disabled={followMutation.isPending || loading}
+                >
+                  {followMutation.isPending ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={
+                        followStatus.is_following ? colors.text : "#FFFFFF"
+                      }
+                    />
+                  ) : (
+                    <>
+                      <FontAwesome
+                        name={followStatus.is_following ? "check" : "plus"}
+                        size={14}
+                        color={
+                          followStatus.is_following ? colors.text : "#FFFFFF"
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.followActionButtonText,
+                          followStatus.is_following &&
+                            styles.followingActionButtonText,
+                        ]}
+                      >
+                        {followStatus.is_following ? "Otprati" : "Prati"}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              )}
+            </View>
+            <View style={styles.buttonHalf}>
+              <Pressable
+                style={styles.playButton}
+                onPress={() =>
+                  router.push(
+                    `/(home)/createMatch?clubId=${club.id}&clubName=${encodeURIComponent(club.name)}`,
+                  )
+                }
+              >
+                <FontAwesome
+                  name="play"
+                  size={14}
+                  color={isDark ? "#0B0B0B" : "#FFFFFF"}
+                />
+                <Text style={styles.playButtonText}>Igraj</Text>
+              </Pressable>
+            </View>
+          </View>
+
           {/* Description */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>O klubu</Text>
@@ -179,7 +240,7 @@ export default function ClubProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sadržaji</Text>
             <View style={styles.amenitiesGrid}>
-              {club.amenities.map((amenity: any, index: number) => (
+              {(club.amenities || []).map((amenity: any, index: number) => (
                 <View key={index} style={styles.amenityCard}>
                   <FontAwesome
                     name={amenity.icon}
@@ -225,7 +286,7 @@ export default function ClubProfileScreen() {
               showsHorizontalScrollIndicator={false}
               style={styles.timeSlotsScroll}
             >
-              {club.timeSlots.map((slot: string, index: number) => (
+              {(club.timeSlots || []).map((slot: string, index: number) => (
                 <Pressable key={index} style={styles.timeSlot}>
                   <Text style={styles.timeSlotText}>{slot}</Text>
                 </Pressable>
@@ -271,19 +332,9 @@ export default function ClubProfileScreen() {
             </View>
           </View>
 
-          <View style={{ height: 60 }} />
+          <View style={{ height: 20 }} />
         </View>
       </ScrollView>
-
-      {/* Bottom Action Button */}
-      <View style={styles.footer}>
-        <Pressable
-          style={styles.bookButton}
-          onPress={() => router.push(`/createMatch?clubId=${club.id}`)}
-        >
-          <Text style={styles.bookButtonText}>Rezerviši termin</Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }
@@ -293,6 +344,18 @@ const getStyles = (colors: any, isDark: boolean) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.background,
+    },
+    errorText: {
+      color: colors.text,
+      fontSize: 16,
+      textAlign: "center",
+      marginTop: 20,
     },
     headerImage: {
       width: "100%",
@@ -473,31 +536,56 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 14,
       lineHeight: 20,
     },
-    footer: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: 20,
-      backgroundColor: colors.background,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
+    statsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginBottom: 28,
+      paddingVertical: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
-    bookButton: {
-      backgroundColor: isDark ? colors.accent : colors.blue,
-      borderRadius: 24,
-      paddingVertical: 16,
+    actionButtons: {
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 28,
+    },
+    buttonHalf: {
+      flex: 1,
+    },
+    followActionButton: {
+      flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 24,
+      backgroundColor: isDark ? colors.accent : colors.blue,
     },
-    bookButtonText: {
-      color: isDark ? colors.background : "#FFFFFF",
+    followingActionButton: {
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    followActionButtonText: {
+      color: "#FFFFFF",
       fontSize: 16,
-      fontWeight: "700",
+      fontWeight: "600",
     },
-    errorText: {
+    followingActionButtonText: {
       color: colors.text,
+    },
+    playButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 24,
+      backgroundColor: isDark ? colors.accent : colors.blue,
+    },
+    playButtonText: {
+      color: isDark ? "#0B0B0B" : "#FFFFFF",
       fontSize: 16,
-      textAlign: "center",
-      marginTop: 40,
+      fontWeight: "600",
     },
   });

@@ -27,50 +27,81 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   // Function to load profile from database
   const loadProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    try {
+      console.log("[AuthContext] Starting loadProfile for userId:", userId);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
-      console.error("[AuthContext] Error loading profile:", error);
+      if (error) {
+        console.error("[AuthContext] Error loading profile:", error);
 
-      // If user doesn't exist in profiles table (deleted from database), clear the session
-      if (error.code === "PGRST116") {
-        console.log(
-          "[AuthContext] User not found in database, clearing session...",
-        );
-        await supabase.auth.signOut();
+        // If user doesn't exist in profiles table (deleted from database), clear the session
+        if (error.code === "PGRST116") {
+          console.log(
+            "[AuthContext] User not found in database, clearing session...",
+          );
+          await supabase.auth.signOut();
+        }
+
+        setProfile(null);
+        return;
       }
 
+      console.log("[AuthContext] Profile loaded:", {
+        userId,
+        profileCompleted: data?.profile_completed,
+      });
+      setProfile(data);
+    } catch (error) {
+      console.error("[AuthContext] Unexpected error in loadProfile:", error);
       setProfile(null);
-      return;
     }
-
-    console.log("[AuthContext] Profile loaded:", {
-      userId,
-      profileCompleted: data?.profile_completed,
-    });
-    setProfile(data);
   };
 
   useEffect(() => {
+    let mounted = true;
+    console.log("[AuthContext] useEffect starting, mounted:", mounted);
+
     const loadInitialSession = async () => {
-      console.log("[AuthContext] Loading initial session...");
-      const { data, error } = await supabase.auth.getSession();
-      console.log("[AuthContext] getSession result:", {
-        hasSession: !!data.session,
-        userId: data.session?.user?.id,
-        error,
-      });
-      setSession(data.session);
+      try {
+        console.log("[AuthContext] Loading initial session...");
+        const { data, error } = await supabase.auth.getSession();
+        console.log("[AuthContext] getSession completed:", {
+          hasSession: !!data.session,
+          userId: data.session?.user?.id,
+          error,
+        });
 
-      if (data.session?.user) {
-        await loadProfile(data.session.user.id);
+        if (!mounted) {
+          console.log("[AuthContext] Component unmounted, skipping setState");
+          return;
+        }
+
+        setSession(data.session);
+        console.log("[AuthContext] Session state updated");
+
+        if (data.session?.user) {
+          console.log("[AuthContext] User exists, loading profile...");
+          await loadProfile(data.session.user.id);
+          console.log("[AuthContext] Profile loading completed");
+        } else {
+          console.log("[AuthContext] No user, skipping profile load");
+        }
+      } catch (error) {
+        console.error("[AuthContext] Error loading initial session:", error);
+      } finally {
+        if (mounted) {
+          console.log("[AuthContext] Setting isLoading to false");
+          setIsLoading(false);
+        } else {
+          console.log(
+            "[AuthContext] Component unmounted, skipping isLoading update",
+          );
+        }
       }
-
-      setIsLoading(false);
     };
 
     loadInitialSession();
@@ -83,6 +114,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         hasSession: !!nextSession,
         userId: nextSession?.user?.id,
       });
+
+      if (!mounted) return;
+
       setSession(nextSession);
 
       if (nextSession?.user) {
@@ -90,11 +124,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       } else {
         setProfile(null);
       }
-
-      setIsLoading(false);
     });
 
     return () => {
+      console.log("[AuthContext] useEffect cleanup");
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

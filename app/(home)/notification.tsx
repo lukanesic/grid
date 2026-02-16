@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NotificationItem, NotificationSection } from "../../components";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const NOTIFICATION_STATUS = {
@@ -25,34 +26,27 @@ const NOTIFICATION_STATUS = {
   match_invite: { color: "#4F7DFF", icon: "plus" },
   match_accepted: { color: "#34C759", icon: "check" },
   match_declined: { color: "#FF6B6B", icon: "times" },
+  match_joined: { color: "#34C759", icon: "user-plus" },
+  match_left: { color: "#FF6B6B", icon: "user-times" },
+  match_cancelled: { color: "#FF6B6B", icon: "ban" },
   message: { color: "#B8FF00", icon: "comment" },
 } as const;
 
 export default function NotificationScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { profile } = useAuth();
   const styles = getStyles(colors);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Get current user ID
-    const getUserId = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-    getUserId();
-  }, []);
+  const userId = profile?.id;
 
   useEffect(() => {
     if (!userId) return;
 
+    console.log("🔔 Setting up notifications for user:", userId);
     loadNotifications();
 
     // Real-time subscription with user filter
@@ -68,6 +62,7 @@ export default function NotificationScreen() {
         },
         () => {
           console.log("🔔 New notification received in notification screen!");
+          console.log("🔄 Reloading notifications...");
           loadNotifications();
         },
       )
@@ -110,8 +105,19 @@ export default function NotificationScreen() {
       // Reload notifications to update UI immediately
       await loadNotifications();
 
-      // Navigate to the user's profile if actor_id exists
-      if (notification.actor_id) {
+      // Navigation logic based on notification type
+      const matchTypes = [
+        "match_invite",
+        "match_joined",
+        "match_left",
+        "match_cancelled",
+      ];
+
+      if (matchTypes.includes(notification.type)) {
+        // For match notifications, find the relevant reservation
+        await handleMatchNotificationNavigation(notification);
+      } else if (notification.actor_id) {
+        // Navigate to player profile for follow/other notifications
         router.push(`/playerProfile?id=${notification.actor_id}`);
       }
     } catch (error) {
@@ -119,15 +125,141 @@ export default function NotificationScreen() {
     }
   };
 
+  const handleMatchNotificationNavigation = async (
+    notification: Notification,
+  ) => {
+    try {
+      console.log(
+        "🔍 Finding reservation for match notification:",
+        notification.type,
+      );
+
+      // Find recent reservations involving the actor and current user
+      const { data: reservations, error } = await supabase
+        .from("court_reservations")
+        .select("id, user_id, invited_players, created_at")
+        .or(`user_id.eq.${userId},user_id.eq.${notification.actor_id}`)
+        .gte(
+          "created_at",
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        ) // Last 7 days
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.error("Error finding reservations:", error);
+        // Fallback to player profile
+        if (notification.actor_id) {
+          router.push(`/playerProfile?id=${notification.actor_id}`);
+        }
+        return;
+      }
+
+      // Find the most relevant reservation
+      let targetReservation = null;
+
+      for (const reservation of reservations || []) {
+        const isUserCreator = reservation.user_id === userId;
+        const isActorCreator = reservation.user_id === notification.actor_id;
+        const isUserInvited = reservation.invited_players?.includes(userId);
+        const isActorInvited = reservation.invited_players?.includes(
+          notification.actor_id,
+        );
+
+        // Logic based on notification type
+        if (
+          notification.type === "match_invite" &&
+          isActorCreator &&
+          isUserInvited
+        ) {
+          targetReservation = reservation;
+          break;
+        } else if (
+          notification.type === "match_joined" &&
+          isUserCreator &&
+          isActorInvited
+        ) {
+          targetReservation = reservation;
+          break;
+        } else if (
+          notification.type === "match_left" &&
+          isUserCreator &&
+          !isActorInvited
+        ) {
+          targetReservation = reservation;
+          break;
+        } else if (notification.type === "match_cancelled" && isActorCreator) {
+          targetReservation = reservation;
+          break;
+        }
+      }
+
+      if (targetReservation) {
+        console.log(
+          "✅ Found reservation, navigating to match screen:",
+          targetReservation.id,
+        );
+        router.replace(`/matchScreen?id=${targetReservation.id}`);
+      } else {
+        console.log(
+          "❌ No matching reservation found, going to player profile",
+        );
+        if (notification.actor_id) {
+          router.push(`/playerProfile?id=${notification.actor_id}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error navigating from match notification:", error);
+      // Fallback to player profile
+      if (notification.actor_id) {
+        router.push(`/playerProfile?id=${notification.actor_id}`);
+      }
+    }
+  };
+
   const loadNotifications = async () => {
     try {
-      const { data, error } = await supabase.rpc("get_user_notifications", {
-        page_limit: 50,
-        page_offset: 0,
-      });
+      console.log("🔄 Loading notifications...");
+
+      // Use direct query instead of RPC to get all notification types
+      const { data, error } = await supabase
+        .from("notifications")
+        .select(
+          `
+          id,
+          type,
+          message,
+          is_read,
+          created_at,
+          actor_id,
+          actor:profiles!actor_id(
+            full_name,
+            avatar_url
+          )
+        `,
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (error) throw error;
-      setNotifications(data || []);
+
+      // Transform data to match expected format
+      const transformedData =
+        data?.map((notification) => ({
+          id: notification.id,
+          type: notification.type,
+          message: notification.message,
+          is_read: notification.is_read,
+          created_at: notification.created_at,
+          actor_id: notification.actor_id,
+          reservation_id: null, // Will be populated after SQL migration
+          actor_name: notification.actor?.full_name || null,
+          actor_avatar: notification.actor?.avatar_url || null,
+        })) || [];
+
+      console.log("📱 Loaded notifications:", transformedData.length);
+      setNotifications(transformedData);
     } catch (error) {
       console.error("Error loading notifications:", error);
     } finally {

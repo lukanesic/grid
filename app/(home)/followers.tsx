@@ -20,16 +20,21 @@ export default function FollowersScreen() {
   const [followers, setFollowers] = useState<FollowerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const router = useRouter();
-  const { userId } = useLocalSearchParams();
+  const { userId, clubId } = useLocalSearchParams();
   const { colors } = useTheme();
   const styles = createStyles(colors);
+
+  const isClub = !!clubId;
 
   useEffect(() => {
     if (userId && typeof userId === "string") {
       loadFollowers(userId);
+    } else if (clubId && typeof clubId === "string") {
+      loadClubFollowers(clubId);
     }
-  }, [userId]);
+  }, [userId, clubId]);
 
   const loadFollowers = async (targetUserId: string, isRefresh = false) => {
     try {
@@ -39,7 +44,8 @@ export default function FollowersScreen() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const currentUserId = user?.id;
+      const currentUserIdTemp = user?.id;
+      setCurrentUserId(currentUserIdTemp || null);
 
       // Query followers with profile data
       const { data: followersData, error } = await supabase
@@ -67,11 +73,11 @@ export default function FollowersScreen() {
         followersData?.map((f: any) => f.profiles.id).filter(Boolean) || [];
 
       let followingStatus: Record<string, boolean> = {};
-      if (currentUserId && followerIds.length > 0) {
+      if (currentUserIdTemp && followerIds.length > 0) {
         const { data: followingData } = await supabase
           .from("followers")
           .select("following_id")
-          .eq("follower_id", currentUserId)
+          .eq("follower_id", currentUserIdTemp)
           .in("following_id", followerIds);
 
         followingData?.forEach((f: any) => {
@@ -100,10 +106,89 @@ export default function FollowersScreen() {
     }
   };
 
+  const loadClubFollowers = async (targetClubId: string, isRefresh = false) => {
+    try {
+      if (!isRefresh) setLoading(true);
+
+      // Convert clubId to UUID format if needed
+      const clubUuid =
+        targetClubId.length < 36
+          ? `00000000-0000-0000-0000-${targetClubId.padStart(12, "0")}`
+          : targetClubId;
+
+      // Get current user ID
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const currentUserIdTemp = user?.id;
+      setCurrentUserId(currentUserIdTemp || null);
+
+      // Query club_follows to get followers of this club
+      const { data: clubFollowersData, error } = await supabase
+        .from("club_follows")
+        .select(
+          `
+          created_at,
+          follower_id,
+          profiles!club_follows_follower_id_fkey (
+            id,
+            full_name,
+            avatar_url,
+            followers_count,
+            following_count
+          )
+        `,
+        )
+        .eq("club_id", clubUuid)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Check which followers the current user is following
+      const followerIds =
+        clubFollowersData?.map((f: any) => f.profiles.id).filter(Boolean) || [];
+
+      let followingStatus: Record<string, boolean> = {};
+      if (currentUserIdTemp && followerIds.length > 0) {
+        const { data: followingData } = await supabase
+          .from("followers")
+          .select("following_id")
+          .eq("follower_id", currentUserIdTemp)
+          .in("following_id", followerIds);
+
+        followingData?.forEach((f: any) => {
+          followingStatus[f.following_id] = true;
+        });
+      }
+
+      // Map to expected format
+      const mappedFollowers: FollowerProfile[] =
+        clubFollowersData?.map((item: any) => ({
+          id: item.profiles.id,
+          full_name: item.profiles.full_name,
+          avatar_url: item.profiles.avatar_url,
+          followers_count: item.profiles.followers_count || 0,
+          following_count: item.profiles.following_count || 0,
+          is_following: followingStatus[item.profiles.id] || false,
+          followed_at: item.created_at,
+        })) || [];
+
+      setFollowers(mappedFollowers);
+    } catch (error) {
+      console.error("Error loading club followers:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     if (userId && typeof userId === "string") {
       loadFollowers(userId, true);
+    } else if (clubId && typeof clubId === "string") {
+      loadClubFollowers(clubId, true);
     }
   };
 
@@ -144,14 +229,16 @@ export default function FollowersScreen() {
           </Text>
         </View>
       </View>
-      <FollowButton
-        userId={item.id}
-        isFollowing={item.is_following}
-        onFollowChange={(isFollowing) =>
-          handleFollowChange(item.id, isFollowing)
-        }
-        variant="small"
-      />
+      {currentUserId !== item.id && (
+        <FollowButton
+          userId={item.id}
+          isFollowing={item.is_following}
+          onFollowChange={(isFollowing) =>
+            handleFollowChange(item.id, isFollowing)
+          }
+          variant="small"
+        />
+      )}
     </Pressable>
   );
 
@@ -159,7 +246,9 @@ export default function FollowersScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <IconButton icon="arrow-left" onPress={() => router.back()} />
-        <Text style={styles.headerTitle}>Pratioci</Text>
+        <Text style={styles.headerTitle}>
+          {isClub ? "Pratioci kluba" : "Pratioci"}
+        </Text>
         <View style={styles.headerPlaceholder} />
       </View>
 

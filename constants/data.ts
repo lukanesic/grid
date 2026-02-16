@@ -1164,12 +1164,6 @@ export const LEGAL_LINKS = [
 export const LANGUAGES = [
   { id: "sr", name: "Srpski", nativeName: "Српски", flag: "🇷🇸" },
   { id: "en", name: "English", nativeName: "English", flag: "🇬🇧" },
-  { id: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸" },
-  { id: "de", name: "German", nativeName: "Deutsch", flag: "🇩🇪" },
-  { id: "fr", name: "French", nativeName: "Français", flag: "🇫🇷" },
-  { id: "it", name: "Italian", nativeName: "Italiano", flag: "🇮🇹" },
-  { id: "pt", name: "Portuguese", nativeName: "Português", flag: "🇵🇹" },
-  { id: "ru", name: "Russian", nativeName: "Русский", flag: "🇷🇺" },
   { id: "hr", name: "Croatian", nativeName: "Hrvatski", flag: "🇭🇷" },
   { id: "bs", name: "Bosnian", nativeName: "Bosanski", flag: "🇧🇦" },
   { id: "mk", name: "Macedonian", nativeName: "Македонски", flag: "🇲🇰" },
@@ -1208,36 +1202,66 @@ export const PAYMENT_HISTORY = [
 // ============================================
 export const UPGRADE_PLANS = [
   {
-    id: "monthly",
-    name: "Mesečni",
-    price: "9.99 €",
+    id: "free",
+    name: "Free",
+    price: "0 RSD",
     period: "mesečno",
     savings: null,
     popular: false,
   },
   {
-    id: "yearly",
-    name: "Godišnji",
-    price: "79.99 €",
-    period: "godišnje",
-    savings: "Uštedi 33%",
+    id: "premium",
+    name: "Premium",
+    price: "999 RSD",
+    period: "mesečno",
+    savings: null,
     popular: true,
-  },
-  {
-    id: "lifetime",
-    name: "Doživotni",
-    price: "199.99 €",
-    period: "jednokratno",
-    savings: "Najbolja ponuda",
-    popular: false,
   },
 ];
 
-export const UPGRADE_FEATURES = [
+export const FREE_FEATURES = [
+  {
+    icon: "gamepad",
+    title: "Osnovni mečevi",
+    description: "Do 5 mečeva mesečno",
+  },
+  {
+    icon: "search",
+    title: "Pretraga igrača",
+    description: "Pronađi partnere za igru",
+  },
+  {
+    icon: "user",
+    title: "Osnovni profil",
+    description: "Kreiraj i uređuj svoj profil",
+  },
+  {
+    icon: "map-marker",
+    title: "Pretraga terena",
+    description: "Pronađi terene u blizini",
+  },
+  {
+    icon: "comment",
+    title: "1-na-1 chat",
+    description: "Direktne poruke sa igračima",
+  },
+  {
+    icon: "calendar",
+    title: "Osnovni kalendar",
+    description: "Prati svoje zakazane mečeve",
+  },
+];
+
+export const PREMIUM_FEATURES = [
   {
     icon: "repeat",
     title: "Neograničeni mečevi",
     description: "Kreiraj koliko god mečeva želiš",
+  },
+  {
+    icon: "users",
+    title: "Grupni chat",
+    description: "Kreiraj grupe i komuniciraj sa timom",
   },
   {
     icon: "bar-chart",
@@ -1245,14 +1269,14 @@ export const UPGRADE_FEATURES = [
     description: "Detaljne analize i grafici performansi",
   },
   {
-    icon: "star",
-    title: "Prioritetna podrška",
-    description: "Brz odgovor od support tima",
+    icon: "video-camera",
+    title: "Video analiza",
+    description: "Snimaj i analiziraj svoje mečeve",
   },
   {
-    icon: "eye-slash",
-    title: "Bez reklama",
-    description: "Aplikacija bez ometajućih reklama",
+    icon: "star",
+    title: "Match prioritet",
+    description: "Pojavi se na vrhu liste pretraga",
   },
   {
     icon: "trophy",
@@ -1260,21 +1284,19 @@ export const UPGRADE_FEATURES = [
     description: "Pristup premium događajima",
   },
   {
-    icon: "video-camera",
-    title: "Video analiza",
-    description: "Snimaj i analiziraj svoje mečeve",
+    icon: "eye-slash",
+    title: "Bez reklama",
+    description: "Aplikacija bez ometajućih reklama",
   },
   {
-    icon: "users",
-    title: "Match prioritet",
-    description: "Pojavi se na vrhu liste pretraga",
-  },
-  {
-    icon: "calendar-check-o",
-    title: "Automatsko zakazivanje",
-    description: "AI predlaže najbolje termine",
+    icon: "support",
+    title: "Prioritetna podrška",
+    description: "Brz odgovor od support tima",
   },
 ];
+
+// Keep UPGRADE_FEATURES for backward compatibility
+export const UPGRADE_FEATURES = PREMIUM_FEATURES;
 
 export const SUGGESTED_FRIENDS = [
   {

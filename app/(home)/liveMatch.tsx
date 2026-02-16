@@ -1,4 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -19,11 +20,24 @@ import {
     TeamInformation,
 } from "../../components/liveMatch";
 import { OPEN_MATCHES, UPCOMING_MATCHES } from "../../constants/data";
+import { fetchReservationById } from "../../lib/courtApi";
 
 export default function LiveMatchScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [matchTime, setMatchTime] = useState(0); // in minutes
+
+  // Check if ID is UUID (database reservation) or sample data
+  const isUUID =
+    typeof id === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  // Fetch reservation from database if UUID
+  const { data: reservation, isLoading } = useQuery({
+    queryKey: ["reservation", id],
+    queryFn: () => fetchReservationById(id as string),
+    enabled: isUUID,
+  });
 
   // Professional padel scoring state
   const [setsWon, setSetsWon] = useState({ team1: 0, team2: 0 });
@@ -36,9 +50,51 @@ export default function LiveMatchScreen() {
   );
   const [totalSets] = useState(3); // Best of 3 sets
 
-  // Combine both upcoming and open matches to find the match by ID
-  const allMatches = [...UPCOMING_MATCHES, ...OPEN_MATCHES];
-  const match = allMatches.find((m) => m.id === id);
+  // Get match data - either from database reservation or sample data
+  let match = null;
+
+  if (isUUID && reservation) {
+    // Transform database reservation to match format
+    const participants: any[] = [];
+
+    // Add creator
+    if (reservation.user?.full_name) {
+      participants.push({
+        name: reservation.user.full_name,
+        level: "1.0",
+        avatar: reservation.user.avatar_url || null,
+      });
+    }
+
+    // Add invited players
+    if (reservation.invited_players_profiles) {
+      reservation.invited_players_profiles.forEach((player: any) => {
+        participants.push({
+          name: player.full_name,
+          level: "1.0",
+          avatar: player.avatar_url || null,
+        });
+      });
+    }
+
+    // Fill empty slots
+    while (participants.length < 4) {
+      participants.push({ name: "", level: "+", avatar: null });
+    }
+
+    match = {
+      id: reservation.id,
+      type: "OTVORENI MEČ",
+      date: `${reservation.reservation_date} • ${reservation.start_time.substring(0, 5)}`,
+      location: `${reservation.court?.clubs?.name || "Klub"}`,
+      participants: participants,
+      author: reservation.user?.full_name || "Korisnik",
+    };
+  } else if (!isUUID) {
+    // Use sample data for non-UUID IDs
+    const allMatches = [...UPCOMING_MATCHES, ...OPEN_MATCHES];
+    match = allMatches.find((m) => m.id === id);
+  }
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,6 +103,20 @@ export default function LiveMatchScreen() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Show loading for database reservations
+  if (isUUID && isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()}>
+            <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          </Pressable>
+          <Text style={styles.headerTitle}>Učitavanje...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!match) {
     return (

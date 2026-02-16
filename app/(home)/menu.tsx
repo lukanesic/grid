@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Pressable,
@@ -13,13 +14,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MenuRow, MenuSection } from "../../components";
+import { LANGUAGES } from "../../constants/data";
+import { useLanguage } from "../../contexts/LanguageContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 export default function MenuScreen() {
   const router = useRouter();
   const { colors, toggleTheme, isDark } = useTheme();
+  const { language } = useLanguage();
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState(true);
-  const [saveHistory, setSaveHistory] = useState(true);
+
+  const currentLanguage = LANGUAGES.find((l) => l.id === language);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -41,22 +47,24 @@ export default function MenuScreen() {
           <Pressable style={styles.backButton} onPress={() => router.back()}>
             <FontAwesome name="chevron-left" size={20} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Nalog</Text>
+          <Text style={styles.headerTitle}>{t("menu.account")}</Text>
         </View>
 
         <View style={styles.upgradeCard}>
           <View style={styles.upgradeHeader}>
-            <Text style={styles.upgradeTitle}>GRID</Text>
+            <Text style={styles.upgradeTitle}>{t("menu.upgrade.title")}</Text>
             <View style={styles.proBadge}>
-              <Text style={styles.proBadgeText}>PRO</Text>
+              <Text style={styles.proBadgeText}>{t("menu.upgrade.badge")}</Text>
             </View>
           </View>
-          <Text style={styles.upgradeSub}>Otključaj sve premium opcije.</Text>
+          <Text style={styles.upgradeSub}>{t("menu.upgrade.description")}</Text>
           <Pressable
             style={styles.upgradeButton}
             onPress={() => router.push("/_menu/upgrade")}
           >
-            <Text style={styles.upgradeButtonText}>Nadogradi</Text>
+            <Text style={styles.upgradeButtonText}>
+              {t("menu.upgrade.button")}
+            </Text>
             <FontAwesome name="arrow-right" size={14} color="#111111" />
           </Pressable>
         </View>
@@ -65,20 +73,20 @@ export default function MenuScreen() {
           {[
             {
               icon: "user",
-              label: "Profil informacije",
-              sub: "Lični podaci i nalog",
+              label: t("menu.profile"),
+              sub: t("menu.profileSub"),
               onPress: () => router.push("/_menu/profileInfo"),
             },
             {
               icon: "lock",
-              label: "Privatnost i bezbednost",
-              sub: "Lozinka i zaštita",
+              label: t("menu.privacy"),
+              sub: t("menu.privacySub"),
               onPress: () => router.push("/_menu/privacySecurity"),
             },
             {
               icon: "credit-card",
-              label: "Pretplata i naplata",
-              sub: "Plan i plaćanja",
+              label: t("menu.subscription"),
+              sub: t("menu.subscriptionSub"),
               onPress: () => router.push("/_menu/subscriptionBilling"),
             },
           ].map((item) => (
@@ -96,34 +104,36 @@ export default function MenuScreen() {
         <MenuSection>
           <MenuRow
             icon="moon-o"
-            title="Tamni režim"
-            subtitle="Tema aplikacije"
+            title={t("menu.darkMode")}
+            subtitle={t("menu.darkModeSub")}
             right={<Switch value={isDark} onValueChange={toggleTheme} />}
           />
           <MenuRow
             icon="bell-o"
-            title="Notifikacije"
-            subtitle="Push i e-mail"
+            title={t("menu.notifications")}
+            subtitle={t("menu.notificationsSub")}
             right={
               <Switch value={notifications} onValueChange={setNotifications} />
             }
           />
-          <MenuRow
+          {/* <MenuRow
             icon="bookmark-o"
             title="Istorija čuvanja"
             subtitle="Sačuvani mečevi"
             right={
               <Switch value={saveHistory} onValueChange={setSaveHistory} />
             }
-          />
+          /> */}
           <MenuRow
             icon="language"
-            title="Jezik"
-            subtitle="Izaberi jezik"
+            title={t("menu.language")}
+            subtitle={t("menu.languageSub")}
             onPress={() => router.push("/_menu/language")}
             right={
               <View style={styles.langRight}>
-                <Text style={styles.langValue}>Srpski</Text>
+                <Text style={styles.langValue}>
+                  {currentLanguage?.nativeName}
+                </Text>
                 <FontAwesome
                   name="chevron-right"
                   size={20}
@@ -134,15 +144,15 @@ export default function MenuScreen() {
           />
           <MenuRow
             icon="question-circle-o"
-            title="Centar za pomoć"
-            subtitle="FAQ i podrška"
+            title={t("menu.helpCenter")}
+            subtitle={t("menu.helpCenterSub")}
             showChevron
             onPress={() => router.push("/_menu/helpCenter")}
           />
           <MenuRow
             icon="info-circle"
-            title="O aplikaciji"
-            subtitle="Verzija i detalji"
+            title={t("menu.about")}
+            subtitle={t("menu.aboutSub")}
             showChevron
             onPress={() => router.push("/_menu/aboutApp")}
           />
@@ -151,8 +161,8 @@ export default function MenuScreen() {
         <MenuSection>
           <MenuRow
             icon="sign-out"
-            title="Izloguj se"
-            subtitle="Odjavi nalog"
+            title={t("menu.logout")}
+            subtitle={t("menu.logoutSub")}
             iconColor="#FF6B6B"
             titleColor="#FF6B6B"
             onPress={handleLogout}

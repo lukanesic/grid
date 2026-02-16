@@ -10,7 +10,7 @@ import {
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] = useState<"sve" | "vruce" | "krugovi">(
+  const [activeTab, setActiveTab] = useState<"sve" | "igraci" | "klubovi">(
     "sve",
   );
   const [refreshing, setRefreshing] = useState(false);
@@ -46,8 +46,8 @@ export default function HomeScreen() {
 
         {/* Tab Content */}
         {activeTab === "sve" && <SveTabContent styles={styles} />}
-        {activeTab === "vruce" && <VruceTabContent styles={styles} />}
-        {activeTab === "krugovi" && <KrugoviTabContent styles={styles} />}
+        {activeTab === "igraci" && <VruceTabContent styles={styles} />}
+        {activeTab === "klubovi" && <KrugoviTabContent styles={styles} />}
       </ScrollView>
     </SafeAreaView>
   );

@@ -25,6 +25,11 @@ export interface Profile {
   // Social
   followers_count: number;
   following_count: number;
+  // Subscription
+  subscription_plan?: "free" | "premium";
+  subscription_status?: "active" | "inactive" | "trial" | "cancelled";
+  subscription_expires_at?: string | null;
+  trial_ends_at?: string | null;
 }
 
 export interface Follower {
@@ -41,6 +46,15 @@ export interface FollowerProfile {
   following_count: number;
   is_following: boolean;
   followed_at: string;
+}
+
+// Extended type for following list that can include both users and clubs
+export interface FollowingItem extends FollowerProfile {
+  type: "user" | "club";
+  club_info?: {
+    address?: string | null;
+    courts?: number;
+  };
 }
 
 export interface FollowStatus {

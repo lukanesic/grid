@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { ChatProvider } from "../contexts/ChatContext";
+import { LanguageProvider } from "../contexts/LanguageContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 
 // Create a client
@@ -82,9 +83,11 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <RootLayoutContent />
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <RootLayoutContent />
+        </ThemeProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

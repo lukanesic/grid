@@ -1,0 +1,111 @@
+{
+  "menu": {
+    "account": "Сметка",
+    "upgrade": {
+      "title": "GRID",
+      "badge": "Free",
+      "description": "Отклучи ги сите премиум опции.",
+      "button": "Надогради"
+    },
+    "profile": "Информации за профилот",
+    "profileSub": "Лични податоци и сметка",
+    "privacy": "Приватност и безбедност",
+    "privacySub": "Лозинка и заштита",
+    "subscription": "Претплата и наплата",
+    "subscriptionSub": "План и плаќања",
+    "darkMode": "Темен режим",
+    "darkModeSub": "Тема на апликацијата",
+    "notifications": "Известувања",
+    "notificationsSub": "Push и e-mail",
+    "language": "Јазик",
+    "languageSub": "Избери јазик",
+    "helpCenter": "Центар за помош",
+    "helpCenterSub": "FAQ и поддршка",
+    "about": "За апликацијата",
+    "aboutSub": "Верзија и детали",
+    "logout": "Одјави се",
+    "logoutSub": "Излез од сметката"
+  },
+  "languages": {
+    "sr": "Srpski",
+    "en": "English",
+    "hr": "Hrvatski",
+    "bs": "Bosanski",
+    "mk": "Македонски",
+    "sl": "Slovenščina"
+  },
+  "subscription": {
+    "title": "Претплата и наплата",
+    "currentPlan": "Тековен план",
+    "freePlan": "Free Plan",
+    "premiumPlan": "Premium Plan",
+    "monthly": "месечно",
+    "upgradePlan": "Надогради план",
+    "comingSoon": "НАСКОРО"
+  },
+  "profile": {
+    "title": "Информации за профилот",
+    "changePhoto": "Смени слика",
+    "subscriptionPlan": "План за претплата",
+    "upgradePrompt": "Кликни за надградба на Premium",
+    "validUntil": "Важи до",
+    "trialPeriod": "Пробен период до",
+    "personalInfo": "Лични информации",
+    "fullName": "Име и презиме",
+    "email": "Email",
+    "phone": "Телефон",
+    "birthDate": "Датум на раѓање",
+    "location": "Локација",
+    "accountSecurity": "Сметка и безбедност",
+    "password": "Лозинка",
+    "changePassword": "Смени лозинка",
+    "stats": "Статистика",
+    "matchesPlayed": "Изиграни натпревари",
+    "winRate": "Победи",
+    "dangerZone": "Опасна зона",
+    "deleteAccount": "Избриши сметка",
+    "save": "Зачувај"
+  },
+  "upgrade": {
+    "title": "Надогради",
+    "hero": {
+      "title": "Отклучи ги сите функции",
+      "subtitle": "Издвој се и активирај напредни опции за професионално искуство."
+    },
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "monthly": "месечно",
+      "savings": "Заштеди {{amount}}%"
+    },
+    "features": {
+      "title": "Што добиваш",
+      "unlimitedReservations": "Неограничени резервации",
+      "premiumBadge": "Premium беџ на профилот",
+      "prioritySupport": "Приоритетна поддршка",
+      "advancedStats": "Напредни статистики",
+      "adFree": "Без реклами",
+      "exclusiveEvents": "Ексклузивни настани"
+    },
+    "testimonials": {
+      "title": "Што велат корисниците"
+    },
+    "faq": {
+      "title": "Често поставувани прашања"
+    },
+    "cta": {
+      "button": "Надогради на Premium",
+      "terms": "Со претплата ги прифаќаш нашите услови за користење и политика за приватност."
+    }
+  },
+  "common": {
+    "back": "Назад",
+    "save": "Зачувај",
+    "cancel": "Откажи",
+    "delete": "Избриши",
+    "edit": "Измени",
+    "done": "Готово",
+    "error": "Грешка",
+    "success": "Успешно"
+  }
+}

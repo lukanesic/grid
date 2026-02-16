@@ -2,19 +2,23 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface PlayerCardProps {
+  userId: string;
   name: string;
   friendsInCommon: number;
   matchPercentage: number;
   avatar?: string;
-  onAddPress: () => void;
+  isFollowing: boolean;
+  onPress: () => void;
 }
 
 export default function PlayerCard({
+  userId,
   name,
   friendsInCommon,
   matchPercentage,
   avatar,
-  onAddPress,
+  isFollowing,
+  onPress,
 }: PlayerCardProps) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -35,8 +39,10 @@ export default function PlayerCard({
       <Text style={styles.friendsText}>
         {friendsInCommon} prijatelja zajedničkih
       </Text>
-      <Pressable style={styles.addButton} onPress={onAddPress}>
-        <Text style={styles.addButtonText}>Dodaj</Text>
+      <Pressable style={styles.addButton} onPress={onPress}>
+        <Text style={styles.addButtonText}>
+          {isFollowing ? "Igraj" : "Profil"}
+        </Text>
       </Pressable>
     </View>
   );

@@ -10,16 +10,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { UPGRADE_FEATURES, UPGRADE_PLANS } from "../../../constants/data";
+import { PREMIUM_FEATURES, UPGRADE_PLANS } from "../../../constants/data";
 
 export default function UpgradeScreen() {
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState("yearly");
+  const [selectedPlan, setSelectedPlan] = useState("free");
 
-  const handleUpgrade = () => {
-    // Handle upgrade logic here
-    router.push("/_menu/subscriptionBilling");
-  };
+  // COMMENTED OUT FOR MVP - will be used when payment system is ready
+  // const handleUpgrade = () => {
+  //   // Handle upgrade logic here
+  //   router.push("/_menu/subscriptionBilling");
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,7 +29,7 @@ export default function UpgradeScreen() {
         <Pressable onPress={() => router.back()}>
           <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
         </Pressable>
-        <Text style={styles.headerTitle}>Nadogradi na PRO</Text>
+        <Text style={styles.headerTitle}>Planovi i cene</Text>
         <View style={{ width: 20 }} />
       </View>
 
@@ -42,10 +43,8 @@ export default function UpgradeScreen() {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.heroTitle}>Otključaj sve funkcije</Text>
-          <Text style={styles.heroSubtitle}>
-            Podignite svoju padel igru na sledeći nivo sa GRID Pro
-          </Text>
+          <Text style={styles.heroTitle}>Pretplata</Text>
+          <Text style={styles.heroSubtitle}>Podignite svoju padel igru</Text>
         </View>
 
         {/* Plans */}
@@ -57,18 +56,41 @@ export default function UpgradeScreen() {
               style={[
                 styles.planCard,
                 selectedPlan === plan.id && styles.planCardSelected,
+                plan.id === "premium" && styles.planCardDisabled,
               ]}
-              onPress={() => setSelectedPlan(plan.id)}
+              onPress={() => plan.id === "free" && setSelectedPlan(plan.id)}
+              disabled={plan.id === "premium"}
             >
-              {plan.popular && (
+              {plan.popular && plan.id === "free" && (
                 <View style={styles.popularBadge}>
                   <Text style={styles.popularText}>NAJPOPULARNIJE</Text>
                 </View>
               )}
+              {plan.id === "premium" && (
+                <View
+                  style={[styles.popularBadge, { backgroundColor: "#3867FF" }]}
+                >
+                  <Text style={styles.popularText}>USKORO</Text>
+                </View>
+              )}
               <View style={styles.planHeader}>
                 <View style={styles.planInfo}>
-                  <Text style={styles.planName}>{plan.name}</Text>
-                  <Text style={styles.planPeriod}>{plan.period}</Text>
+                  <Text
+                    style={[
+                      styles.planName,
+                      plan.id === "premium" && { color: "#8B8B8B" },
+                    ]}
+                  >
+                    {plan.name}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.planPeriod,
+                      plan.id === "premium" && { color: "#6B6B6B" },
+                    ]}
+                  >
+                    {plan.period}
+                  </Text>
                   <View style={styles.planRadio}>
                     {selectedPlan === plan.id ? (
                       <View style={styles.radioSelected}>
@@ -80,8 +102,15 @@ export default function UpgradeScreen() {
                   </View>
                 </View>
                 <View style={styles.planPricing}>
-                  <Text style={styles.planPrice}>{plan.price}</Text>
-                  {plan.savings && (
+                  <Text
+                    style={[
+                      styles.planPrice,
+                      plan.id === "premium" && { color: "#8B8B8B" },
+                    ]}
+                  >
+                    {plan.price}
+                  </Text>
+                  {plan.savings && plan.id !== "premium" && (
                     <View style={styles.savingsBadge}>
                       <Text style={styles.savingsText}>{plan.savings}</Text>
                     </View>
@@ -96,7 +125,7 @@ export default function UpgradeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Šta dobijaš</Text>
           <View style={styles.featuresGrid}>
-            {UPGRADE_FEATURES.map((feature, index) => (
+            {PREMIUM_FEATURES.map((feature, index) => (
               <View key={index} style={styles.featureCard}>
                 <View style={styles.featureIcon}>
                   <FontAwesome
@@ -144,7 +173,7 @@ export default function UpgradeScreen() {
         </View>
 
         {/* Guarantee */}
-        <View style={styles.guaranteeCard}>
+        {/* <View style={styles.guaranteeCard}>
           <FontAwesome name="shield" size={32} color="#3867FF" />
           <View style={styles.guaranteeText}>
             <Text style={styles.guaranteeTitle}>
@@ -154,10 +183,10 @@ export default function UpgradeScreen() {
               Ako niste zadovoljni, vratićemo vam novac bez pitanja
             </Text>
           </View>
-        </View>
+        </View> */}
 
         {/* FAQ */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Često pitanja</Text>
           <View style={styles.faqCard}>
             <Text style={styles.faqQuestion}>Mogu li otkazati pretplatu?</Text>
@@ -175,11 +204,11 @@ export default function UpgradeScreen() {
               plan. Možete otkazati pre isteka.
             </Text>
           </View>
-        </View>
+        </View> */}
       </ScrollView>
 
-      {/* Bottom CTA */}
-      <View style={styles.footer}>
+      {/* Bottom CTA - COMMENTED OUT FOR MVP */}
+      {/* <View style={styles.footer}>
         <View style={styles.priceRow}>
           <Text style={styles.priceLabel}>
             {UPGRADE_PLANS.find((p) => p.id === selectedPlan)?.name}
@@ -189,13 +218,19 @@ export default function UpgradeScreen() {
           </Text>
         </View>
         <Pressable style={styles.upgradeButton} onPress={handleUpgrade}>
-          <Text style={styles.upgradeButtonText}>Započni 7 dana besplatno</Text>
+          <Text style={styles.upgradeButtonText}>
+            {selectedPlan === "free"
+              ? "Nastavi sa Free planom"
+              : "Započni 7 dana besplatno"}
+          </Text>
         </Pressable>
-        <Text style={styles.footerNote}>
-          Nakon toga {UPGRADE_PLANS.find((p) => p.id === selectedPlan)?.price} /{" "}
-          {UPGRADE_PLANS.find((p) => p.id === selectedPlan)?.period}
-        </Text>
-      </View>
+        {selectedPlan === "premium" && (
+          <Text style={styles.footerNote}>
+            Nakon toga {UPGRADE_PLANS.find((p) => p.id === selectedPlan)?.price}{" "}
+            / {UPGRADE_PLANS.find((p) => p.id === selectedPlan)?.period}
+          </Text>
+        )}
+      </View> */}
     </SafeAreaView>
   );
 }
@@ -267,6 +302,10 @@ const styles = StyleSheet.create({
   },
   planCardSelected: {
     borderColor: "#B8FF00",
+  },
+  planCardDisabled: {
+    opacity: 0.5,
+    backgroundColor: "#0F0F0F",
   },
   popularBadge: {
     position: "absolute",

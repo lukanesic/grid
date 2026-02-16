@@ -2,22 +2,23 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LANGUAGES } from "../../../constants/data";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function LanguageScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { language, changeLanguage } = useLanguage();
   const styles = getStyles(colors, isDark);
-  const [selectedLanguage, setSelectedLanguage] = useState("sr");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredLanguages = LANGUAGES.filter(
@@ -25,6 +26,16 @@ export default function LanguageScreen() {
       lang.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lang.nativeName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const handleLanguageSelect = async (langId: string) => {
+    await changeLanguage(langId);
+    // Navigate back after a short delay to show selection
+    setTimeout(() => {
+      router.back();
+    }, 300);
+  };
+
+  const currentLanguage = LANGUAGES.find((l) => l.id === language);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,15 +74,13 @@ export default function LanguageScreen() {
         <View style={styles.currentSection}>
           <Text style={styles.sectionTitle}>Trenutni jezik</Text>
           <View style={styles.currentLanguageCard}>
-            <Text style={styles.currentFlag}>
-              {LANGUAGES.find((l) => l.id === selectedLanguage)?.flag}
-            </Text>
+            <Text style={styles.currentFlag}>{currentLanguage?.flag}</Text>
             <View style={styles.currentLanguageText}>
               <Text style={styles.currentLanguageName}>
-                {LANGUAGES.find((l) => l.id === selectedLanguage)?.nativeName}
+                {currentLanguage?.nativeName}
               </Text>
               <Text style={styles.currentLanguageSubtitle}>
-                {LANGUAGES.find((l) => l.id === selectedLanguage)?.name}
+                {currentLanguage?.name}
               </Text>
             </View>
             <View style={styles.activeBadge}>
@@ -88,23 +97,21 @@ export default function LanguageScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Svi jezici</Text>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {filteredLanguages.map((language) => {
-              const isSelected = selectedLanguage === language.id;
+            {filteredLanguages.map((lang) => {
+              const isSelected = language === lang.id;
               return (
                 <Pressable
-                  key={language.id}
+                  key={lang.id}
                   style={[
                     styles.languageCard,
                     isSelected && styles.languageCardSelected,
                   ]}
-                  onPress={() => setSelectedLanguage(language.id)}
+                  onPress={() => handleLanguageSelect(lang.id)}
                 >
-                  <Text style={styles.languageFlag}>{language.flag}</Text>
+                  <Text style={styles.languageFlag}>{lang.flag}</Text>
                   <View style={styles.languageInfo}>
-                    <Text style={styles.languageName}>
-                      {language.nativeName}
-                    </Text>
-                    <Text style={styles.languageSubtitle}>{language.name}</Text>
+                    <Text style={styles.languageName}>{lang.nativeName}</Text>
+                    <Text style={styles.languageSubtitle}>{lang.name}</Text>
                   </View>
                   {isSelected && (
                     <FontAwesome
@@ -123,16 +130,9 @@ export default function LanguageScreen() {
         <View style={styles.infoCard}>
           <FontAwesome name="info-circle" size={16} color="#3867FF" />
           <Text style={styles.infoText}>
-            Promena jezika će se primeniti nakon ponovnog pokretanja aplikacije
+            Promena jezika će se odmah primeniti u aplikaciji
           </Text>
         </View>
-      </View>
-
-      {/* Save Button */}
-      <View style={styles.footer}>
-        <Pressable style={styles.saveButton} onPress={() => router.back()}>
-          <Text style={styles.saveButtonText}>Sačuvaj</Text>
-        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -257,29 +257,12 @@ const getStyles = (colors: any, isDark: boolean) =>
       padding: 16,
       flexDirection: "row",
       gap: 12,
-      marginBottom: 16,
+      marginBottom: 32,
     },
     infoText: {
       flex: 1,
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 20,
-    },
-    footer: {
-      padding: 20,
-      backgroundColor: colors.background,
-      borderTopWidth: 1,
-      borderTopColor: isDark ? "#1E1F23" : colors.border,
-    },
-    saveButton: {
-      backgroundColor: isDark ? "#B8FF00" : colors.blue,
-      borderRadius: 24,
-      paddingVertical: 16,
-      alignItems: "center",
-    },
-    saveButtonText: {
-      color: isDark ? "#0B0B0B" : "#FFFFFF",
-      fontSize: 16,
-      fontWeight: "700",
     },
   });

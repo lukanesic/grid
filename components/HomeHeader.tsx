@@ -10,8 +10,8 @@ import IconButton from "./IconButton";
 
 interface HomeHeaderProps {
   styles: any;
-  activeTab: "sve" | "vruce" | "krugovi";
-  setActiveTab: (tab: "sve" | "vruce" | "krugovi") => void;
+  activeTab: "sve" | "igraci" | "klubovi";
+  setActiveTab: (tab: "sve" | "igraci" | "klubovi") => void;
 }
 
 export default function HomeHeader({
@@ -143,27 +143,27 @@ export default function HomeHeader({
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.tab, activeTab === "vruce" && styles.tabActive]}
-          onPress={() => setActiveTab("vruce")}
+          style={[styles.tab, activeTab === "igraci" && styles.tabActive]}
+          onPress={() => setActiveTab("igraci")}
         >
           <Text
             style={
-              activeTab === "vruce" ? styles.tabActiveText : styles.tabText
+              activeTab === "igraci" ? styles.tabActiveText : styles.tabText
             }
           >
-            Šta je vruće
+            Igrači
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.tab, activeTab === "krugovi" && styles.tabActive]}
-          onPress={() => setActiveTab("krugovi")}
+          style={[styles.tab, activeTab === "klubovi" && styles.tabActive]}
+          onPress={() => setActiveTab("klubovi")}
         >
           <Text
             style={
-              activeTab === "krugovi" ? styles.tabActiveText : styles.tabText
+              activeTab === "klubovi" ? styles.tabActiveText : styles.tabText
             }
           >
-            Tvoji krugovi
+            Klubovi
           </Text>
         </Pressable>
       </View>

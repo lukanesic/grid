@@ -1,25 +1,25 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+// import { useState } from "react"; // COMMENTED OUT FOR MVP
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  // Modal, // COMMENTED OUT FOR MVP
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  // TextInput, // COMMENTED OUT FOR MVP
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { PAYMENT_HISTORY } from "../../../constants/data";
+// import { PAYMENT_HISTORY } from "../../../constants/data"; // COMMENTED OUT FOR MVP
 
 export default function SubscriptionBillingScreen() {
   const router = useRouter();
-  const [showAddCardModal, setShowAddCardModal] = useState(false);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
+  // const [showAddCardModal, setShowAddCardModal] = useState(false); // COMMENTED OUT FOR MVP
+  // const [cardNumber, setCardNumber] = useState(""); // COMMENTED OUT FOR MVP
+  // const [cardName, setCardName] = useState(""); // COMMENTED OUT FOR MVP
+  // const [expiryDate, setExpiryDate] = useState(""); // COMMENTED OUT FOR MVP
+  // const [cvv, setCvv] = useState(""); // COMMENTED OUT FOR MVP
 
   return (
     <SafeAreaView style={styles.container}>
@@ -40,7 +40,7 @@ export default function SubscriptionBillingScreen() {
             <View style={styles.planHeader}>
               <View>
                 <Text style={styles.currentPlanName}>Free Plan</Text>
-                <Text style={styles.currentPlanPrice}>0 € / mesečno</Text>
+                <Text style={styles.currentPlanPrice}>0 RSD / mesečno</Text>
               </View>
               <View style={styles.freeBadge}>
                 <Text style={styles.freeBadgeText}>FREE</Text>
@@ -49,15 +49,18 @@ export default function SubscriptionBillingScreen() {
             <Text style={styles.planDescription}>
               Osnovna verzija sa ograničenim mogućnostima
             </Text>
-            <Pressable style={styles.upgradeButton}>
+            <Pressable
+              style={styles.upgradeButton}
+              onPress={() => router.push("/_menu/upgrade")}
+            >
               <FontAwesome name="arrow-up" size={16} color="#0B0B0B" />
               <Text style={styles.upgradeButtonText}>Nadogradi plan</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Payment Method */}
-        <View style={styles.section}>
+        {/* Payment Method - COMMENTED OUT FOR MVP */}
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Način plaćanja</Text>
           <Pressable style={styles.paymentCard}>
             <View style={styles.paymentLeft}>
@@ -78,10 +81,10 @@ export default function SubscriptionBillingScreen() {
             <FontAwesome name="plus" size={16} color="#3867FF" />
             <Text style={styles.addPaymentText}>Dodaj novu karticu</Text>
           </Pressable>
-        </View>
+        </View> */}
 
-        {/* Payment History */}
-        <View style={styles.section}>
+        {/* Payment History - COMMENTED OUT FOR MVP */}
+        {/* <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Istorija plaćanja</Text>
             <Pressable>
@@ -118,10 +121,10 @@ export default function SubscriptionBillingScreen() {
               </View>
             </View>
           ))}
-        </View>
+        </View> */}
 
-        {/* Next Billing */}
-        <View style={styles.infoCard}>
+        {/* Next Billing - COMMENTED OUT FOR MVP */}
+        {/* <View style={styles.infoCard}>
           <FontAwesome name="info-circle" size={16} color="#3867FF" />
           <View style={styles.infoTextContainer}>
             <Text style={styles.infoText}>
@@ -132,16 +135,16 @@ export default function SubscriptionBillingScreen() {
               Možete otkazati pretplatu bilo kada
             </Text>
           </View>
-        </View>
+        </View> */}
 
-        {/* Cancel Subscription */}
-        <Pressable style={styles.cancelButton}>
+        {/* Cancel Subscription - COMMENTED OUT FOR MVP */}
+        {/* <Pressable style={styles.cancelButton}>
           <Text style={styles.cancelButtonText}>Otkaži pretplatu</Text>
-        </Pressable>
+        </Pressable> */}
       </ScrollView>
 
-      {/* Add Card Modal */}
-      <Modal
+      {/* Add Card Modal - COMMENTED OUT FOR MVP */}
+      {/* <Modal
         visible={showAddCardModal}
         transparent
         animationType="fade"
@@ -254,7 +257,7 @@ export default function SubscriptionBillingScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </SafeAreaView>
   );
 }

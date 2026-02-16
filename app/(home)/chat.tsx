@@ -4,17 +4,17 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
@@ -39,16 +39,6 @@ export default function ChatScreen() {
   // Convert params to strings
   const avatarUrl = Array.isArray(avatar) ? avatar[0] : avatar;
   const userName = Array.isArray(name) ? name[0] : name;
-
-  useEffect(() => {
-    if (chatId && typeof chatId === "string") {
-      setMessages([]);
-      setOffset(0);
-      setHasMore(true);
-      loadMessages(chatId, 0);
-      markChatAsRead(chatId);
-    }
-  }, [chatId]);
 
   // Reload messages when screen is focused
   useFocusEffect(
@@ -97,6 +87,17 @@ export default function ChatScreen() {
             setOffset((prevOffset) => prevOffset + 1);
             return [newMessage as Message, ...prev];
           });
+
+          // Auto-mark messages as read if received from other user while in chat
+          if (
+            payload.new.sender_id !== profile?.id &&
+            typeof chatId === "string"
+          ) {
+            console.log("📖 Auto-marking message as read...");
+            setTimeout(() => {
+              markChatAsRead(chatId);
+            }, 1000); // 1 second delay to ensure user saw the message
+          }
         },
       )
       .subscribe();
@@ -125,8 +126,14 @@ export default function ChatScreen() {
         // First load: messages are in DESC order (newest first)
         setMessages(newMessages);
       } else {
-        // Load more: append older messages to the end
-        setMessages((prev) => [...prev, ...newMessages]);
+        // Load more: append older messages, but avoid duplicates
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((msg) => msg.message_id));
+          const uniqueNewMessages = newMessages.filter(
+            (msg: Message) => !existingIds.has(msg.message_id),
+          );
+          return [...prev, ...uniqueNewMessages];
+        });
       }
 
       setOffset(currentOffset + newMessages.length);
