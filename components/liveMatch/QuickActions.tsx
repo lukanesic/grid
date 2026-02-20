@@ -2,29 +2,93 @@ import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-export default function QuickActions() {
+interface QuickActionsProps {
+  onAddGameTeam1?: () => void;
+  onAddGameTeam2?: () => void;
+  onAddPointTeam1?: () => void;
+  onAddPointTeam2?: () => void;
+  isTiebreak?: boolean;
+  matchWinner?: "team1" | "team2" | null;
+}
+
+export default function QuickActions({
+  onAddGameTeam1,
+  onAddGameTeam2,
+  onAddPointTeam1,
+  onAddPointTeam2,
+  isTiebreak,
+  matchWinner,
+}: QuickActionsProps) {
   return (
     <View style={styles.actionsSection}>
       <View style={styles.actionGrid}>
-        <Pressable style={styles.actionButton}>
-          <FontAwesome name="pause" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Pauza</Text>
+        <Pressable
+          style={[styles.actionButton, matchWinner && styles.disabled]}
+          onPress={onAddGameTeam1}
+          disabled={!!matchWinner}
+        >
+          <FontAwesome
+            name="plus"
+            size={20}
+            color={matchWinner ? "#888" : "#4A90E2"}
+          />
+          <Text style={[styles.actionText, matchWinner && styles.disabledText]}>
+            Tim 1
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.actionButton}>
-          <FontAwesome name="bar-chart" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Rezultat</Text>
+        <Pressable
+          style={[styles.actionButton, matchWinner && styles.disabled]}
+          onPress={onAddGameTeam2}
+          disabled={!!matchWinner}
+        >
+          <FontAwesome
+            name="plus"
+            size={20}
+            color={matchWinner ? "#888" : "#4A90E2"}
+          />
+          <Text style={[styles.actionText, matchWinner && styles.disabledText]}>
+            Tim 2
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.actionButton}>
-          <FontAwesome name="camera" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Slika</Text>
-        </Pressable>
+        {isTiebreak && (
+          <>
+            <Pressable
+              style={[styles.actionButton, matchWinner && styles.disabled]}
+              onPress={onAddPointTeam1}
+              disabled={!!matchWinner}
+            >
+              <FontAwesome
+                name="star"
+                size={20}
+                color={matchWinner ? "#888" : "#4A90E2"}
+              />
+              <Text
+                style={[styles.actionText, matchWinner && styles.disabledText]}
+              >
+                Poen Tim 1
+              </Text>
+            </Pressable>
 
-        <Pressable style={styles.actionButton}>
-          <FontAwesome name="share-alt" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Podeli</Text>
-        </Pressable>
+            <Pressable
+              style={[styles.actionButton, matchWinner && styles.disabled]}
+              onPress={onAddPointTeam2}
+              disabled={!!matchWinner}
+            >
+              <FontAwesome
+                name="star"
+                size={20}
+                color={matchWinner ? "#888" : "#4A90E2"}
+              />
+              <Text
+                style={[styles.actionText, matchWinner && styles.disabledText]}
+              >
+                Poen Tim 2
+              </Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </View>
   );
@@ -52,5 +116,12 @@ const styles = StyleSheet.create({
     color: "#F2F2F2",
     fontSize: 12,
     fontWeight: "600",
+  },
+  disabled: {
+    backgroundColor: "#0A0A0A",
+    opacity: 0.5,
+  },
+  disabledText: {
+    color: "#888",
   },
 });

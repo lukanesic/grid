@@ -4,6 +4,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 interface Player {
   name: string;
   level: string;
+  avatar?: string | null;
 }
 
 interface TeamInformationProps {
@@ -22,7 +23,9 @@ export default function TeamInformation({ players }: TeamInformationProps) {
             <View style={styles.teamPlayer}>
               <Image
                 source={{
-                  uri: `https://i.pravatar.cc/40?name=${players[0]?.name}`,
+                  uri:
+                    players[0]?.avatar ||
+                    `https://i.pravatar.cc/40?name=${players[0]?.name}`,
                 }}
                 style={styles.teamPlayerAvatar}
               />
@@ -34,7 +37,9 @@ export default function TeamInformation({ players }: TeamInformationProps) {
             <View style={styles.teamPlayer}>
               <Image
                 source={{
-                  uri: `https://i.pravatar.cc/40?name=${players[1]?.name}`,
+                  uri:
+                    players[1]?.avatar ||
+                    `https://i.pravatar.cc/40?name=${players[1]?.name}`,
                 }}
                 style={styles.teamPlayerAvatar}
               />
@@ -52,7 +57,9 @@ export default function TeamInformation({ players }: TeamInformationProps) {
             <View style={styles.teamPlayer}>
               <Image
                 source={{
-                  uri: `https://i.pravatar.cc/40?name=${players[2]?.name}`,
+                  uri:
+                    players[2]?.avatar ||
+                    `https://i.pravatar.cc/40?name=${players[2]?.name}`,
                 }}
                 style={styles.teamPlayerAvatar}
               />
@@ -64,7 +71,9 @@ export default function TeamInformation({ players }: TeamInformationProps) {
             <View style={styles.teamPlayer}>
               <Image
                 source={{
-                  uri: `https://i.pravatar.cc/40?name=${players[3]?.name}`,
+                  uri:
+                    players[3]?.avatar ||
+                    `https://i.pravatar.cc/40?name=${players[3]?.name}`,
                 }}
                 style={styles.teamPlayerAvatar}
               />

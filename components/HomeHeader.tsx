@@ -10,15 +10,9 @@ import IconButton from "./IconButton";
 
 interface HomeHeaderProps {
   styles: any;
-  activeTab: "sve" | "igraci" | "klubovi";
-  setActiveTab: (tab: "sve" | "igraci" | "klubovi") => void;
 }
 
-export default function HomeHeader({
-  styles,
-  activeTab,
-  setActiveTab,
-}: HomeHeaderProps) {
+export default function HomeHeader({ styles }: HomeHeaderProps) {
   const router = useRouter();
   const { colors } = useTheme();
   const { profile } = useAuth();
@@ -123,48 +117,10 @@ export default function HomeHeader({
         </Pressable>
         <Pressable
           style={styles.createButton}
-          onPress={() => router.push("/createMatch")}
+          onPress={() => router.push("/(home)/createMatchNew")}
         >
           <FontAwesome name="plus" size={20} color="#111111" />
           <Text style={styles.createButtonText}>Kreiraj mec</Text>
-        </Pressable>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        <Pressable
-          style={[styles.tab, activeTab === "sve" && styles.tabActive]}
-          onPress={() => setActiveTab("sve")}
-        >
-          <Text
-            style={activeTab === "sve" ? styles.tabActiveText : styles.tabText}
-          >
-            Sve
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tab, activeTab === "igraci" && styles.tabActive]}
-          onPress={() => setActiveTab("igraci")}
-        >
-          <Text
-            style={
-              activeTab === "igraci" ? styles.tabActiveText : styles.tabText
-            }
-          >
-            Igrači
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tab, activeTab === "klubovi" && styles.tabActive]}
-          onPress={() => setActiveTab("klubovi")}
-        >
-          <Text
-            style={
-              activeTab === "klubovi" ? styles.tabActiveText : styles.tabText
-            }
-          >
-            Klubovi
-          </Text>
         </Pressable>
       </View>
 

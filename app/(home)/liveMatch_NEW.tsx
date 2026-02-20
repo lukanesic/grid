@@ -3,28 +3,41 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components";
 import {
-    CourtVisualization,
-    MatchStats,
-    ProfessionalScore,
-    QuickActions,
-    TeamInformation,
+  CourtVisualization,
+  MatchStats,
+  ProfessionalScore,
+  QuickActions,
+  TeamInformation,
+  TeamSelection,
 } from "../../components/liveMatch";
 import { fetchReservationById } from "../../lib/courtApi";
 
+interface Player {
+  name: string;
+  level: string;
+  avatar?: string | null;
+  id: string;
+}
+
 export default function LiveMatchScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, teams } = useLocalSearchParams();
   const [matchTime, setMatchTime] = useState(0); // in minutes
+  const [showTeamSelection, setShowTeamSelection] = useState(true);
+  const [selectedTeams, setSelectedTeams] = useState<{
+    team1: Player[];
+    team2: Player[];
+  }>({ team1: [], team2: [] });
 
   // Check if ID is UUID (database reservation)
   const isUUID =
@@ -60,6 +73,19 @@ export default function LiveMatchScreen() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Handle teams passed from match screen
+  useEffect(() => {
+    if (teams && typeof teams === "string") {
+      try {
+        const teamData = JSON.parse(teams);
+        setSelectedTeams(teamData);
+        setShowTeamSelection(false); // Skip team selection if teams are already set
+      } catch (error) {
+        console.error("Error parsing team data:", error);
+      }
+    }
+  }, [teams]);
 
   // Only support actual reservations (UUID IDs)
   if (!isUUID) {
@@ -124,26 +150,43 @@ export default function LiveMatchScreen() {
   }
 
   // Build players list from real reservation data
-  const players: any[] = [];
+  const allPlayers: Player[] = [];
 
   // Add creator
   if (reservation.user?.full_name) {
-    players.push({
+    allPlayers.push({
       name: reservation.user.full_name,
       level: "1.0",
       avatar: reservation.user.avatar_url || null,
+      id: reservation.user.id,
     });
   }
 
   // Add invited players
   if (reservation.invited_players_profiles) {
     reservation.invited_players_profiles.forEach((player: any) => {
-      players.push({
+      allPlayers.push({
         name: player.full_name,
         level: "1.0",
         avatar: player.avatar_url || null,
+        id: player.id,
       });
     });
+  }
+
+  // Build players array for display (handle team selections or fill with placeholder)
+  const players: Player[] = [];
+
+  if (
+    !showTeamSelection &&
+    selectedTeams.team1.length > 0 &&
+    selectedTeams.team2.length > 0
+  ) {
+    // Use selected teams
+    players.push(...selectedTeams.team1, ...selectedTeams.team2);
+  } else {
+    // Use all players or fill with placeholders
+    players.push(...allPlayers);
   }
 
   // Ensure exactly 4 players for court positioning
@@ -152,12 +195,46 @@ export default function LiveMatchScreen() {
       name: `Igrač ${players.length + 1}`,
       level: "1.0",
       avatar: null,
+      id: `placeholder-${players.length + 1}`,
     });
   }
+
+  const getCurrentScore = () => {
+    if (isTiebreak) {
+      return tiebreakPoints;
+    }
+    return gamesInSet;
+  };
+
+  const resetMatch = () => {
+    setSetsWon({ team1: 0, team2: 0 });
+    setCurrentSet(1);
+    setGamesInSet({ team1: 0, team2: 0 });
+    setIsTiebreak(false);
+    setTiebreakPoints({ team1: 0, team2: 0 });
+    setMatchWinner(null);
+    setMatchTime(0);
+  };
+
+  const addGame = (team: "team1" | "team2") => {
+    addGameToTeam(team);
+  };
 
   const courtName = reservation.court?.name || "Teren";
   const clubName = reservation.court?.clubs?.name || "Klub";
   const matchDate = `${reservation.reservation_date} • ${reservation.start_time.substring(0, 5)}`;
+  const matchLocation = `${clubName} - ${courtName}`;
+  const isOneVsOne =
+    selectedTeams.team1.length === 1 && selectedTeams.team2.length === 1;
+
+  const handleTeamsConfirmed = (team1: Player[], team2: Player[]) => {
+    setSelectedTeams({ team1, team2 });
+    setShowTeamSelection(false);
+  };
+
+  const handleBackToTeamSelection = () => {
+    setShowTeamSelection(true);
+  };
 
   // Additional game functions
   const addPointToTeam = (team: "team1" | "team2") => {
@@ -208,13 +285,26 @@ export default function LiveMatchScreen() {
     }
   };
 
+  // Show team selection screen first
+  if (showTeamSelection) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <TeamSelection
+          players={allPlayers}
+          onTeamsConfirmed={handleTeamsConfirmed}
+          onBack={() => router.back()}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()}>
-            <FontAwesome name="chevron-left" size={20} color="#F2F2F2" />
+          <Pressable onPress={handleBackToTeamSelection}>
+            <FontAwesome name="users" size={20} color="#F2F2F2" />
           </Pressable>
           <Text style={styles.headerTitle}>Uživo</Text>
           <View style={styles.timerContainer}>
@@ -228,30 +318,43 @@ export default function LiveMatchScreen() {
           <Text style={styles.matchLocation}>{clubName}</Text>
           <Text style={styles.matchDate}>{matchDate}</Text>
           <Text style={styles.courtName}>{courtName}</Text>
+          <View style={styles.matchTypeContainer}>
+            <FontAwesome
+              name={isOneVsOne ? "user" : "users"}
+              size={16}
+              color="#4F7DFF"
+            />
+            <Text style={styles.matchType}>
+              {isOneVsOne ? "Pojedinačni meč (1v1)" : "Timski meč (2v2)"}
+            </Text>
+          </View>
         </View>
 
         {/* Professional Score Display */}
         <ProfessionalScore
           setsWon={setsWon}
           currentSet={currentSet}
-          gamesInSet={gamesInSet}
           isTiebreak={isTiebreak}
-          tiebreakPoints={tiebreakPoints}
           matchWinner={matchWinner}
           totalSets={totalSets}
+          getCurrentScore={getCurrentScore}
+          addGame={addGame}
+          resetMatch={resetMatch}
         />
 
         {/* Court Visualization */}
-        <CourtVisualization players={players} />
+        <CourtVisualization players={players.slice(0, 4)} />
 
         {/* Team Information */}
-        <TeamInformation
-          team1Players={[players[0], players[1]]}
-          team2Players={[players[2], players[3]]}
-        />
+        <TeamInformation players={players.slice(0, 4)} />
 
         {/* Match Statistics */}
-        <MatchStats />
+        <MatchStats
+          matchTime={matchTime}
+          currentSet={currentSet}
+          location={matchLocation}
+          level="Intermediate"
+        />
 
         {/* Quick Actions */}
         <QuickActions
@@ -346,6 +449,21 @@ const styles = StyleSheet.create({
   courtName: {
     color: "#B8B8B8",
     fontSize: 14,
+  },
+  matchTypeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    backgroundColor: "#2A2A2A",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  matchType: {
+    color: "#4F7DFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
   },
   errorContainer: {
     flex: 1,

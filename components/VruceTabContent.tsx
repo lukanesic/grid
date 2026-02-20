@@ -26,7 +26,7 @@ export default function VruceTabContent({ styles }: VruceTabContentProps) {
 
   const handlePlayerPress = (player: any) => {
     if (player.is_following) {
-      router.push("/createMatch");
+      router.push("/(home)/createMatchNew");
     } else {
       router.push(`/playerProfile?id=${player.id}`);
     }

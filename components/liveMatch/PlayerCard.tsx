@@ -4,20 +4,26 @@ import { Image, StyleSheet, Text, View } from "react-native";
 interface Player {
   name: string;
   level: string;
+  avatar?: string | null; // Add avatar field
 }
 
 interface PlayerCardProps {
-  player: Player;
+  player?: Player; // Make player optional
   position: any; // StyleSheet position styles
 }
 
 export default function PlayerCard({ player, position }: PlayerCardProps) {
+  // Don't render anything if player is undefined
+  if (!player) {
+    return <View style={[styles.playerPosition, position]} />;
+  }
+
   return (
     <View style={[styles.playerPosition, position]}>
       <Text style={styles.playerName}>{player.name}</Text>
       <Image
         source={{
-          uri: `https://i.pravatar.cc/80?name=${player.name}`,
+          uri: player.avatar || `https://i.pravatar.cc/80?name=${player.name}`,
         }}
         style={styles.playerAvatar}
       />

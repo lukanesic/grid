@@ -29,6 +29,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const loadProfile = async (userId: string) => {
     try {
       console.log("[AuthContext] Starting loadProfile for userId:", userId);
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -36,7 +37,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         .single();
 
       if (error) {
-        console.error("[AuthContext] Error loading profile:", error);
+        console.error(
+          "[AuthContext] Error loading profile:",
+          error.message,
+          error.code,
+        );
 
         // If user doesn't exist in profiles table (deleted from database), clear the session
         if (error.code === "PGRST116") {
@@ -85,8 +90,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         if (data.session?.user) {
           console.log("[AuthContext] User exists, loading profile...");
-          await loadProfile(data.session.user.id);
-          console.log("[AuthContext] Profile loading completed");
+          try {
+            await loadProfile(data.session.user.id);
+            console.log("[AuthContext] Profile loading completed");
+          } catch (error) {
+            console.error("[AuthContext] Profile loading failed:", error);
+            setProfile(null);
+          }
         } else {
           console.log("[AuthContext] No user, skipping profile load");
         }
@@ -120,7 +130,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(nextSession);
 
       if (nextSession?.user) {
-        await loadProfile(nextSession.user.id);
+        try {
+          await loadProfile(nextSession.user.id);
+        } catch (error) {
+          console.error(
+            "[AuthContext] Profile loading failed in auth state change:",
+            error,
+          );
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
@@ -141,7 +159,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isLoading,
       refreshProfile: async () => {
         if (session?.user) {
-          await loadProfile(session.user.id);
+          try {
+            await loadProfile(session.user.id);
+          } catch (error) {
+            console.error("[AuthContext] Profile refresh failed:", error);
+          }
         }
       },
     }),

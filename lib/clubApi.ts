@@ -1,3 +1,4 @@
+import { SUGGESTED_CLUBS } from "../constants/data";
 import { Club, ClubFollowStatus } from "../types/club";
 import { supabase } from "./supabase";
 
@@ -16,6 +17,34 @@ export async function fetchClubById(clubId: string): Promise<Club> {
     .select("*")
     .eq("id", clubUuid)
     .single();
+
+  // If club doesn't exist in database, use mock data
+  if (error?.code === "PGRST116" || !data) {
+    console.log("Club not found in database, using mock data for ID:", clubId);
+    const mockClub = SUGGESTED_CLUBS.find((club) => club.id === clubId);
+
+    if (!mockClub) {
+      throw new Error("Club not found");
+    }
+
+    return {
+      id: mockClub.id,
+      name: mockClub.name,
+      image: mockClub.image,
+      distance: mockClub.distance,
+      price: mockClub.price,
+      rating: mockClub.rating,
+      reviews: mockClub.reviews,
+      address: mockClub.address,
+      description: mockClub.description,
+      courts: mockClub.courts,
+      amenities: mockClub.amenities,
+      openingHours: mockClub.openingHours,
+      timeSlots: mockClub.timeSlots,
+      opening_hours: mockClub.openingHours,
+      time_slots: mockClub.timeSlots,
+    } as Club;
+  }
 
   if (error) {
     console.error("Error fetching club:", error);

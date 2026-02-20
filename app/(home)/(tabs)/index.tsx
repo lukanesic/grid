@@ -1,18 +1,10 @@
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-    HomeHeader,
-    KrugoviTabContent,
-    SveTabContent,
-    VruceTabContent,
-} from "../../../components";
+import { HomeHeader, SveTabContent } from "../../../components";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] = useState<"sve" | "igraci" | "klubovi">(
-    "sve",
-  );
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -38,16 +30,10 @@ export default function HomeScreen() {
           />
         }
       >
-        <HomeHeader
-          styles={styles}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <HomeHeader styles={styles} />
 
-        {/* Tab Content */}
-        {activeTab === "sve" && <SveTabContent styles={styles} />}
-        {activeTab === "igraci" && <VruceTabContent styles={styles} />}
-        {activeTab === "klubovi" && <KrugoviTabContent styles={styles} />}
+        {/* Content */}
+        <SveTabContent styles={styles} />
       </ScrollView>
     </SafeAreaView>
   );

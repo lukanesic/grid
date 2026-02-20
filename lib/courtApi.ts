@@ -362,7 +362,7 @@ export async function fetchOpenReservations(): Promise<any[]> {
         id,
         name,
         club_id,
-        clubs(
+        club:clubs(
           id,
           name,
           location,
@@ -401,10 +401,13 @@ export async function fetchOpenReservations(): Promise<any[]> {
             .in("id", reservation.invited_players);
 
           if (!invitedError && invitedData) {
-            return { ...reservation, invited_players_profiles: invitedData };
+            return {
+              ...reservation,
+              invited_players_profiles: invitedData,
+            } as any;
           }
         }
-        return reservation;
+        return reservation as any;
       }),
     );
     return reservationsWithInvited;

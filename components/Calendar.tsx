@@ -1,6 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface CalendarProps {
@@ -27,6 +27,9 @@ export default function Calendar({
   maxDate.setMonth(maxDate.getMonth() + 2);
 
   const [currentMonth, setCurrentMonth] = useState(selectedDate || today);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const [direction, setDirection] = useState(0);
 
   const monthNames = [
     "Januar",
@@ -173,10 +176,10 @@ export default function Calendar({
     onDateSelect?.(newDate);
   };
 
-  const changeMonth = (direction: number) => {
+  const changeMonth = (dir: number) => {
     const newMonth = new Date(
       currentMonth.getFullYear(),
-      currentMonth.getMonth() + direction,
+      currentMonth.getMonth() + dir,
       1,
     );
 
@@ -197,7 +200,38 @@ export default function Calendar({
       return;
     }
 
-    setCurrentMonth(newMonth);
+    setDirection(dir);
+
+    // Slide out and fade out animation
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: dir > 0 ? -50 : 50,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setCurrentMonth(newMonth);
+      slideAnim.setValue(dir > 0 ? 50 : -50);
+
+      // Slide in and fade in animation
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
   };
 
   const days = generateCalendarDays();
@@ -216,10 +250,10 @@ export default function Calendar({
         </View>
         <View style={styles.headerActions}>
           <Pressable onPress={() => changeMonth(-1)} style={styles.navButton}>
-            <FontAwesome name="chevron-left" size={18} color={navIconColor} />
+            <FontAwesome name="chevron-up" size={18} color={navIconColor} />
           </Pressable>
           <Pressable onPress={() => changeMonth(1)} style={styles.navButton}>
-            <FontAwesome name="chevron-right" size={18} color={navIconColor} />
+            <FontAwesome name="chevron-down" size={18} color={navIconColor} />
           </Pressable>
         </View>
       </View>
@@ -234,7 +268,15 @@ export default function Calendar({
       </View>
 
       {/* Calendar grid */}
-      <View style={styles.calendarGrid}>
+      <Animated.View
+        style={[
+          styles.calendarGrid,
+          {
+            transform: [{ translateY: slideAnim }],
+            opacity: opacityAnim,
+          },
+        ]}
+      >
         {days.map((day, index) => {
           const isCurrentMonth =
             index >= firstDay && index < firstDay + daysInMonth;
@@ -269,7 +311,7 @@ export default function Calendar({
             </Pressable>
           );
         })}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -279,6 +321,7 @@ const getStyles = (colors: any, isDark: boolean) =>
     container: {
       backgroundColor: isDark ? "#0B0B0B" : "#FFFFFF",
       borderRadius: 16,
+      overflow: "hidden",
     },
     header: {
       flexDirection: "row",
@@ -301,8 +344,8 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontWeight: "500",
     },
     headerActions: {
-      flexDirection: "row",
-      gap: 12,
+      flexDirection: "column",
+      gap: 8,
     },
     navButton: {
       width: 32,

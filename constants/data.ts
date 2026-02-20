@@ -469,6 +469,20 @@ export const SUGGESTED_CLUBS = [
       "https://images.pexels.com/photos/29696876/pexels-photo-29696876.jpeg",
     distance: "3km",
     price: "17 €",
+    rating: 4.8,
+    reviews: 217,
+    address: "Carrer de l'Esport, 30-38, Barcelona",
+    description:
+      "Enjoy the sounds of nature when you stay in this unique place. A shuttle will be arranged to a floating platform where the courts are attached.",
+    courts: 4,
+    amenities: [
+      { icon: "cutlery", label: "Restaurant" },
+      { icon: "suitcase", label: "Locker Room" },
+      { icon: "bed", label: "Rest Area" },
+      { icon: "wifi", label: "WiFi" },
+    ],
+    openingHours: "08:00 - 22:00",
+    timeSlots: ["10:00", "12:00", "14:00", "16:00", "18:00"],
   },
   {
     id: "2",
@@ -477,6 +491,20 @@ export const SUGGESTED_CLUBS = [
       "https://images.pexels.com/photos/27151849/pexels-photo-27151849.jpeg",
     distance: "5km",
     price: "11 €",
+    rating: 4.5,
+    reviews: 183,
+    address: "Passeig de la Vall d'Hebron, Barcelona",
+    description:
+      "Modern sports facility with excellent padel courts. Professional coaching available on request. Family-friendly environment.",
+    courts: 6,
+    amenities: [
+      { icon: "cutlery", label: "Cafe" },
+      { icon: "suitcase", label: "Lockers" },
+      { icon: "shower", label: "Showers" },
+      { icon: "car", label: "Parking" },
+    ],
+    openingHours: "07:00 - 23:00",
+    timeSlots: ["09:00", "11:00", "13:00", "15:00", "17:00", "19:00"],
   },
   {
     id: "3",
@@ -485,6 +513,20 @@ export const SUGGESTED_CLUBS = [
       "https://images.pexels.com/photos/34116480/pexels-photo-34116480.jpeg",
     distance: "2km",
     price: "15 €",
+    rating: 4.9,
+    reviews: 342,
+    address: "Carrer de Numància, 47, Barcelona",
+    description:
+      "Historic sports club offering premium padel and tennis facilities. Join our vibrant community of players.",
+    courts: 8,
+    amenities: [
+      { icon: "utensils", label: "Bar & Grill" },
+      { icon: "shopping-bag", label: "Pro Shop" },
+      { icon: "users", label: "Coaching" },
+      { icon: "trophy", label: "Tournaments" },
+    ],
+    openingHours: "06:00 - 00:00",
+    timeSlots: ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"],
   },
   {
     id: "4",
@@ -493,6 +535,30 @@ export const SUGGESTED_CLUBS = [
       "https://images.pexels.com/photos/18084429/pexels-photo-18084429.jpeg",
     distance: "4km",
     price: "20 €",
+    rating: 4.7,
+    reviews: 298,
+    address: "Avinguda del Paral·lel, 62, Barcelona",
+    description:
+      "State-of-the-art indoor padel facility with climate control. Perfect for year-round play regardless of weather conditions.",
+    courts: 10,
+    amenities: [
+      { icon: "snowflake-o", label: "Air Conditioning" },
+      { icon: "glass", label: "Juice Bar" },
+      { icon: "heart", label: "Spa Access" },
+      { icon: "video-camera", label: "Match Recording" },
+    ],
+    openingHours: "24/7",
+    timeSlots: [
+      "06:00",
+      "08:00",
+      "10:00",
+      "12:00",
+      "14:00",
+      "16:00",
+      "18:00",
+      "20:00",
+      "22:00",
+    ],
   },
 ];
 
@@ -520,6 +586,100 @@ export const UPCOMING_MATCHES = [
     location: "Pádel Indoor Centro · 8km",
     duration: "120 MIN",
     level: "1.5",
+  },
+];
+
+export const UPCOMING_VERSUS_MATCHES = [
+  {
+    id: "1",
+    type: "KOMPLETAN MEČ",
+    time: "15:00",
+    date: "Sri 2. feb",
+    club: "Polideportivo de la Concepción",
+    matchType: "2v2" as const,
+    teamA: [
+      {
+        name: "Ana Marković",
+        avatar: "https://i.pravatar.cc/150?img=47",
+        level: "1.1",
+      },
+      {
+        name: "Stefan Nikolić",
+        avatar: "https://i.pravatar.cc/150?img=33",
+        level: "1.2",
+      },
+    ],
+    teamB: [
+      {
+        name: "Milica Stojanović",
+        avatar: "https://i.pravatar.cc/150?img=44",
+        level: "1.0",
+      },
+      {
+        name: "Marko Jovanović",
+        avatar: "https://i.pravatar.cc/150?img=55",
+        level: "1.3",
+      },
+    ],
+  },
+  {
+    id: "2",
+    type: "KOMPLETAN MEČ",
+    time: "18:00",
+    date: "Čet 3. feb",
+    club: "Club de Tenis La Moraleja",
+    matchType: "1v2" as const,
+    teamA: [
+      {
+        name: "Nikola Milanović",
+        avatar: "https://i.pravatar.cc/150?img=12",
+        level: "2.0",
+      },
+    ],
+    teamB: [
+      {
+        name: "Luka Petrović",
+        avatar: "https://i.pravatar.cc/150?img=20",
+        level: "1.9",
+      },
+      {
+        name: "Jelena Đorđević",
+        avatar: "https://i.pravatar.cc/150?img=28",
+        level: "1.8",
+      },
+    ],
+  },
+  {
+    id: "3",
+    type: "KOMPLETAN MEČ",
+    time: "20:00",
+    date: "Pet 4. feb",
+    club: "Pádel Indoor Centro",
+    matchType: "2v2" as const,
+    teamA: [
+      {
+        name: "Jovana Vasić",
+        avatar: "https://i.pravatar.cc/150?img=25",
+        level: "1.4",
+      },
+      {
+        name: "Miloš Radić",
+        avatar: "https://i.pravatar.cc/150?img=30",
+        level: "1.6",
+      },
+    ],
+    teamB: [
+      {
+        name: "Teodora Stanić",
+        avatar: "https://i.pravatar.cc/150?img=35",
+        level: "1.5",
+      },
+      {
+        name: "Viktor Ilić",
+        avatar: "https://i.pravatar.cc/150?img=40",
+        level: "1.7",
+      },
+    ],
   },
 ];
 

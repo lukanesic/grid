@@ -10,15 +10,15 @@ import {
   Text,
   View,
 } from "react-native";
-import { SUGGESTED_CLUBS, UPCOMING_MATCHES } from "../constants/data";
+import { SUGGESTED_FRIENDS, UPCOMING_VERSUS_MATCHES } from "../constants/data";
 import { useTheme } from "../contexts/ThemeContext";
+import { fetchTopClubs } from "../lib/clubApi";
 import { fetchOpenReservations } from "../lib/courtApi";
-import { fetchSuggestedPlayers } from "../lib/profileApi";
 import { supabase } from "../lib/supabase";
 import Button from "./Button";
-import ClubCard from "./ClubCard";
-import MatchCard from "./MatchCard";
-import PlayerCard from "./PlayerCard";
+import InstagramPlayerCard from "./InstagramPlayerCard";
+import ModernClubCard from "./ModernClubCard";
+import VersusMatchCard from "./VersusMatchCard";
 
 interface SveTabContentProps {
   styles: any;
@@ -40,16 +40,10 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
     getCurrentUser();
   }, []);
 
-  // Fetch suggested players from database
-  const {
-    data: suggestedPlayers = [],
-    isLoading: playersLoading,
-    error: playersError,
-  } = useQuery({
-    queryKey: ["suggestedPlayers"],
-    queryFn: () => fetchSuggestedPlayers(10),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  // Use static data for following players
+  const suggestedPlayers = SUGGESTED_FRIENDS;
+  const playersLoading = false;
+  const playersError = null;
 
   // Fetch open reservations (matches looking for players)
   const {
@@ -63,6 +57,17 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
     refetchInterval: 1000 * 3, // Auto-refresh every 3 seconds
     refetchOnFocus: true,
     refetchOnMount: true,
+  });
+
+  // Fetch top clubs from database
+  const {
+    data: suggestedClubs = [],
+    isLoading: clubsLoading,
+    error: clubsError,
+  } = useQuery({
+    queryKey: ["topClubs"],
+    queryFn: () => fetchTopClubs(10),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Transform reservations to match card format
@@ -165,48 +170,23 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
   const openMatches = openReservations.map(transformReservationToMatch);
 
   const handlePlayerPress = (player: any) => {
-    if (player.is_following) {
-      // If following, go to create match screen
-      router.push("/createMatch");
+    if (player.isConnected) {
+      // If connected/following, go to create match screen
+      router.push("/(home)/createMatchNew");
     } else {
-      // If not following, go to player profile
-      router.push(`/playerProfile?id=${player.id}`);
+      // If not connected, go to player profile
+      router.push(`/(home)/playerProfile?id=${player.id}`);
     }
   };
 
   return (
     <>
-      {/* Upcoming Matches */}
-      <View style={styles.matchesSection}>
-        <Text style={styles.sectionTitle}>Predstojeći mečevi</Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.matchesScroll}
-        >
-          {UPCOMING_MATCHES.map((match, index) => (
-            <MatchCard
-              key={index}
-              id={match.id}
-              type={match.type}
-              date={match.date}
-              location={match.location}
-              duration={match.duration}
-              level={match.level}
-              onPress={() => router.push(`/(home)/matchScreen?id=${match.id}`)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Suggested Players */}
+      {/* Following Players - Instagram Style */}
       <View style={styles.suggestedSection}>
         <View style={styles.suggestedHeader}>
           <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-            Predloženi igrači
+            Praćenja
           </Text>
-          <Text style={styles.seeAllLink}>Vidi sve</Text>
         </View>
         {playersLoading ? (
           <View style={{ paddingVertical: 40, alignItems: "center" }}>
@@ -215,13 +195,13 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
         ) : playersError ? (
           <View style={{ paddingVertical: 20, alignItems: "center" }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-              Greška pri učitavanju igrača
+              Greška pri učitavanju praćenja
             </Text>
           </View>
         ) : suggestedPlayers.length === 0 ? (
           <View style={{ paddingVertical: 20, alignItems: "center" }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-              Nema predloženih igrača
+              Nema praćenja
             </Text>
           </View>
         ) : (
@@ -231,15 +211,16 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
             style={styles.playersScroll}
           >
             {suggestedPlayers.map((player, index) => (
-              <PlayerCard
+              <InstagramPlayerCard
                 key={player.id}
-                userId={player.id}
-                name={player.full_name || "Unknown"}
-                friendsInCommon={3}
-                matchPercentage={65}
-                avatar={player.avatar_url || undefined}
-                isFollowing={player.is_following}
+                userId={player.id.toString()}
+                name={player.name}
+                avatar={player.avatar}
+                isFollowing={player.isConnected}
                 onPress={() => handlePlayerPress(player)}
+                style={[
+                  index === suggestedPlayers.length - 1 && { marginRight: 20 },
+                ]}
               />
             ))}
           </ScrollView>
@@ -252,22 +233,56 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
           <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
             Predloženi klubovi
           </Text>
-          <Text style={styles.seeAllLink}>Vidi sve</Text>
+          <Pressable onPress={() => router.push("/(home)/allClubs")}>
+            <Text style={styles.seeAllLink}>Vidi sve</Text>
+          </Pressable>
         </View>
+        {clubsLoading ? (
+          <View style={{ paddingVertical: 20 }}>
+            <ActivityIndicator size="small" color={colors.accent} />
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.playersScroll}
+          >
+            {suggestedClubs.map((club, index) => (
+              <ModernClubCard
+                key={club.id || index}
+                id={club.id}
+                name={club.name}
+                image={club.image}
+                distance={club.distance}
+                price={club.price}
+                onPress={() => router.push(`/(home)/clubProfile?id=${club.id}`)}
+              />
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Upcoming Matches */}
+      <View style={styles.matchesSection}>
+        <Text style={styles.sectionTitle}>Predstojeći mečevi</Text>
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.playersScroll}
+          style={styles.matchesScroll}
         >
-          {SUGGESTED_CLUBS.map((club, index) => (
-            <ClubCard
+          {UPCOMING_VERSUS_MATCHES.map((match, index) => (
+            <VersusMatchCard
               key={index}
-              id={club.id}
-              name={club.name}
-              image={club.image}
-              distance={club.distance}
-              price={club.price}
-              onPress={() => router.push(`/(home)/clubProfile?id=${club.id}`)}
+              id={match.id}
+              type={match.type}
+              time={match.time}
+              date={match.date}
+              club={match.club}
+              matchType={match.matchType}
+              teamA={match.teamA}
+              teamB={match.teamB}
+              onPress={() => router.push(`/(home)/matchScreen?id=${match.id}`)}
             />
           ))}
         </ScrollView>

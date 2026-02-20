@@ -2,22 +2,24 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ActionCard, EmptyState, FriendCard, QRCard } from "../../components";
+import { ActionCard, QRCard } from "../../components";
 import { SUGGESTED_FRIENDS } from "../../constants/data";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 
 export default function ConnectFriends() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [friends, setFriends] = useState(SUGGESTED_FRIENDS);
 
@@ -45,11 +47,18 @@ export default function ConnectFriends() {
     );
   };
 
-  const handleShareQR = () => {
-    Alert.alert("Podeli QR kod", "Tvoj QR kod je spreman za deljenje", [
-      { text: "Otkaži", style: "cancel" },
-      { text: "Podeli", onPress: () => console.log("Sharing QR") },
-    ]);
+  const handleShareQR = async () => {
+    try {
+      await Share.share({
+        message: `Prati me na Grid! Skeniraj moj QR kod ili dodaj: @${profile?.username || profile?.full_name}`,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
+
+  const handleScanQR = () => {
+    router.push("/(home)/scanQR");
   };
 
   const filteredFriends = friends.filter(
@@ -71,7 +80,7 @@ export default function ConnectFriends() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Search Section */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <TextInput
             style={styles.searchInput}
             placeholder="Pretraži prijatelje..."
@@ -79,7 +88,7 @@ export default function ConnectFriends() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-        </View>
+        </View> */}
 
         {/* Quick Actions */}
         <View style={styles.section}>
@@ -101,7 +110,7 @@ export default function ConnectFriends() {
         </View>
 
         {/* Suggested Friends */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             Predloženi prijatelji ({filteredFriends.length})
           </Text>
@@ -123,15 +132,17 @@ export default function ConnectFriends() {
               ))}
             </View>
           )}
-        </View>
+        </View> */}
 
         {/* QR Code Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tvoj QR kod</Text>
           <QRCard
-            username="@tvoj_username"
+            userId={profile?.id || ""}
+            username={`@${profile?.username || profile?.full_name || "korisnik"}`}
             subtitle="Skeniranjem ovog koda prijatelji mogu da te pronađu"
             onShare={handleShareQR}
+            onScan={handleScanQR}
           />
         </View>
       </ScrollView>

@@ -1,27 +1,30 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Dimensions,
+    Image,
+    PanResponder,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../components";
 import { OPEN_MATCHES, UPCOMING_MATCHES } from "../../constants/data";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  cancelReservation,
-  fetchReservationById,
-  joinReservation,
-  leaveReservation,
-  removePlayerFromReservation,
+    cancelReservation,
+    fetchReservationById,
+    joinReservation,
+    leaveReservation,
+    removePlayerFromReservation,
 } from "../../lib/courtApi";
 import { supabase } from "../../lib/supabase";
 
@@ -31,9 +34,32 @@ export default function MatchScreen() {
   const { id } = useLocalSearchParams();
   const [isJoined, setIsJoined] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [team1Players, setTeam1Players] = useState<any[]>([]);
+  const [team2Players, setTeam2Players] = useState<any[]>([]);
+  const [unassignedPlayers, setUnassignedPlayers] = useState<any[]>([]);
+  const [draggedPlayer, setDraggedPlayer] = useState<any>(null);
+  const [hoveredTeam, setHoveredTeam] = useState<"team1" | "team2" | null>(
+    null,
+  );
+  const [isHoveredTeamFull, setIsHoveredTeamFull] = useState(false);
+  const team1Ref = useRef<View>(null);
+  const team2Ref = useRef<View>(null);
+  const [team1Layout, setTeam1Layout] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
+  const [team2Layout, setTeam2Layout] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors);
   const iconColor = isDark ? colors.accent : colors.blue;
+  const screenDimensions = Dimensions.get("window");
 
   // Get current user ID
   useEffect(() => {
@@ -178,6 +204,65 @@ export default function MatchScreen() {
       setIsJoined(hasJoinedMatch);
     }
   }, [hasJoinedMatch]);
+
+  // Initialize team selection with all real players unassigned
+  useEffect(() => {
+    if (openMatch?.participants) {
+      const realPlayers = openMatch.participants.filter(
+        (p: any) => p.name !== "",
+      );
+
+      // Only update if the players actually changed
+      const currentPlayerIds = unassignedPlayers.map((p) => p.userId).join(",");
+      const newPlayerIds = realPlayers.map((p) => p.userId).join(",");
+
+      if (currentPlayerIds !== newPlayerIds) {
+        setUnassignedPlayers(realPlayers);
+        setTeam1Players([]);
+        setTeam2Players([]);
+      }
+    }
+  }, [
+    openMatch?.participants?.length,
+    openMatch?.participants?.map((p: any) => p.userId).join(","),
+  ]);
+
+  // Team management functions
+  const movePlayerToTeam1 = (player: any) => {
+    if (team1Players.length >= 2) return; // Max 2 players per team
+
+    setUnassignedPlayers((prev) =>
+      prev.filter((p) => p.userId !== player.userId),
+    );
+    setTeam2Players((prev) => prev.filter((p) => p.userId !== player.userId));
+    setTeam1Players((prev) => [...prev, player]);
+  };
+
+  const movePlayerToTeam2 = (player: any) => {
+    if (team2Players.length >= 2) return; // Max 2 players per team
+
+    setUnassignedPlayers((prev) =>
+      prev.filter((p) => p.userId !== player.userId),
+    );
+    setTeam1Players((prev) => prev.filter((p) => p.userId !== player.userId));
+    setTeam2Players((prev) => [...prev, player]);
+  };
+
+  const movePlayerToUnassigned = (player: any) => {
+    setTeam1Players((prev) => prev.filter((p) => p.userId !== player.userId));
+    setTeam2Players((prev) => prev.filter((p) => p.userId !== player.userId));
+    setUnassignedPlayers((prev) => [...prev, player]);
+  };
+
+  const canStartMatch = team1Players.length > 0 && team2Players.length > 0;
+
+  const handleHoverChange = (
+    team: "team1" | "team2" | null,
+    isFull: boolean,
+  ) => {
+    setHoveredTeam(team);
+    setIsHoveredTeamFull(isFull);
+  };
 
   // Loading state
   if (isUUID && isLoading) {
@@ -360,11 +445,38 @@ export default function MatchScreen() {
   };
 
   const handleStartMatch = () => {
-    Alert.alert("Započni meč", "Da li si spreman da započneš ovaj meč?", [
+    if (!canStartMatch) {
+      Alert.alert(
+        "Nepotpuni timovi",
+        "Molimo postavite oba tima pre početka meča. Svaki tim mora imati najmanje jednog igrača.",
+      );
+      return;
+    }
+
+    const message = `Timovi su postavljeni:\nTim 1: ${team1Players.map((p) => p.name).join(", ")}\nTim 2: ${team2Players.map((p) => p.name).join(", ")}\n\nDa li ste spremni za početak meča?`;
+
+    Alert.alert("Započni meč", message, [
       { text: "Otkaži", style: "cancel" },
       {
         text: "Započni",
-        onPress: () => router.push(`/(home)/liveMatch?id=${id}`),
+        onPress: () => {
+          // Navigate to live match with team data
+          if (canStartMatch) {
+            const teamData = {
+              team1: team1Players,
+              team2: team2Players,
+            };
+            router.push({
+              pathname: `/(home)/liveMatch_NEW`,
+              params: {
+                id: id as string,
+                teams: JSON.stringify(teamData),
+              },
+            });
+          } else {
+            router.push(`/(home)/liveMatch_NEW?id=${id}`);
+          }
+        },
       },
     ]);
   };
@@ -503,104 +615,199 @@ export default function MatchScreen() {
         {/* Participants Section */}
         {openMatch && (
           <View style={styles.participantsSection}>
-            <Text style={styles.sectionTitle}>
-              Igrači (
-              {openMatch.participants.filter((p: any) => p.name !== "").length}
-              /4)
-            </Text>
-            <View style={styles.participantsList}>
-              {openMatch.participants.map((participant: any, index: number) => {
-                const isEmptySlot = participant.name === "";
-                const ParticipantWrapper =
-                  isEmptySlot && isCreator ? Pressable : View;
+            <View style={styles.participantsSectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Igrači (
+                {
+                  openMatch.participants.filter((p: any) => p.name !== "")
+                    .length
+                }
+                /4)
+              </Text>
+            </View>
 
-                return (
-                  <ParticipantWrapper
-                    key={index}
-                    style={styles.participantCard}
-                    {...(isEmptySlot && isCreator
-                      ? { onPress: handleInvitePlayer }
-                      : {})}
-                  >
-                    {participant.name === "" ? (
-                      <>
-                        <View style={styles.emptySlot}>
-                          <FontAwesome
-                            name="plus"
-                            size={16}
-                            color={colors.blue}
-                          />
-                        </View>
-                        <Text style={styles.emptySlotText}>Slobodno mesto</Text>
-                        <Text style={styles.participantLevel}>
-                          Nivo: {participant.level}
-                        </Text>
-                      </>
-                    ) : (
-                      <>
-                        {participant.avatar ? (
+            <View style={styles.teamSelectionContainer}>
+              {/* Invite Players Button - only show for creators when there are open spots */}
+              {isCreator &&
+                openMatch.participants.filter((p: any) => p.name === "")
+                  .length > 0 && (
+                  <View style={styles.inviteSection}>
+                    <Pressable
+                      style={styles.inviteButton}
+                      onPress={handleInvitePlayer}
+                    >
+                      <FontAwesome name="plus" size={16} color={colors.blue} />
+                      <Text style={styles.inviteButtonText}>Pozovi igrače</Text>
+                    </Pressable>
+                  </View>
+                )}
+
+              {/* Unassigned Players */}
+              {unassignedPlayers.length > 0 && (
+                <View style={styles.unassignedSection}>
+                  <Text style={styles.teamSectionTitle}>Dostupni igrači</Text>
+                  <View style={styles.unassignedPlayers}>
+                    {unassignedPlayers.map((player: any, index: number) => (
+                      <DraggablePlayer
+                        key={player.userId || index}
+                        player={player}
+                        onDropInTeam1={() => movePlayerToTeam1(player)}
+                        onDropInTeam2={() => movePlayerToTeam2(player)}
+                        team1Layout={team1Layout}
+                        team2Layout={team2Layout}
+                        screenDimensions={screenDimensions}
+                        styles={styles}
+                        team1Players={team1Players}
+                        team2Players={team2Players}
+                        onHoverChange={handleHoverChange}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Teams */}
+              <View style={styles.teamsContainer}>
+                {/* Team 1 */}
+                <View
+                  ref={team1Ref}
+                  style={[
+                    styles.teamZone,
+                    { borderColor: "#4F7DFF" },
+                    hoveredTeam === "team1" &&
+                      (isHoveredTeamFull
+                        ? styles.teamZoneFull
+                        : styles.teamZoneHighlight),
+                  ]}
+                  onLayout={(event) => {
+                    team1Ref.current?.measureInWindow((x, y, width, height) => {
+                      setTeam1Layout({ x, y, width, height });
+                    });
+                  }}
+                >
+                  <Text style={[styles.teamZoneTitle, { color: "#4F7DFF" }]}>
+                    TIM 1 ({team1Players.length}/2)
+                  </Text>
+                  <View style={styles.teamZonePlayers}>
+                    {team1Players.map((player: any, index: number) => (
+                      <View
+                        key={player.userId || index}
+                        style={styles.teamZonePlayer}
+                      >
+                        {player.avatar ? (
                           <Image
-                            source={{ uri: participant.avatar }}
-                            style={styles.participantAvatar}
+                            source={{ uri: player.avatar }}
+                            style={styles.teamZonePlayerAvatar}
                           />
                         ) : (
                           <View
                             style={[
-                              styles.participantAvatar,
-                              {
-                                backgroundColor: "#3867FF",
-                                justifyContent: "center",
-                                alignItems: "center",
-                              },
+                              styles.teamZonePlayerAvatar,
+                              { backgroundColor: "#3867FF" },
                             ]}
                           >
-                            <Text
-                              style={{
-                                color: "#FFFFFF",
-                                fontSize: 20,
-                                fontWeight: "700",
-                              }}
-                            >
-                              {participant.name
+                            <Text style={styles.teamPlayerInitials}>
+                              {player.name
                                 .split(" ")
                                 .map((n: string) => n[0])
                                 .join("")}
                             </Text>
                           </View>
                         )}
-                        <Text style={styles.participantName}>
-                          {participant.name}
+                        <Text style={styles.teamZonePlayerName}>
+                          {player.name}
                         </Text>
-                        <Text style={styles.participantLevel}>
-                          Nivo: {participant.level}
-                        </Text>
-                        {isCreator &&
-                          participant.userId &&
-                          participant.userId !== match.user_id && (
-                            <Pressable
-                              style={styles.removePlayerButton}
-                              onPress={() =>
-                                handleRemovePlayer(
-                                  participant.userId,
-                                  participant.name,
-                                )
-                              }
-                            >
-                              <FontAwesome
-                                name="times-circle"
-                                size={14}
-                                color="#FF3B30"
-                              />
-                              <Text style={styles.removePlayerText}>
-                                Ukloni
-                              </Text>
-                            </Pressable>
-                          )}
-                      </>
+                        <Pressable
+                          style={styles.removePlayerButton}
+                          onPress={() => movePlayerToUnassigned(player)}
+                        >
+                          <FontAwesome name="times" size={12} color="#FF3B30" />
+                        </Pressable>
+                      </View>
+                    ))}
+                    {team1Players.length === 0 && (
+                      <Text style={styles.emptyTeamText}>Nema igrača</Text>
                     )}
-                  </ParticipantWrapper>
-                );
-              })}
+                  </View>
+                </View>
+
+                {/* Team 2 */}
+                <View
+                  ref={team2Ref}
+                  style={[
+                    styles.teamZone,
+                    { borderColor: "#FF6B6B" },
+                    hoveredTeam === "team2" &&
+                      (isHoveredTeamFull
+                        ? styles.teamZoneFull
+                        : styles.teamZoneHighlight),
+                  ]}
+                  onLayout={(event) => {
+                    team2Ref.current?.measureInWindow((x, y, width, height) => {
+                      setTeam2Layout({ x, y, width, height });
+                    });
+                  }}
+                >
+                  <Text style={[styles.teamZoneTitle, { color: "#FF6B6B" }]}>
+                    TIM 2 ({team2Players.length}/2)
+                  </Text>
+                  <View style={styles.teamZonePlayers}>
+                    {team2Players.map((player: any, index: number) => (
+                      <View
+                        key={player.userId || index}
+                        style={styles.teamZonePlayer}
+                      >
+                        {player.avatar ? (
+                          <Image
+                            source={{ uri: player.avatar }}
+                            style={styles.teamZonePlayerAvatar}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.teamZonePlayerAvatar,
+                              { backgroundColor: "#3867FF" },
+                            ]}
+                          >
+                            <Text style={styles.teamPlayerInitials}>
+                              {player.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.teamZonePlayerName}>
+                          {player.name}
+                        </Text>
+                        <Pressable
+                          style={styles.removePlayerButton}
+                          onPress={() => movePlayerToUnassigned(player)}
+                        >
+                          <FontAwesome name="times" size={12} color="#FF3B30" />
+                        </Pressable>
+                      </View>
+                    ))}
+                    {team2Players.length === 0 && (
+                      <Text style={styles.emptyTeamText}>Nema igrača</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+
+              {/* Team Selection Status */}
+              {!canStartMatch && (
+                <View style={styles.teamSelectionWarning}>
+                  <FontAwesome
+                    name="exclamation-triangle"
+                    size={16}
+                    color="#FF9500"
+                  />
+                  <Text style={styles.teamSelectionWarningText}>
+                    Oba tima moraju imati najmanje jednog igrača
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -724,11 +931,17 @@ export default function MatchScreen() {
               </Pressable>
               <View style={styles.buttonSpacer} />
               <Pressable
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  !canStartMatch && styles.disabledPrimaryButton,
+                ]}
                 onPress={handleStartMatch}
+                disabled={!canStartMatch}
               >
                 <FontAwesome name="play" size={16} color={colors.background} />
-                <Text style={styles.primaryButtonText}>Započni meč</Text>
+                <Text style={styles.primaryButtonText}>
+                  {!canStartMatch ? "Postavite timove" : "Započni meč"}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -753,6 +966,178 @@ export default function MatchScreen() {
     </SafeAreaView>
   );
 }
+
+// Draggable Player Component
+interface DraggablePlayerProps {
+  player: any;
+  onDropInTeam1: () => void;
+  onDropInTeam2: () => void;
+  team1Layout: { x: number; y: number; width: number; height: number };
+  team2Layout: { x: number; y: number; width: number; height: number };
+  screenDimensions: { width: number; height: number };
+  styles: any; // Pass styles from parent
+  team1Players: any[];
+  team2Players: any[];
+  onHoverChange?: (team: "team1" | "team2" | null, isFull: boolean) => void;
+}
+
+const DraggablePlayer = ({
+  player,
+  onDropInTeam1,
+  onDropInTeam2,
+  team1Layout,
+  team2Layout,
+  screenDimensions,
+  styles,
+  team1Players,
+  team2Players,
+  onHoverChange,
+}: DraggablePlayerProps) => {
+  const pan = useRef(new Animated.ValueXY()).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const [isDragging, setIsDragging] = useState(false);
+  const [hoveringTeam, setHoveringTeam] = useState<"team1" | "team2" | null>(
+    null,
+  );
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        setIsDragging(true);
+        Animated.spring(scale, {
+          toValue: 1.1,
+          useNativeDriver: false,
+        }).start();
+      },
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+        listener: (evt, gestureState) => {
+          const { pageX, pageY } = evt.nativeEvent;
+
+          // Check if hovering over teams for visual feedback
+          if (
+            pageX >= team1Layout.x &&
+            pageX <= team1Layout.x + team1Layout.width &&
+            pageY >= team1Layout.y &&
+            pageY <= team1Layout.y + team1Layout.height
+          ) {
+            setHoveringTeam("team1");
+            onHoverChange?.("team1", team1Players.length >= 2);
+          } else if (
+            pageX >= team2Layout.x &&
+            pageX <= team2Layout.x + team2Layout.width &&
+            pageY >= team2Layout.y &&
+            pageY <= team2Layout.y + team2Layout.height
+          ) {
+            setHoveringTeam("team2");
+            onHoverChange?.("team2", team2Players.length >= 2);
+          } else {
+            setHoveringTeam(null);
+            onHoverChange?.(null, false);
+          }
+        },
+      }),
+      onPanResponderRelease: (evt, gestureState) => {
+        const { pageX, pageY } = evt.nativeEvent;
+
+        // Check if dropped in Team 1 zone
+        if (
+          pageX >= team1Layout.x &&
+          pageX <= team1Layout.x + team1Layout.width &&
+          pageY >= team1Layout.y &&
+          pageY <= team1Layout.y + team1Layout.height &&
+          team1Players.length < 2
+        ) {
+          onDropInTeam1();
+        }
+        // Check if dropped in Team 2 zone
+        else if (
+          pageX >= team2Layout.x &&
+          pageX <= team2Layout.x + team2Layout.width &&
+          pageY >= team2Layout.y &&
+          pageY <= team2Layout.y + team2Layout.height &&
+          team2Players.length < 2
+        ) {
+          onDropInTeam2();
+        }
+
+        // Reset position and scale
+        setIsDragging(false);
+        setHoveringTeam(null);
+        Animated.parallel([
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }),
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      },
+    }),
+  ).current;
+
+  return (
+    <Animated.View
+      style={[
+        {
+          transform: [
+            { translateX: pan.x },
+            { translateY: pan.y },
+            { scale: scale },
+          ],
+          zIndex: isDragging ? 1000 : 1,
+        },
+      ]}
+      {...panResponder.panHandlers}
+    >
+      <View
+        style={[styles.draggablePlayer, isDragging && styles.draggingPlayer]}
+      >
+        {player.avatar ? (
+          <Image
+            source={{ uri: player.avatar }}
+            style={styles.teamPlayerAvatar}
+          />
+        ) : (
+          <View
+            style={[styles.teamPlayerAvatar, { backgroundColor: "#3867FF" }]}
+          >
+            <Text style={styles.teamPlayerInitials}>
+              {player.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.teamPlayerName}>{player.name}</Text>
+        <Text style={styles.teamPlayerLevel}>Nivo: {player.level}</Text>
+        {isDragging && (
+          <Text
+            style={[
+              styles.dragHintText,
+              hoveringTeam === "team1" &&
+                team1Players.length >= 2 && { color: "#FF3B30" },
+              hoveringTeam === "team2" &&
+                team2Players.length >= 2 && { color: "#FF3B30" },
+            ]}
+          >
+            {hoveringTeam === "team1" && team1Players.length >= 2
+              ? "Tim 1 je pun"
+              : hoveringTeam === "team2" && team2Players.length >= 2
+                ? "Tim 2 je pun"
+                : hoveringTeam
+                  ? `Pustite u ${hoveringTeam === "team1" ? "Tim 1" : "Tim 2"}`
+                  : "Povucite u tim"}
+          </Text>
+        )}
+      </View>
+    </Animated.View>
+  );
+};
 
 const getStyles = (colors: any) =>
   StyleSheet.create({
@@ -1038,5 +1423,219 @@ const getStyles = (colors: any) =>
       color: colors.background,
       fontSize: 16,
       fontWeight: "700",
+    },
+    disabledPrimaryButton: {
+      backgroundColor: colors.textSecondary + "88", // Add transparency
+    },
+    participantsSectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    teamToggleButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      gap: 4,
+    },
+    teamToggleText: {
+      color: colors.blue,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    teamSelectionContainer: {
+      gap: 20,
+    },
+    inviteSection: {
+      marginBottom: 16,
+    },
+    inviteButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 2,
+      borderColor: colors.blue,
+      borderStyle: "dashed",
+    },
+    inviteButtonText: {
+      color: colors.blue,
+      fontSize: 16,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    unassignedSection: {
+      marginBottom: 16,
+    },
+    teamSectionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    unassignedPlayers: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+    },
+    draggablePlayer: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      alignItems: "center",
+      minWidth: 100,
+      flex: 1,
+      maxWidth: "45%",
+    },
+    teamPlayerAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginBottom: 8,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    teamPlayerInitials: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    teamPlayerName: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "600",
+      textAlign: "center",
+      marginBottom: 4,
+    },
+    teamPlayerLevel: {
+      color: colors.textSecondary,
+      fontSize: 10,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    teamButtonsContainer: {
+      flexDirection: "row",
+      gap: 4,
+    },
+    teamMoveButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      minWidth: 35,
+      alignItems: "center",
+    },
+    team1Button: {
+      backgroundColor: "#4F7DFF",
+    },
+    team2Button: {
+      backgroundColor: "#FF6B6B",
+    },
+    teamMoveButtonText: {
+      color: "#FFFFFF",
+      fontSize: 10,
+      fontWeight: "600",
+    },
+    disabledButton: {
+      backgroundColor: colors.textSecondary,
+      opacity: 0.5,
+    },
+    teamsContainer: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    teamZone: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderStyle: "dashed",
+      padding: 12,
+      minHeight: 120,
+    },
+    teamZoneTitle: {
+      fontSize: 14,
+      fontWeight: "700",
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    teamZonePlayers: {
+      gap: 8,
+    },
+    teamZonePlayer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      padding: 8,
+      gap: 8,
+    },
+    teamZonePlayerAvatar: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    teamZonePlayerName: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "500",
+      flex: 1,
+    },
+    emptyTeamText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: "center",
+      fontStyle: "italic",
+      padding: 20,
+    },
+    teamSelectionWarning: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#FF9500" + "20",
+      borderRadius: 8,
+      padding: 12,
+      gap: 8,
+      marginTop: 12,
+    },
+    teamSelectionWarningText: {
+      color: "#FF9500",
+      fontSize: 14,
+      fontWeight: "600",
+      flex: 1,
+    },
+    draggingPlayer: {
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      backgroundColor: colors.surface + "EE", // More opaque when dragging
+    },
+    dragHintText: {
+      color: colors.blue,
+      fontSize: 10,
+      fontWeight: "600",
+      textAlign: "center",
+      marginTop: 4,
+    },
+    teamZoneHighlight: {
+      borderColor: colors.blue,
+      borderWidth: 3,
+      backgroundColor: colors.blue + "10",
+    },
+    teamZoneFull: {
+      borderColor: "#FF3B30",
+      borderWidth: 3,
+      backgroundColor: "#FF3B30" + "10",
     },
   });

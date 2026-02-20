@@ -1,8 +1,10 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Redirect, Stack } from "expo-router";
 
 export default function HomeLayout() {
   const { user, profile } = useAuth();
+  const { colors } = useTheme();
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;

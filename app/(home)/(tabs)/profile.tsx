@@ -220,7 +220,7 @@ export default function ProfileScreen() {
           <View style={styles.buttonHalf}>
             <Pressable
               style={styles.playButton}
-              onPress={() => router.push("/createMatch")}
+              onPress={() => router.push("/(home)/createMatchNew")}
             >
               <FontAwesome
                 name="play"
