@@ -1,6 +1,4 @@
-import { FontAwesome } from "@expo/vector-icons";
-import { useRef, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface CalendarProps {
@@ -9,323 +7,19 @@ interface CalendarProps {
   markedDates?: Date[];
 }
 
-export default function Calendar({
-  selectedDate,
-  onDateSelect,
-  markedDates = [],
-}: CalendarProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
-  const navIconColor = isDark ? "#F2F2F2" : colors.text;
-
-  // Get today's date at midnight for comparison
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Calculate max date (2 months from today)
-  const maxDate = new Date(today);
-  maxDate.setMonth(maxDate.getMonth() + 2);
-
-  const [currentMonth, setCurrentMonth] = useState(selectedDate || today);
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const [direction, setDirection] = useState(0);
-
-  const monthNames = [
-    "Januar",
-    "Februar",
-    "Mart",
-    "April",
-    "Maj",
-    "Jun",
-    "Jul",
-    "Avgust",
-    "Septembar",
-    "Oktobar",
-    "Novembar",
-    "Decembar",
-  ];
-
-  const dayNames = ["NED", "PON", "UTO", "SRE", "ČET", "PET", "SUB"];
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return new Date(year, month, 1).getDay();
-  };
-
-  const generateCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(currentMonth);
-    const firstDay = getFirstDayOfMonth(currentMonth);
-    const days: (number | null)[] = [];
-
-    // Previous month days
-    const prevMonthDays = getDaysInMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
-    );
-    for (let i = firstDay - 1; i >= 0; i--) {
-      days.push(prevMonthDays - i);
-    }
-
-    // Current month days
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-
-    // Next month days (fill to 35 total for 5 rows)
-    const remainingDays = 35 - days.length;
-    for (let i = 1; i <= remainingDays; i++) {
-      days.push(i);
-    }
-
-    return days;
-  };
-
-  const isDateMarked = (day: number) => {
-    return markedDates.some((date) => {
-      return (
-        date.getDate() === day &&
-        date.getMonth() === currentMonth.getMonth() &&
-        date.getFullYear() === currentMonth.getFullYear()
-      );
-    });
-  };
-
-  const isDateSelected = (day: number) => {
-    if (!selectedDate) return false;
-    return (
-      selectedDate.getDate() === day &&
-      selectedDate.getMonth() === currentMonth.getMonth() &&
-      selectedDate.getFullYear() === currentMonth.getFullYear()
-    );
-  };
-
-  const isDateDisabled = (day: number, index: number) => {
-    const firstDay = getFirstDayOfMonth(currentMonth);
-    const daysInMonth = getDaysInMonth(currentMonth);
-
-    let checkDate: Date;
-
-    if (index < firstDay) {
-      // Previous month
-      checkDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() - 1,
-        day,
-      );
-    } else if (day <= daysInMonth) {
-      // Current month
-      checkDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth(),
-        day,
-      );
-    } else {
-      // Next month
-      checkDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() + 1,
-        day,
-      );
-    }
-
-    checkDate.setHours(0, 0, 0, 0);
-    return checkDate < today || checkDate > maxDate;
-  };
-
-  const handleDatePress = (day: number | null, index: number) => {
-    if (day === null) return;
-
-    // Check if date is disabled
-    if (isDateDisabled(day, index)) return;
-
-    const firstDay = getFirstDayOfMonth(currentMonth);
-    const daysInMonth = getDaysInMonth(currentMonth);
-
-    let newDate: Date;
-
-    if (index < firstDay) {
-      // Previous month
-      newDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() - 1,
-        day,
-      );
-    } else if (day <= daysInMonth) {
-      // Current month
-      newDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth(),
-        day,
-      );
-    } else {
-      // Next month
-      newDate = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() + 1,
-        day,
-      );
-    }
-
-    onDateSelect?.(newDate);
-  };
-
-  const changeMonth = (dir: number) => {
-    const newMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + dir,
-      1,
-    );
-
-    // Don't allow navigating before current month or more than 2 months ahead
-    const newMonthStart = new Date(
-      newMonth.getFullYear(),
-      newMonth.getMonth(),
-      1,
-    );
-    const todayMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const maxMonthStart = new Date(
-      maxDate.getFullYear(),
-      maxDate.getMonth(),
-      1,
-    );
-
-    if (newMonthStart < todayMonthStart || newMonthStart > maxMonthStart) {
-      return;
-    }
-
-    setDirection(dir);
-
-    // Slide out and fade out animation
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: dir > 0 ? -50 : 50,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setCurrentMonth(newMonth);
-      slideAnim.setValue(dir > 0 ? 50 : -50);
-
-      // Slide in and fade in animation
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
-  };
-
-  const days = generateCalendarDays();
-  const firstDay = getFirstDayOfMonth(currentMonth);
-  const daysInMonth = getDaysInMonth(currentMonth);
-
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.monthYear}>
-          <Text style={styles.monthText}>
-            {monthNames[currentMonth.getMonth()]}
-          </Text>
-          <Text style={styles.yearText}>{currentMonth.getFullYear()}</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <Pressable onPress={() => changeMonth(-1)} style={styles.navButton}>
-            <FontAwesome name="chevron-up" size={18} color={navIconColor} />
-          </Pressable>
-          <Pressable onPress={() => changeMonth(1)} style={styles.navButton}>
-            <FontAwesome name="chevron-down" size={18} color={navIconColor} />
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Day names */}
-      <View style={styles.dayNamesRow}>
-        {dayNames.map((day) => (
-          <View key={day} style={styles.dayNameCell}>
-            <Text style={styles.dayNameText}>{day}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Calendar grid */}
-      <Animated.View
-        style={[
-          styles.calendarGrid,
-          {
-            transform: [{ translateY: slideAnim }],
-            opacity: opacityAnim,
-          },
-        ]}
-      >
-        {days.map((day, index) => {
-          const isCurrentMonth =
-            index >= firstDay && index < firstDay + daysInMonth;
-          const isMarked = day !== null && isCurrentMonth && isDateMarked(day);
-          const isSelected =
-            day !== null && isCurrentMonth && isDateSelected(day);
-          const isDisabled = day !== null && isDateDisabled(day, index);
-
-          return (
-            <Pressable
-              key={index}
-              style={styles.dayCell}
-              onPress={() => handleDatePress(day, index)}
-              disabled={isDisabled}
-            >
-              <View style={styles.dayContent}>
-                {isSelected ? <View style={styles.selectedCircle} /> : null}
-                <Text
-                  style={[
-                    styles.dayText,
-                    !isCurrentMonth && styles.dayTextInactive,
-                    isDisabled && styles.dayTextDisabled,
-                    isSelected ? styles.dayTextSelected : undefined,
-                  ]}
-                >
-                  {day}
-                </Text>
-              </View>
-              {isMarked && !isDisabled ? (
-                <View style={styles.markerDot} />
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </Animated.View>
-    </View>
-  );
-}
-
 const getStyles = (colors: any, isDark: boolean) =>
   StyleSheet.create({
     container: {
       backgroundColor: isDark ? "#0B0B0B" : "#FFFFFF",
       borderRadius: 16,
-      overflow: "hidden",
+      // paddingHorizontal: 24,
+    },
+    monthContainer: {
+      paddingBottom: 32,
     },
     header: {
       flexDirection: "row",
-      justifyContent: "space-between",
+      justifyContent: "flex-start",
       alignItems: "flex-start",
       marginBottom: 24,
     },
@@ -342,16 +36,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.textSecondary,
       fontSize: 16,
       fontWeight: "500",
-    },
-    headerActions: {
-      flexDirection: "column",
-      gap: 8,
-    },
-    navButton: {
-      width: 32,
-      height: 32,
-      alignItems: "center",
-      justifyContent: "center",
     },
     dayNamesRow: {
       flexDirection: "row",
@@ -422,3 +106,225 @@ const getStyles = (colors: any, isDark: boolean) =>
       backgroundColor: isDark ? "#F2F2F2" : colors.blue,
     },
   });
+
+export default function Calendar({
+  selectedDate,
+  onDateSelect,
+  markedDates = [],
+}: CalendarProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors, isDark);
+
+  // Get today's date at midnight for comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Calculate max date (2 months from today)
+  const maxDate = new Date(today);
+  maxDate.setMonth(maxDate.getMonth() + 2);
+
+  // Generate array of available months (current + next 2 months)
+  const availableMonths = [];
+  for (let i = 0; i <= 2; i++) {
+    const month = new Date(today);
+    month.setMonth(today.getMonth() + i);
+    availableMonths.push(month);
+  }
+
+  const monthNames = [
+    "Januar",
+    "Februar",
+    "Mart",
+    "April",
+    "Maj",
+    "Jun",
+    "Jul",
+    "Avgust",
+    "Septembar",
+    "Oktobar",
+    "Novembar",
+    "Decembar",
+  ];
+
+  const dayNames = ["NED", "PON", "UTO", "SRE", "ČET", "PET", "SUB"];
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month, 1).getDay();
+  };
+
+  const generateCalendarDays = (month: Date) => {
+    const daysInMonth = getDaysInMonth(month);
+    const firstDay = getFirstDayOfMonth(month);
+    const days: (number | null)[] = [];
+
+    // Previous month days
+    const prevMonthDays = getDaysInMonth(
+      new Date(month.getFullYear(), month.getMonth() - 1, 1),
+    );
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push(prevMonthDays - i);
+    }
+
+    // Current month days
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+
+    // Next month days (fill to 35 total for 5 rows)
+    const remainingDays = 35 - days.length;
+    for (let i = 1; i <= remainingDays; i++) {
+      days.push(i);
+    }
+
+    return days;
+  };
+
+  const isDateMarked = (day: number, month: Date) => {
+    return markedDates.some((date) => {
+      return (
+        date.getDate() === day &&
+        date.getMonth() === month.getMonth() &&
+        date.getFullYear() === month.getFullYear()
+      );
+    });
+  };
+
+  const isDateSelected = (day: number, month: Date) => {
+    if (!selectedDate) return false;
+    return (
+      selectedDate.getDate() === day &&
+      selectedDate.getMonth() === month.getMonth() &&
+      selectedDate.getFullYear() === month.getFullYear()
+    );
+  };
+
+  const isDateDisabled = (day: number, index: number, month: Date) => {
+    const firstDay = getFirstDayOfMonth(month);
+    const daysInMonth = getDaysInMonth(month);
+
+    let checkDate: Date;
+
+    if (index < firstDay) {
+      // Previous month
+      checkDate = new Date(month.getFullYear(), month.getMonth() - 1, day);
+    } else if (day <= daysInMonth) {
+      // Current month
+      checkDate = new Date(month.getFullYear(), month.getMonth(), day);
+    } else {
+      // Next month
+      checkDate = new Date(month.getFullYear(), month.getMonth() + 1, day);
+    }
+
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate < today || checkDate > maxDate;
+  };
+
+  const handleDatePress = (day: number | null, index: number, month: Date) => {
+    if (day === null) return;
+
+    // Check if date is disabled
+    if (isDateDisabled(day, index, month)) return;
+
+    const firstDay = getFirstDayOfMonth(month);
+    const daysInMonth = getDaysInMonth(month);
+
+    let newDate: Date;
+
+    if (index < firstDay) {
+      // Previous month
+      newDate = new Date(month.getFullYear(), month.getMonth() - 1, day);
+    } else if (day <= daysInMonth) {
+      // Current month
+      newDate = new Date(month.getFullYear(), month.getMonth(), day);
+    } else {
+      // Next month
+      newDate = new Date(month.getFullYear(), month.getMonth() + 1, day);
+    }
+
+    onDateSelect?.(newDate);
+  };
+
+  const renderMonth = (month: Date) => {
+    const days = generateCalendarDays(month);
+    const firstDay = getFirstDayOfMonth(month);
+    const daysInMonth = getDaysInMonth(month);
+
+    return (
+      <View
+        key={`${month.getFullYear()}-${month.getMonth()}`}
+        style={styles.monthContainer}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.monthYear}>
+            <Text style={styles.monthText}>{monthNames[month.getMonth()]}</Text>
+            <Text style={styles.yearText}>{month.getFullYear()}</Text>
+          </View>
+        </View>
+
+        {/* Day names */}
+        <View style={styles.dayNamesRow}>
+          {dayNames.map((day) => (
+            <View key={day} style={styles.dayNameCell}>
+              <Text style={styles.dayNameText}>{day}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Calendar grid */}
+        <View style={styles.calendarGrid}>
+          {days.map((day, index) => {
+            const isCurrentMonth =
+              index >= firstDay && index < firstDay + daysInMonth;
+            const isMarked =
+              day !== null && isCurrentMonth && isDateMarked(day, month);
+            const isSelected =
+              day !== null && isCurrentMonth && isDateSelected(day, month);
+            const isDisabled =
+              day !== null && isDateDisabled(day, index, month);
+
+            return (
+              <Pressable
+                key={index}
+                style={styles.dayCell}
+                onPress={() => handleDatePress(day, index, month)}
+                disabled={isDisabled}
+              >
+                <View style={styles.dayContent}>
+                  {isSelected ? <View style={styles.selectedCircle} /> : null}
+                  <Text
+                    style={[
+                      styles.dayText,
+                      !isCurrentMonth && styles.dayTextInactive,
+                      isDisabled && styles.dayTextDisabled,
+                      isSelected ? styles.dayTextSelected : undefined,
+                    ]}
+                  >
+                    {day}
+                  </Text>
+                </View>
+                {isMarked && !isDisabled ? (
+                  <View style={styles.markerDot} />
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {availableMonths.map((month) => renderMonth(month))}
+    </View>
+  );
+}

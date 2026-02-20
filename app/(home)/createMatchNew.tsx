@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Animated,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "../../components";
@@ -33,7 +33,6 @@ export default function CreateMatchNewScreen() {
 
   const [currentStep, setCurrentStep] = useState<Step>("club");
   const [selectedData, setSelectedData] = useState<SelectedData>({});
-  const [fadeAnim] = useState(new Animated.Value(1));
   const [selectionFadeAnim] = useState(new Animated.Value(0));
 
   // Animate selection overlay when club changes
@@ -92,55 +91,28 @@ export default function CreateMatchNewScreen() {
       router.back();
     } else {
       // Go back to previous step
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        if (currentStep === "time") {
-          setCurrentStep("court");
-        } else if (currentStep === "court") {
-          setCurrentStep("date");
-        } else if (currentStep === "date") {
-          setCurrentStep("club");
-        }
-
-        // Fade in animation
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      });
+      if (currentStep === "time") {
+        setCurrentStep("court");
+      } else if (currentStep === "court") {
+        setCurrentStep("date");
+      } else if (currentStep === "date") {
+        setCurrentStep("club");
+      }
     }
   };
 
   const handleNext = () => {
-    // Fade out animation
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      // Change step
-      if (currentStep === "club" && selectedData.club) {
-        setCurrentStep("date");
-      } else if (currentStep === "date" && selectedData.date) {
-        setCurrentStep("court");
-      } else if (currentStep === "court" && selectedData.court) {
-        setCurrentStep("time");
-      } else if (currentStep === "time" && selectedData.time) {
-        // Navigate to final step or complete
-        console.log("Complete:", selectedData);
-      }
-
-      // Fade in animation
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    });
+    // Change step
+    if (currentStep === "club" && selectedData.club) {
+      setCurrentStep("date");
+    } else if (currentStep === "date" && selectedData.date) {
+      setCurrentStep("court");
+    } else if (currentStep === "court" && selectedData.court) {
+      setCurrentStep("time");
+    } else if (currentStep === "time" && selectedData.time) {
+      // Navigate to final step or complete
+      console.log("Complete:", selectedData);
+    }
   };
 
   const isNextEnabled = () => {
@@ -257,14 +229,16 @@ export default function CreateMatchNewScreen() {
 
   const renderDateSelection = () => {
     return (
-      <View style={styles.content}>
-        <View style={styles.calendarWrapper}>
-          <Calendar
-            onDateSelect={(date) => setSelectedData({ ...selectedData, date })}
-            selectedDate={selectedData.date}
-          />
-        </View>
-      </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <Calendar
+          onDateSelect={(date) => setSelectedData({ ...selectedData, date })}
+          selectedDate={selectedData.date}
+        />
+      </ScrollView>
     );
   };
 
@@ -382,13 +356,13 @@ export default function CreateMatchNewScreen() {
       </View>
 
       {/* Content */}
-      <Animated.View style={[styles.mainContent, { opacity: fadeAnim }]}>
+      <View style={styles.mainContent}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{getStepTitle()}</Text>
           <Text style={styles.subtitle}>Korak {getStepNumber()} od 4</Text>
         </View>
         {renderStepContent()}
-      </Animated.View>
+      </View>
 
       {/* Bottom Bar */}
       <SafeAreaView edges={["bottom"]} style={styles.bottomBar}>
@@ -452,6 +426,9 @@ const getStyles = (colors: any, isDark: boolean) =>
     titleContainer: {
       paddingHorizontal: 24,
       paddingVertical: 24,
+      backgroundColor: colors.background,
+      zIndex: 10,
+      position: "relative",
     },
     title: {
       fontSize: 32,
@@ -611,9 +588,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontWeight: "500",
       color: colors.textSecondary,
     },
-    calendarWrapper: {
-      paddingHorizontal: 24,
-    },
     timeGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -646,6 +620,8 @@ const getStyles = (colors: any, isDark: boolean) =>
       paddingVertical: 16,
       borderTopWidth: 1,
       borderTopColor: isDark ? "#333" : "#E5E7EB",
+      backgroundColor: colors.background,
+      zIndex: 100,
     },
     nextButton: {
       backgroundColor: colors.text,
