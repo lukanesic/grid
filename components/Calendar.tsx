@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface CalendarProps {
@@ -6,6 +7,63 @@ interface CalendarProps {
   onDateSelect?: (date: Date) => void;
   markedDates?: Date[];
 }
+
+// Animated calendar day component
+const CalendarDay = ({
+  day,
+  isSelected,
+  isCurrentMonth,
+  isDisabled,
+  isMarked,
+  onPress,
+  styles,
+}: any) => {
+  const animValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(animValue, {
+      toValue: isSelected ? 1 : 0,
+      friction: 4,
+      useNativeDriver: true,
+    }).start();
+  }, [isSelected, animValue]);
+
+  return (
+    <Pressable style={styles.dayCell} onPress={onPress} disabled={isDisabled}>
+      <View style={styles.dayContent}>
+        {isSelected && (
+          <Animated.View
+            style={[
+              styles.selectedCircle,
+              {
+                opacity: animValue,
+                transform: [
+                  {
+                    scale: animValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+        )}
+        <Text
+          style={[
+            styles.dayText,
+            !isCurrentMonth && styles.dayTextInactive,
+            isDisabled && styles.dayTextDisabled,
+            isSelected ? styles.dayTextSelected : undefined,
+          ]}
+        >
+          {day}
+        </Text>
+      </View>
+      {isMarked && !isDisabled ? <View style={styles.markerDot} /> : null}
+    </Pressable>
+  );
+};
 
 const getStyles = (colors: any, isDark: boolean) =>
   StyleSheet.create({
@@ -94,7 +152,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: isDark ? "#F2F2F2" : colors.blue,
+      backgroundColor: colors.text,
       zIndex: 0,
     },
     markerDot: {
@@ -103,7 +161,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       width: 4,
       height: 4,
       borderRadius: 2,
-      backgroundColor: isDark ? "#F2F2F2" : colors.blue,
+      backgroundColor: colors.text,
     },
   });
 
@@ -292,29 +350,16 @@ export default function Calendar({
               day !== null && isDateDisabled(day, index, month);
 
             return (
-              <Pressable
+              <CalendarDay
                 key={index}
-                style={styles.dayCell}
+                day={day}
+                isSelected={isSelected}
+                isCurrentMonth={isCurrentMonth}
+                isDisabled={isDisabled}
+                isMarked={isMarked}
                 onPress={() => handleDatePress(day, index, month)}
-                disabled={isDisabled}
-              >
-                <View style={styles.dayContent}>
-                  {isSelected ? <View style={styles.selectedCircle} /> : null}
-                  <Text
-                    style={[
-                      styles.dayText,
-                      !isCurrentMonth && styles.dayTextInactive,
-                      isDisabled && styles.dayTextDisabled,
-                      isSelected ? styles.dayTextSelected : undefined,
-                    ]}
-                  >
-                    {day}
-                  </Text>
-                </View>
-                {isMarked && !isDisabled ? (
-                  <View style={styles.markerDot} />
-                ) : null}
-              </Pressable>
+                styles={styles}
+              />
             );
           })}
         </View>
