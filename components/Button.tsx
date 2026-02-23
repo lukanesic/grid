@@ -16,8 +16,8 @@ export default function Button({
   disabled = false,
   fullWidth = true,
 }: ButtonProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
 
   return (
     <Pressable
@@ -42,7 +42,7 @@ export default function Button({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     button: {
       borderRadius: 24,
@@ -67,6 +67,7 @@ const getStyles = (colors: any, isDark: boolean) =>
     text: {
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     primaryText: {
       color: isDark ? "#111111" : "#FFFFFF",

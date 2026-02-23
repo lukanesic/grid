@@ -23,7 +23,7 @@ export default function TrendingClubCard({
   rating,
   onPress,
 }: TrendingClubCardProps) {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, fonts } = useTheme();
 
   // Inverted theme for trending clubs (always dark mode style)
   const cardColors = {
@@ -33,7 +33,7 @@ export default function TrendingClubCard({
     border: "#1A1B20",
   };
 
-  const styles = getStyles(cardColors, colors);
+  const styles = getStyles(cardColors, colors, fonts);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -84,7 +84,7 @@ export default function TrendingClubCard({
   );
 }
 
-const getStyles = (cardColors: any, colors: any) =>
+const getStyles = (cardColors: any, colors: any, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 160,
@@ -127,6 +127,7 @@ const getStyles = (cardColors: any, colors: any) =>
       fontWeight: "600",
       marginBottom: 4,
       minHeight: 32,
+      fontFamily: fonts.semiBold,
     },
     ratingContainer: {
       flexDirection: "row",
@@ -137,6 +138,7 @@ const getStyles = (cardColors: any, colors: any) =>
       color: "#FFD700",
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     reasonContainer: {
       backgroundColor: cardColors.border,
@@ -149,6 +151,7 @@ const getStyles = (cardColors: any, colors: any) =>
       fontSize: 11,
       fontWeight: "600",
       textAlign: "center",
+      fontFamily: fonts.semiBold,
     },
     footer: {
       marginTop: "auto",
@@ -164,10 +167,12 @@ const getStyles = (cardColors: any, colors: any) =>
     distance: {
       color: cardColors.textSecondary,
       fontSize: 12,
+      fontFamily: fonts.regular,
     },
     price: {
       color: colors.blue,
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });

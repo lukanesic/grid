@@ -21,8 +21,8 @@ export default function ModernClubCard({
   fullWidth = false,
   onPress,
 }: ModernClubCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark, fullWidth);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fullWidth, fonts);
 
   return (
     <Pressable onPress={onPress} style={styles.container}>
@@ -58,7 +58,12 @@ export default function ModernClubCard({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean, fullWidth: boolean) =>
+const getStyles = (
+  colors: any,
+  isDark: boolean,
+  fullWidth: boolean,
+  fonts: any,
+) =>
   StyleSheet.create({
     container: {
       marginRight: fullWidth ? 0 : 16,
@@ -112,6 +117,7 @@ const getStyles = (colors: any, isDark: boolean, fullWidth: boolean) =>
       color: colors.text,
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     rating: {
       flexDirection: "row",
@@ -122,10 +128,12 @@ const getStyles = (colors: any, isDark: boolean, fullWidth: boolean) =>
       color: colors.text,
       fontSize: 14,
       fontWeight: "400",
+      fontFamily: fonts.regular,
     },
     details: {
       color: colors.textSecondary,
       fontSize: 14,
+      fontFamily: fonts.regular,
     },
     priceRow: {
       flexDirection: "row",
@@ -135,9 +143,11 @@ const getStyles = (colors: any, isDark: boolean, fullWidth: boolean) =>
       color: colors.text,
       fontSize: 15,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     priceLabel: {
       color: colors.textSecondary,
       fontSize: 14,
+      fontFamily: fonts.regular,
     },
   });

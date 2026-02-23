@@ -18,8 +18,8 @@ export default function QRCard({
   onShare,
   onScan,
 }: QRCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   const buttonColor = isDark ? colors.accent : colors.blue;
 
@@ -67,7 +67,7 @@ export default function QRCard({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     qrCard: {
       backgroundColor: colors.surface,
@@ -107,12 +107,14 @@ const getStyles = (colors: any) =>
     scanButtonText: {
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     qrTitle: {
       color: colors.text,
       fontSize: 18,
       fontWeight: "600",
       marginBottom: 8,
+      fontFamily: fonts.semiBold,
     },
     qrSubtitle: {
       color: colors.textSecondary,
@@ -120,6 +122,7 @@ const getStyles = (colors: any) =>
       textAlign: "center",
       marginBottom: 20,
       lineHeight: 20,
+      fontFamily: fonts.regular,
     },
     shareQrButton: {
       flexDirection: "row",
@@ -135,5 +138,6 @@ const getStyles = (colors: any) =>
       color: colors.background,
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });

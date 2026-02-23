@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface ClubCardProps {
   id: string;
@@ -18,19 +19,28 @@ export default function ClubCard({
   price,
   onPress,
 }: ClubCardProps) {
+  const { fonts } = useTheme();
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <Image source={{ uri: image }} style={styles.image} />
       <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+        <Text
+          style={[styles.name, { fontFamily: fonts.semiBold }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {name}
         </Text>
         <View style={styles.infoRow}>
           <FontAwesome name="map-marker" size={12} color="#8B8B8B" />
-          <Text style={styles.distance}>{distance}</Text>
+          <Text style={[styles.distance, { fontFamily: fonts.regular }]}>
+            {distance}
+          </Text>
         </View>
         <View style={styles.footer}>
-          <Text style={styles.price}>{price}</Text>
+          <Text style={[styles.price, { fontFamily: fonts.bold }]}>
+            {price}
+          </Text>
           <FontAwesome name="chevron-right" size={14} color="#8B8B8B" />
         </View>
       </View>

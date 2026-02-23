@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthLinkProps {
   onPress: () => void;
@@ -6,9 +7,12 @@ interface AuthLinkProps {
 }
 
 export default function AuthLink({ onPress, children }: AuthLinkProps) {
+  const { fonts } = useTheme();
   return (
     <Pressable style={styles.linkRow} onPress={onPress}>
-      <Text style={styles.linkText}>{children}</Text>
+      <Text style={[styles.linkText, { fontFamily: fonts.regular }]}>
+        {children}
+      </Text>
     </Pressable>
   );
 }

@@ -74,7 +74,7 @@ export default function CircleCard({
   onPress,
   isActiveCircle = false,
 }: CircleCardProps) {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, fonts } = useTheme();
 
   // Inverted theme for active circles in light mode
   const cardColors =
@@ -91,6 +91,8 @@ export default function CircleCard({
           textSecondary: colors.textSecondary,
           border: colors.border,
         };
+
+  const styles = getStyles(fonts);
 
   return (
     <Pressable
@@ -195,97 +197,103 @@ export default function CircleCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-  header: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
-  imageContainer: {
-    position: "relative",
-    marginRight: 12,
-  },
-  circleImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#2C2C2C",
-  },
-  typeIndicator: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#1E1F23",
-  },
-  info: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  circleName: {
-    fontSize: 16,
-    fontWeight: "700",
-    flex: 1,
-  },
-  creatorBadge: {
-    marginLeft: 6,
-  },
-  description: {
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  membersStat: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  membersCount: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  activityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  activityText: {
-    color: "#000000",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 12,
-    borderTopWidth: 1,
-  },
-  activityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  lastActivityText: {
-    fontSize: 12,
-    marginLeft: 6,
-    flex: 1,
-  },
-});
+const getStyles = (fonts: any) =>
+  StyleSheet.create({
+    card: {
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+    },
+    header: {
+      flexDirection: "row",
+      marginBottom: 12,
+    },
+    imageContainer: {
+      position: "relative",
+      marginRight: 12,
+    },
+    circleImage: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: "#2C2C2C",
+    },
+    typeIndicator: {
+      position: "absolute",
+      bottom: -2,
+      right: -2,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: "#1E1F23",
+    },
+    info: {
+      flex: 1,
+    },
+    nameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 4,
+    },
+    circleName: {
+      fontSize: 16,
+      fontWeight: "700",
+      flex: 1,
+      fontFamily: fonts.bold,
+    },
+    creatorBadge: {
+      marginLeft: 6,
+    },
+    description: {
+      fontSize: 13,
+      marginBottom: 8,
+      fontFamily: fonts.regular,
+    },
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    membersStat: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    membersCount: {
+      fontSize: 12,
+      marginLeft: 4,
+      fontFamily: fonts.regular,
+    },
+    activityBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    activityText: {
+      color: "#000000",
+      fontSize: 10,
+      fontWeight: "600",
+      fontFamily: fonts.semiBold,
+    },
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 12,
+      borderTopWidth: 1,
+    },
+    activityRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    lastActivityText: {
+      fontSize: 12,
+      marginLeft: 6,
+      flex: 1,
+      fontFamily: fonts.regular,
+    },
+  });

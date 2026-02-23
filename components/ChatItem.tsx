@@ -27,8 +27,8 @@ export default function ChatItem({
   groupAvatars,
   onPress,
 }: ChatItemProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
@@ -95,7 +95,7 @@ export default function ChatItem({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     container: {
       flexDirection: "row",
@@ -156,10 +156,12 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.text,
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     time: {
       color: colors.textSecondary,
       fontSize: 13,
+      fontFamily: fonts.regular,
     },
     bottomRow: {
       flexDirection: "row",
@@ -186,6 +188,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.textSecondary,
       fontSize: 14,
       flex: 1,
+      fontFamily: fonts.regular,
     },
     badge: {
       backgroundColor: isDark ? colors.accent : colors.blue,
@@ -201,5 +204,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.background,
       fontSize: 11,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
   });

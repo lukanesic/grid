@@ -21,8 +21,8 @@ export default function MatchCard({
   level,
   onPress,
 }: MatchCardProps) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -38,7 +38,7 @@ export default function MatchCard({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 320,
@@ -66,16 +66,19 @@ const getStyles = (colors: any) =>
       fontSize: 12,
       fontWeight: "700",
       letterSpacing: 0.5,
+      fontFamily: fonts.bold,
     },
     date: {
       color: colors.text,
       fontSize: 16,
       fontWeight: "600",
       marginTop: 4,
+      fontFamily: fonts.semiBold,
     },
     location: {
       color: colors.textSecondary,
       fontSize: 12,
       marginTop: 4,
+      fontFamily: fonts.regular,
     },
   });

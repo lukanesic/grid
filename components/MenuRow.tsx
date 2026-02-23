@@ -30,7 +30,7 @@ export default function MenuRow({
   iconSize = 30,
   chevronSize = 20,
 }: MenuRowProps) {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const Container = onPress ? Pressable : View;
 
   return (
@@ -42,14 +42,22 @@ export default function MenuRow({
           color={iconColor || colors.textSecondary}
         />
         <View style={styles.textGroup}>
-          <Text style={[styles.title, { color: titleColor || colors.text }]}>
+          <Text
+            style={[
+              styles.title,
+              { color: titleColor || colors.text, fontFamily: fonts.medium },
+            ]}
+          >
             {title}
           </Text>
           {subtitle ? (
             <Text
               style={[
                 styles.subtitle,
-                { color: subtitleColor || colors.textSecondary },
+                {
+                  color: subtitleColor || colors.textSecondary,
+                  fontFamily: fonts.regular,
+                },
               ]}
             >
               {subtitle}

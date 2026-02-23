@@ -28,10 +28,10 @@ export const ClubFollowButton: React.FC<ClubFollowButtonProps> = ({
 }) => {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { refreshProfile } = useAuth();
   const queryClient = useQueryClient();
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, fonts);
 
   const handleFollowToggle = async () => {
     if (isLoading) return;
@@ -194,7 +194,7 @@ export const ClubFollowButton: React.FC<ClubFollowButtonProps> = ({
   );
 };
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     button: {
       paddingVertical: 14,
@@ -221,11 +221,13 @@ const createStyles = (colors: any) =>
       color: "#111111",
       fontSize: 15,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     followingButtonText: {
       color: colors.textSecondary,
       fontSize: 15,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     smallButton: {
       paddingVertical: 6,
@@ -246,6 +248,7 @@ const createStyles = (colors: any) =>
     smallButtonText: {
       fontSize: 13,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     followText: {
       color: "#111111",
@@ -264,5 +267,6 @@ const createStyles = (colors: any) =>
       color: colors.accent,
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });

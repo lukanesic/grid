@@ -6,6 +6,7 @@ import {
     TextInputProps,
     View,
 } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthInputProps extends TextInputProps {
   icon: keyof typeof FontAwesome.glyphMap;
@@ -23,12 +24,13 @@ export default function AuthInput({
   onTogglePassword,
   ...textInputProps
 }: AuthInputProps) {
+  const { fonts } = useTheme();
   return (
     <View style={styles.inputRow}>
       <FontAwesome name={icon} size={iconSize} color="#8B8B8B" />
       <TextInput
         placeholderTextColor="#8B8B8B"
-        style={styles.input}
+        style={[styles.input, { fontFamily: fonts.regular }]}
         {...textInputProps}
       />
       {showPasswordToggle && (

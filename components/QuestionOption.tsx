@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface QuestionOptionProps {
   text: string;
@@ -11,12 +12,21 @@ export default function QuestionOption({
   selected,
   onPress,
 }: QuestionOptionProps) {
+  const { fonts } = useTheme();
   return (
     <Pressable
       style={[styles.option, selected && styles.selected]}
       onPress={onPress}
     >
-      <Text style={[styles.text, selected && styles.selectedText]}>{text}</Text>
+      <Text
+        style={[
+          styles.text,
+          { fontFamily: selected ? fonts.semiBold : fonts.medium },
+          selected && styles.selectedText,
+        ]}
+      >
+        {text}
+      </Text>
     </Pressable>
   );
 }

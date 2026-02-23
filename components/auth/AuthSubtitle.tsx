@@ -1,11 +1,17 @@
 import { StyleSheet, Text } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthSubtitleProps {
   children: string;
 }
 
 export default function AuthSubtitle({ children }: AuthSubtitleProps) {
-  return <Text style={styles.subtitle}>{children}</Text>;
+  const { fonts } = useTheme();
+  return (
+    <Text style={[styles.subtitle, { fontFamily: fonts.regular }]}>
+      {children}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({

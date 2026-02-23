@@ -65,7 +65,7 @@ const CalendarDay = ({
   );
 };
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     container: {
       backgroundColor: isDark ? "#0B0B0B" : "#FFFFFF",
@@ -89,11 +89,13 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 32,
       fontWeight: "700",
       letterSpacing: -0.5,
+      fontFamily: fonts.bold,
     },
     yearText: {
       color: colors.textSecondary,
       fontSize: 16,
       fontWeight: "500",
+      fontFamily: fonts.medium,
     },
     dayNamesRow: {
       flexDirection: "row",
@@ -108,6 +110,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 12,
       fontWeight: "600",
       letterSpacing: 0.5,
+      fontFamily: fonts.semiBold,
     },
     calendarGrid: {
       flexDirection: "row",
@@ -132,6 +135,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontWeight: "500",
       textAlign: "center",
       zIndex: 1,
+      fontFamily: fonts.medium,
     },
     dayTextInactive: {
       color: isDark ? "#3C3C3C" : "#A0A0A0",
@@ -144,6 +148,7 @@ const getStyles = (colors: any, isDark: boolean) =>
     dayTextSelected: {
       color: isDark ? "#0B0B0B" : "#FFFFFF",
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     selectedCircle: {
       position: "absolute",
@@ -170,8 +175,8 @@ export default function Calendar({
   onDateSelect,
   markedDates = [],
 }: CalendarProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
 
   // Get today's date at midnight for comparison
   const today = new Date();

@@ -683,6 +683,114 @@ export const UPCOMING_VERSUS_MATCHES = [
   },
 ];
 
+export const FINISHED_MATCHES = [
+  {
+    id: "finished-1",
+    type: "ZAVRŠEN MEČ",
+    time: "14:30h",
+    date: "Uto, 18. feb",
+    club: "TC Partizan",
+    gameMode: "competitive",
+    matchType: "2v2" as const,
+    teamA: [
+      {
+        name: "Marko J.",
+        avatar: "https://i.pravatar.cc/150?img=11",
+      },
+      {
+        name: "Ana M.",
+        avatar: "https://i.pravatar.cc/150?img=47",
+      },
+    ],
+    teamB: [
+      {
+        name: "Stefan N.",
+        avatar: "https://i.pravatar.cc/150?img=33",
+      },
+      {
+        name: "Jelena P.",
+        avatar: "https://i.pravatar.cc/150?img=28",
+      },
+    ],
+    score: {
+      teamA: 2,
+      teamB: 1,
+      sets: ["6:4", "3:6", "6:3"],
+    },
+    duration: "2h 15min",
+  },
+  {
+    id: "finished-2",
+    type: "ZAVRŠEN MEČ",
+    time: "18:00h",
+    date: "Ned, 16. feb",
+    club: "Sportski Centar Dušanovac",
+    gameMode: "friendly",
+    matchType: "2v2" as const,
+    teamA: [
+      {
+        name: "Nikola M.",
+        avatar: "https://i.pravatar.cc/150?img=12",
+      },
+      {
+        name: "Milica S.",
+        avatar: "https://i.pravatar.cc/150?img=44",
+      },
+    ],
+    teamB: [
+      {
+        name: "Luka P.",
+        avatar: "https://i.pravatar.cc/150?img=20",
+      },
+      {
+        name: "Teodora S.",
+        avatar: "https://i.pravatar.cc/150?img=35",
+      },
+    ],
+    score: {
+      teamA: 0,
+      teamB: 2,
+      sets: ["4:6", "2:6"],
+    },
+    duration: "1h 35min",
+  },
+  {
+    id: "finished-3",
+    type: "ZAVRŠEN MEČ",
+    time: "20:00h",
+    date: "Sub, 15. feb",
+    club: "Arena Belgrade",
+    gameMode: "training",
+    matchType: "2v2" as const,
+    teamA: [
+      {
+        name: "Viktor I.",
+        avatar: "https://i.pravatar.cc/150?img=40",
+      },
+      {
+        name: "Jovana V.",
+        avatar: "https://i.pravatar.cc/150?img=25",
+      },
+    ],
+    teamB: [
+      {
+        name: "Miloš R.",
+        avatar: "https://i.pravatar.cc/150?img=30",
+      },
+      {
+        name: "Sara D.",
+        avatar: "https://i.pravatar.cc/150?img=45",
+      },
+    ],
+    score: {
+      teamA: 2,
+      teamB: 0,
+      sets: ["6:2", "6:4"],
+    },
+    duration: "1h 20min",
+  },
+];
+
 export const OPEN_MATCHES = [
   {
     id: "4",
@@ -1136,47 +1244,7 @@ export const PROFILE_SPORTS = [
   { name: "Golf", level: null, active: false },
 ];
 
-export const PROFILE_POSTS = [
-  {
-    image:
-      "https://images.pexels.com/photos/32897040/pexels-photo-32897040.jpeg",
-    name: "Alejandra García",
-    meta: "Madrid · pre 2 sata",
-    likes: "1,248 sviđanja",
-    caption: "Jutarnji trening pre posla. Novi rekord na servisu.",
-  },
-  {
-    image:
-      "https://images.pexels.com/photos/34079996/pexels-photo-34079996.jpeg",
-    name: "Alejandra García",
-    meta: "Madrid · pre 5 sati",
-    likes: "982 sviđanja",
-    caption: "Popodnevni meč sa ekipom. Sjajna energija.",
-  },
-  {
-    image: "https://images.pexels.com/photos/1103829/pexels-photo-1103829.jpeg",
-    name: "Alejandra García",
-    meta: "Madrid · juče",
-    likes: "2,031 sviđanje",
-    caption: "Nova oprema, novi ciljevi. Idemo dalje.",
-  },
-  {
-    image:
-      "https://images.pexels.com/photos/32474981/pexels-photo-32474981.jpeg",
-    name: "Alejandra García",
-    meta: "Madrid · pre 2 dana",
-    likes: "1,507 sviđanja",
-    caption: "Sparring u zatvorenom terenu. Fokus na ritam.",
-  },
-  {
-    image:
-      "https://images.pexels.com/photos/35646550/pexels-photo-35646550.jpeg",
-    name: "Alejandra García",
-    meta: "Madrid · pre 3 dana",
-    likes: "768 sviđanja",
-    caption: "Kratak trening, ali kvalitetan. Tempo jak.",
-  },
-];
+export const PROFILE_POSTS: any[] = [];
 
 export const PROFILE_INFO_STATS = {
   dominantHand: {

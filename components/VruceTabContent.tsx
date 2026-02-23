@@ -12,7 +12,7 @@ interface VruceTabContentProps {
 
 export default function VruceTabContent({ styles }: VruceTabContentProps) {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
 
   const {
     data: topPlayers = [],
@@ -39,7 +39,13 @@ export default function VruceTabContent({ styles }: VruceTabContentProps) {
         <Text style={[styles.sectionTitle, { fontSize: 28, marginBottom: 8 }]}>
           ⭐ Top igrači
         </Text>
-        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+        <Text
+          style={{
+            color: colors.textSecondary,
+            fontSize: 14,
+            fontFamily: fonts.regular,
+          }}
+        >
           Najbolji igrači sa najvišim rejtingom
         </Text>
       </View>
@@ -48,19 +54,37 @@ export default function VruceTabContent({ styles }: VruceTabContentProps) {
       {loadingPlayers ? (
         <View style={{ paddingVertical: 60, alignItems: "center" }}>
           <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={{ color: colors.textSecondary, marginTop: 16 }}>
+          <Text
+            style={{
+              color: colors.textSecondary,
+              marginTop: 16,
+              fontFamily: fonts.regular,
+            }}
+          >
             Učitavamo najbolje igrače...
           </Text>
         </View>
       ) : playersError ? (
         <View style={{ paddingVertical: 40, alignItems: "center" }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+          <Text
+            style={{
+              color: colors.textSecondary,
+              fontSize: 14,
+              fontFamily: fonts.regular,
+            }}
+          >
             Greška pri učitavanju igrača
           </Text>
         </View>
       ) : topPlayers.length === 0 ? (
         <View style={{ paddingVertical: 40, alignItems: "center" }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+          <Text
+            style={{
+              color: colors.textSecondary,
+              fontSize: 14,
+              fontFamily: fonts.regular,
+            }}
+          >
             Trenutno nema igrača
           </Text>
         </View>

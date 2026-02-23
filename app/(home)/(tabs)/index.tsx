@@ -6,8 +6,8 @@ import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -39,7 +39,7 @@ export default function HomeScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -71,11 +71,13 @@ const getStyles = (colors: any) =>
       fontSize: 32,
       fontWeight: "700",
       letterSpacing: -0.5,
+      fontFamily: fonts.bold,
     },
     weatherText: {
       color: colors.textSecondary,
       fontSize: 14,
       marginTop: 4,
+      fontFamily: fonts.regular,
     },
     actionsRow: {
       flexDirection: "row",
@@ -96,6 +98,7 @@ const getStyles = (colors: any) =>
       color: "#B8FF00",
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     createButton: {
       flex: 1,
@@ -111,6 +114,7 @@ const getStyles = (colors: any) =>
       color: "#111111",
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     tabsContainer: {
       flexDirection: "row",
@@ -134,11 +138,13 @@ const getStyles = (colors: any) =>
       color: colors.textSecondary,
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     tabActiveText: {
       color: colors.text,
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     connectCard: {
       backgroundColor: colors.surface,
@@ -169,10 +175,12 @@ const getStyles = (colors: any) =>
       color: colors.text,
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     connectSubheading: {
       color: colors.textSecondary,
       fontSize: 14,
+      fontFamily: fonts.regular,
     },
     matchesSection: {
       marginBottom: 28,
@@ -182,6 +190,7 @@ const getStyles = (colors: any) =>
       fontSize: 20,
       fontWeight: "700",
       marginBottom: 16,
+      fontFamily: fonts.bold,
     },
     matchesScroll: {
       marginHorizontal: -20,
@@ -200,6 +209,7 @@ const getStyles = (colors: any) =>
       color: "#3867FF",
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     playersScroll: {
       marginHorizontal: -20,
@@ -226,11 +236,54 @@ const getStyles = (colors: any) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: 16,
+      gap: 8,
+    },
+    authorContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flex: 1,
+      minWidth: 0,
+    },
+    authorAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    authorAvatarPlaceholder: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    authorAvatarText: {
+      color: "#FFFFFF",
+      fontSize: 12,
+      fontWeight: "700",
+      fontFamily: fonts.bold,
+    },
+    authorInfo: {
+      flex: 1,
     },
     matchCardAuthor: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      fontFamily: fonts.semiBold,
+    },
+    authorAction: {
       color: colors.textSecondary,
       fontSize: 12,
+      fontFamily: fonts.regular,
+    },
+    matchCardTime: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      flexShrink: 0,
+      fontFamily: fonts.regular,
     },
     openMatchType: {
       flexDirection: "row",
@@ -242,6 +295,44 @@ const getStyles = (colors: any) =>
       color: colors.text,
       fontSize: 16,
       fontWeight: "700",
+      fontFamily: fonts.bold,
+    },
+    badgesRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginBottom: 16,
+    },
+    gameModeBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    gameModeBadgeCompetitive: {
+      backgroundColor: "#FEF3C7",
+    },
+    gameModeBadgeFriendly: {
+      backgroundColor: "#D1FAE5",
+    },
+    gameModeBadgeTraining: {
+      backgroundColor: "#DBEAFE",
+    },
+    gameModeBadgeText: {
+      fontSize: 11,
+      fontWeight: "600",
+      fontFamily: fonts.semiBold,
+    },
+    gameModeBadgeTextCompetitive: {
+      color: "#F59E0B",
+    },
+    gameModeBadgeTextFriendly: {
+      color: "#10B981",
+    },
+    gameModeBadgeTextTraining: {
+      color: "#3B82F6",
     },
     matchMetaRow: {
       flexDirection: "row",
@@ -258,35 +349,92 @@ const getStyles = (colors: any) =>
       color: colors.textSecondary,
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
+    },
+    dateLocationSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 12,
+    },
+    locationTextContainer: {
+      flex: 1,
     },
     openMatchDate: {
       color: colors.text,
+      fontSize: 13,
+      fontWeight: "600",
+      fontFamily: fonts.semiBold,
+    },
+    openMatchClub: {
+      color: colors.text,
       fontSize: 14,
       fontWeight: "600",
-      marginBottom: 4,
+      fontFamily: fonts.semiBold,
+    },
+    openMatchCourt: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginTop: 2,
+      fontFamily: fonts.regular,
     },
     openMatchLocation: {
       color: colors.textSecondary,
       fontSize: 13,
       marginBottom: 16,
+      fontFamily: fonts.regular,
     },
     participantsSection: {
-      marginBottom: 16,
+      marginBottom: 20,
+    },
+    participantsLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+      marginBottom: 8,
+      fontFamily: fonts.semiBold,
     },
     participantsList: {
       flexDirection: "row",
-      gap: 12,
+      gap: 8,
     },
     participantItem: {
       alignItems: "center",
-      width: 48,
+      position: "relative",
+      width: 60,
     },
     participantAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: colors.border,
-      marginBottom: 4,
+    },
+    participantAvatarPlaceholder: {
+      backgroundColor: colors.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    participantAvatarText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "700",
+      fontFamily: fonts.bold,
+    },
+    participantLevelBadge: {
+      position: "absolute",
+      bottom: 14,
+      backgroundColor: "#3867FF",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: colors.surface,
+    },
+    participantLevelText: {
+      color: "#FFFFFF",
+      fontSize: 10,
+      fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     joinPlaceholder: {
       alignItems: "center",
@@ -300,16 +448,22 @@ const getStyles = (colors: any) =>
       color: colors.textSecondary,
       fontSize: 11,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     participantName: {
-      color: colors.textSecondary,
-      fontSize: 12,
+      color: colors.text,
+      fontSize: 10,
       fontWeight: "600",
+      marginTop: 6,
+      textAlign: "center",
+      width: "100%",
+      fontFamily: fonts.semiBold,
     },
     participantAction: {
       color: "#3867FF",
       fontSize: 13,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     createCircleCard: {
       backgroundColor: colors.surface,
@@ -339,10 +493,12 @@ const getStyles = (colors: any) =>
       fontSize: 16,
       fontWeight: "700",
       marginBottom: 4,
+      fontFamily: fonts.bold,
     },
     createCircleSubtitle: {
       color: colors.textSecondary,
       fontSize: 13,
+      fontFamily: fonts.regular,
     },
     circlesSection: {
       marginBottom: 28,
@@ -376,10 +532,12 @@ const getStyles = (colors: any) =>
       marginTop: 8,
       marginBottom: 4,
       textAlign: "center",
+      fontFamily: fonts.semiBold,
     },
     quickActionSubtitle: {
       color: colors.textSecondary,
       fontSize: 12,
       textAlign: "center",
+      fontFamily: fonts.regular,
     },
   });

@@ -25,8 +25,8 @@ export default function NotificationItem({
   avatarUrl,
   onPress,
 }: NotificationItemProps) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -67,7 +67,7 @@ export default function NotificationItem({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     row: {
       flexDirection: "row",
@@ -101,6 +101,7 @@ const getStyles = (colors: any) =>
       color: colors.text,
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     statusBadge: {
       position: "absolute",
@@ -122,14 +123,17 @@ const getStyles = (colors: any) =>
       color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 20,
+      fontFamily: fonts.regular,
     },
     rowName: {
       color: colors.text,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     rowTime: {
       color: colors.textSecondary,
       fontSize: 12,
+      fontFamily: fonts.regular,
     },
     unreadDot: {
       width: 8,

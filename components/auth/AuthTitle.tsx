@@ -1,11 +1,15 @@
 import { StyleSheet, Text } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthTitleProps {
   children: string;
 }
 
 export default function AuthTitle({ children }: AuthTitleProps) {
-  return <Text style={styles.title}>{children}</Text>;
+  const { fonts } = useTheme();
+  return (
+    <Text style={[styles.title, { fontFamily: fonts.bold }]}>{children}</Text>
+  );
 }
 
 const styles = StyleSheet.create({

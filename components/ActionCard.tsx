@@ -15,8 +15,8 @@ export default function ActionCard({
   subtitle,
   onPress,
 }: ActionCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   return (
     <Pressable style={styles.actionCard} onPress={onPress}>
@@ -31,16 +31,11 @@ export default function ActionCard({
         <Text style={styles.actionTitle}>{title}</Text>
         <Text style={styles.actionSubtitle}>{subtitle}</Text>
       </View>
-      <FontAwesome
-        name="chevron-right"
-        size={16}
-        color={colors.textSecondary}
-      />
     </Pressable>
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     actionCard: {
       flexDirection: "row",
@@ -71,9 +66,11 @@ const getStyles = (colors: any) =>
       fontSize: 16,
       fontWeight: "600",
       marginBottom: 4,
+      fontFamily: fonts.semiBold,
     },
     actionSubtitle: {
       color: colors.textSecondary,
       fontSize: 14,
+      fontFamily: fonts.regular,
     },
   });

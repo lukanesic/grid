@@ -52,6 +52,7 @@ export interface CourtReservation {
   cancellation_reason: string | null;
   notes: string | null;
   invited_players: string[] | null; // Array of user IDs
+  is_open_match: boolean; // True if match is open for others to join, false if private
   created_at: string;
   updated_at: string;
 }
@@ -76,4 +77,6 @@ export interface CreateReservationPayload {
   currency?: string;
   notes?: string;
   invited_players?: string[];
+  is_open_match?: boolean; // True if match is open for others to join, false if private
+  match_type?: "competitive" | "friendly" | "training"; // Type of match
 }

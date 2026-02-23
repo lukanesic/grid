@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    ImageBackground,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { fetchTopClubs } from "../lib/clubApi";
@@ -19,7 +19,7 @@ interface KrugoviTabContentProps {
 
 export default function KrugoviTabContent({ styles }: KrugoviTabContentProps) {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
 
   const {
     data: topClubs = [],
@@ -30,6 +30,8 @@ export default function KrugoviTabContent({ styles }: KrugoviTabContentProps) {
     queryFn: () => fetchTopClubs(10),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const localStyles = getLocalStyles(fonts);
 
   return (
     <>
@@ -118,71 +120,77 @@ export default function KrugoviTabContent({ styles }: KrugoviTabContentProps) {
   );
 }
 
-const localStyles = StyleSheet.create({
-  clubCard: {
-    marginBottom: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  clubImage: {
-    width: "100%",
-    height: 200,
-    justifyContent: "flex-end",
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  rankBadge: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    backgroundColor: "#B8FF00",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  rankText: {
-    color: "#111111",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  clubInfo: {
-    padding: 16,
-    zIndex: 1,
-  },
-  clubName: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 24,
-    marginBottom: 8,
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statValue: {
-    color: "#B8FF00",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  statLabel: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    opacity: 0.8,
-  },
-  clubAddress: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    opacity: 0.9,
-  },
-});
+const getLocalStyles = (fonts: any) =>
+  StyleSheet.create({
+    clubCard: {
+      marginBottom: 16,
+      borderRadius: 16,
+      overflow: "hidden",
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    clubImage: {
+      width: "100%",
+      height: 200,
+      justifyContent: "flex-end",
+    },
+    imageOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.4)",
+    },
+    rankBadge: {
+      position: "absolute",
+      top: 16,
+      right: 16,
+      backgroundColor: "#B8FF00",
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    rankText: {
+      color: "#111111",
+      fontSize: 16,
+      fontWeight: "800",
+      fontFamily: fonts.bold,
+    },
+    clubInfo: {
+      padding: 16,
+      zIndex: 1,
+    },
+    clubName: {
+      color: "#FFFFFF",
+      fontSize: 24,
+      fontWeight: "700",
+      marginBottom: 12,
+      fontFamily: fonts.bold,
+    },
+    statsRow: {
+      flexDirection: "row",
+      gap: 24,
+      marginBottom: 8,
+    },
+    statItem: {
+      alignItems: "center",
+    },
+    statValue: {
+      color: "#B8FF00",
+      fontSize: 20,
+      fontWeight: "700",
+      fontFamily: fonts.bold,
+    },
+    statLabel: {
+      color: "#FFFFFF",
+      fontSize: 12,
+      opacity: 0.8,
+      fontFamily: fonts.regular,
+    },
+    clubAddress: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      opacity: 0.9,
+      fontFamily: fonts.regular,
+    },
+  });

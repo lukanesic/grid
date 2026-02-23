@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface SocialButtonProps {
   provider: "apple" | "google";
@@ -7,13 +8,14 @@ interface SocialButtonProps {
 }
 
 export default function SocialButton({ provider, onPress }: SocialButtonProps) {
+  const { fonts } = useTheme();
   const icon = provider === "apple" ? "apple" : "google";
   const label = provider === "apple" ? "Nastavi sa Apple" : "Nastavi sa Google";
 
   return (
     <Pressable style={styles.button} onPress={onPress}>
       <FontAwesome name={icon} size={18} color="#FFFFFF" />
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, { fontFamily: fonts.semiBold }]}>{label}</Text>
     </Pressable>
   );
 }

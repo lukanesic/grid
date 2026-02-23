@@ -7,6 +7,7 @@ export type Step =
   | "date"
   | "court"
   | "time"
+  | "gameMode"
   | "matchType"
   | "opponent"
   | "payment"
@@ -16,11 +17,14 @@ export type PaymentMethod = "card" | "cash";
 
 export type MatchType = "open" | "closed";
 
+export type GameMode = "competitive" | "friendly" | "training";
+
 export interface SelectedData {
   club?: Club;
   date?: Date;
   court?: Court;
   times?: string[];
+  gameMode?: GameMode;
   matchType?: MatchType;
   opponent?: Profile;
   paymentMethod?: PaymentMethod;

@@ -3,33 +3,34 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ClubSelection,
-  CourtSelection,
-  DateSelection,
-  MatchTypeSelection,
-  OpponentSelection,
-  PaymentSelection,
-  SelectedData,
-  Step,
-  SummaryStep,
-  TimeSelection,
+    ClubSelection,
+    CourtSelection,
+    DateSelection,
+    GameModeSelection,
+    MatchTypeSelection,
+    OpponentSelection,
+    PaymentSelection,
+    SelectedData,
+    Step,
+    SummaryStep,
+    TimeSelection,
 } from "../../components/createMatch";
 import { useTheme } from "../../contexts/ThemeContext";
 import { fetchTopClubs } from "../../lib/clubApi";
 import {
-  createCourtReservation,
-  fetchAvailableTimeSlots,
-  fetchCourtsByClub,
+    createCourtReservation,
+    fetchAvailableTimeSlots,
+    fetchCourtsByClubWithAvailability,
 } from "../../lib/courtApi";
 import { fetchSuggestedPlayers } from "../../lib/profileApi";
 import type { TimeSlot } from "../../types/court";
@@ -45,7 +46,7 @@ export default function CreateMatchNewScreen() {
   const [selectionFadeAnim] = useState(new Animated.Value(0));
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const progressWidthAnim = useRef(new Animated.Value((1 / 7) * 100)).current;
+  const progressWidthAnim = useRef(new Animated.Value((1 / 8) * 100)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -73,14 +74,15 @@ export default function CreateMatchNewScreen() {
       "date",
       "court",
       "time",
+      "gameMode",
       "matchType",
       "opponent",
       "payment",
       "summary",
     ];
     const stepNumber = steps.indexOf(currentStep) + 1;
-    // Progress bar uses 7 steps (excluding summary)
-    const targetProgress = (Math.min(stepNumber, 7) / 7) * 100;
+    // Progress bar uses 8 steps (excluding summary)
+    const targetProgress = (Math.min(stepNumber, 8) / 8) * 100;
 
     // Animate progress bar
     Animated.timing(progressWidthAnim, {
@@ -119,6 +121,11 @@ export default function CreateMatchNewScreen() {
     }
   }, [selectedData.club]);
 
+  // Format date for API (YYYY-MM-DD) - Define BEFORE using in queries
+  const formattedDate = selectedData.date
+    ? selectedData.date.toLocaleDateString("en-CA").split("T")[0]
+    : "";
+
   // Fetch clubs
   const { data: clubs = [] } = useQuery({
     queryKey: ["clubs"],
@@ -131,18 +138,14 @@ export default function CreateMatchNewScreen() {
     queryFn: () => fetchSuggestedPlayers(10),
   });
 
-  // Fetch courts for selected club
-  const { data: courts = [] } = useQuery({
-    queryKey: ["courts", selectedData.club?.id],
-    queryFn: () => fetchCourtsByClub(selectedData.club!.id),
-    enabled: !!selectedData.club?.id,
-    staleTime: 1000 * 60 * 5,
+  // Fetch courts for selected club with availability status for selected date
+  const { data: courts = [], isLoading: courtsLoading } = useQuery({
+    queryKey: ["courts", selectedData.club?.id, formattedDate],
+    queryFn: () =>
+      fetchCourtsByClubWithAvailability(selectedData.club!.id, formattedDate),
+    enabled: !!selectedData.club?.id && !!formattedDate,
+    staleTime: 1000 * 60 * 2, // Shorter cache for availability checks
   });
-
-  // Format date for API (YYYY-MM-DD)
-  const formattedDate = selectedData.date
-    ? selectedData.date.toLocaleDateString("en-CA").split("T")[0]
-    : "";
 
   // Reset times when court or date changes
   useEffect(() => {
@@ -171,6 +174,8 @@ export default function CreateMatchNewScreen() {
     } else if (currentStep === "opponent") {
       setCurrentStep("matchType");
     } else if (currentStep === "matchType") {
+      setCurrentStep("gameMode");
+    } else if (currentStep === "gameMode") {
       setCurrentStep("time");
     } else if (currentStep === "time") {
       setCurrentStep("court");
@@ -193,6 +198,8 @@ export default function CreateMatchNewScreen() {
       selectedData.times &&
       selectedData.times.length > 0
     ) {
+      setCurrentStep("gameMode");
+    } else if (currentStep === "gameMode" && selectedData.gameMode) {
       setCurrentStep("matchType");
     } else if (currentStep === "matchType" && selectedData.matchType) {
       setCurrentStep("opponent");
@@ -215,6 +222,8 @@ export default function CreateMatchNewScreen() {
         return !!selectedData.court;
       case "time":
         return !!selectedData.times && selectedData.times.length > 0;
+      case "gameMode":
+        return !!selectedData.gameMode;
       case "matchType":
         return !!selectedData.matchType;
       case "opponent":
@@ -238,6 +247,8 @@ export default function CreateMatchNewScreen() {
         return "Odaberi teren";
       case "time":
         return "Odaberi vreme";
+      case "gameMode":
+        return "Odaberi mod igre";
       case "matchType":
         return "Tip meča";
       case "opponent":
@@ -292,16 +303,18 @@ export default function CreateMatchNewScreen() {
         selectedData.court?.hourly_rate ?? selectedData.club?.price ?? 1200;
       const totalPrice = Number(hourlyRate) * hoursCount;
 
-      // Prepare invited players array based on match type
-      const invitedPlayers =
-        selectedData.matchType === "closed" && selectedData.opponent
-          ? [selectedData.opponent.id]
-          : [];
+      // Prepare invited players array - add opponent if selected (regardless of match type)
+      const invitedPlayers = selectedData.opponent
+        ? [selectedData.opponent.id]
+        : [];
 
       // Prepare notes with match type
       const matchTypeText =
         selectedData.matchType === "open" ? "Otvoren meč" : "Zatvoren meč";
       const notes = `${matchTypeText} u ${selectedData.club?.name || "klubu"}`;
+
+      // Determine if match is open or closed
+      const isOpenMatch = selectedData.matchType === "open";
 
       await createCourtReservation({
         court_id: selectedData.court.id,
@@ -313,6 +326,8 @@ export default function CreateMatchNewScreen() {
         currency: "RSD",
         invited_players: invitedPlayers,
         notes: notes,
+        is_open_match: isOpenMatch,
+        match_type: selectedData.gameMode || "friendly",
       });
 
       // Invalidate queries to refresh data
@@ -398,6 +413,23 @@ export default function CreateMatchNewScreen() {
           />
         );
       case "court":
+        if (courtsLoading) {
+          return (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loadingText}>Učitavanje terena...</Text>
+            </View>
+          );
+        }
+        if (courts.length === 0) {
+          return (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                Nema dostupnih terena za izabrani datum.
+              </Text>
+            </View>
+          );
+        }
         return (
           <CourtSelection
             courts={courts}
@@ -415,6 +447,17 @@ export default function CreateMatchNewScreen() {
             timeSlots={timeSlots}
             selectedTimes={selectedData.times || []}
             onSelectTime={handleTimeSelect}
+            colors={colors}
+            isDark={isDark}
+          />
+        );
+      case "gameMode":
+        return (
+          <GameModeSelection
+            selectedGameMode={selectedData.gameMode}
+            onSelectGameMode={(mode) =>
+              setSelectedData({ ...selectedData, gameMode: mode })
+            }
             colors={colors}
             isDark={isDark}
           />
@@ -658,6 +701,28 @@ const getStyles = (colors: any, isDark: boolean) =>
       backgroundColor: colors.text,
       alignItems: "center",
       justifyContent: "center",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 40,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginTop: 16,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: "center",
     },
     // Enhanced Club Card Styles
     clubCard: {

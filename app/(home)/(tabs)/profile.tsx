@@ -14,13 +14,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Badge, IconButton } from "../../../components";
-import { PROFILE_POSTS, PROFILE_SPORTS } from "../../../constants/data";
+import {
+    PROFILE_INFO_STATS,
+    PROFILE_POSTS
+} from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function ProfileScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, fonts } = useTheme();
   const { profile, refreshProfile } = useAuth();
-  const styles = getStyles(colors, isDark);
+  const styles = getStyles(colors, isDark, fonts);
   const accentColor = isDark ? "#B8FF00" : colors.blue;
   const [activeTab, setActiveTab] = useState<"activity" | "info" | "stats">(
     "activity",
@@ -232,29 +235,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Sports Tags */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.sportsScroll}
-          contentContainerStyle={styles.sportsContent}
-        >
-          {PROFILE_SPORTS.map((sport, index) => (
-            <View
-              key={index}
-              style={[styles.sportTag, sport.active && styles.sportTagActive]}
-            >
-              <Text
-                style={
-                  sport.active ? styles.sportTagTextActive : styles.sportTagText
-                }
-              >
-                {sport.name} {sport.level || ""}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-
         {/* Tabs */}
         <View style={styles.tabsContainer}>
           <Pressable
@@ -297,57 +277,93 @@ export default function ProfileScreen() {
 
         {activeTab === "activity" ? (
           <View style={styles.postList}>
-            {PROFILE_POSTS.map((post, index) => (
-              <View key={index} style={styles.postCard}>
-                <View style={styles.postHeader}>
-                  <View style={styles.postAvatar} />
-                  <View style={styles.postHeaderText}>
-                    <Text style={styles.postName}>{post.name}</Text>
-                    <Text style={styles.postMeta}>{post.meta}</Text>
-                  </View>
-                  <FontAwesome
-                    name="ellipsis-h"
-                    size={16}
-                    color={colors.textSecondary}
-                  />
-                </View>
-
-                <Image
-                  source={{
-                    uri: post.image,
-                  }}
-                  style={styles.postImage}
-                  resizeMode="cover"
+            {PROFILE_POSTS.length === 0 ? (
+              <View style={styles.emptyState}>
+                <FontAwesome
+                  name="image"
+                  size={48}
+                  color={colors.textSecondary}
+                  style={{ marginBottom: 16 }}
                 />
-
-                <View style={styles.postActions}>
-                  <View style={styles.postActionsLeft}>
-                    <FontAwesome name="heart-o" size={18} color={colors.text} />
+                <Text style={styles.emptyStateTitle}>Nema aktivnosti</Text>
+                <Text style={styles.emptyStateText}>
+                  Podelite svoje mečeve i fotografije sa zajednicom
+                </Text>
+                <Pressable
+                  style={styles.emptyStateButton}
+                  onPress={() => {
+                    // TODO: Navigate to create post screen
+                    console.log("Create new post");
+                  }}
+                >
+                  <FontAwesome
+                    name="plus"
+                    size={16}
+                    color="#FFFFFF"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={styles.emptyStateButtonText}>
+                    Dodajte novi post
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              PROFILE_POSTS.map((post, index) => (
+                <View key={index} style={styles.postCard}>
+                  <View style={styles.postHeader}>
+                    <View style={styles.postAvatar} />
+                    <View style={styles.postHeaderText}>
+                      <Text style={styles.postName}>{post.name}</Text>
+                      <Text style={styles.postMeta}>{post.meta}</Text>
+                    </View>
                     <FontAwesome
-                      name="comment-o"
-                      size={18}
-                      color={colors.text}
+                      name="ellipsis-h"
+                      size={16}
+                      color={colors.textSecondary}
                     />
+                  </View>
+
+                  <Image
+                    source={{
+                      uri: post.image,
+                    }}
+                    style={styles.postImage}
+                    resizeMode="cover"
+                  />
+
+                  <View style={styles.postActions}>
+                    <View style={styles.postActionsLeft}>
+                      <FontAwesome
+                        name="heart-o"
+                        size={18}
+                        color={colors.text}
+                      />
+                      <FontAwesome
+                        name="comment-o"
+                        size={18}
+                        color={colors.text}
+                      />
+                      <FontAwesome
+                        name="paper-plane-o"
+                        size={18}
+                        color={colors.text}
+                      />
+                    </View>
                     <FontAwesome
-                      name="paper-plane-o"
+                      name="bookmark-o"
                       size={18}
                       color={colors.text}
                     />
                   </View>
-                  <FontAwesome
-                    name="bookmark-o"
-                    size={18}
-                    color={colors.text}
-                  />
-                </View>
 
-                <Text style={styles.postLikes}>{post.likes}</Text>
-                <Text style={styles.postCaption}>
-                  <Text style={styles.postCaptionName}>@agarcia</Text>{" "}
-                  {post.caption}
-                </Text>
-              </View>
-            ))}
+                  <Text style={styles.postLikes}>{post.likes}</Text>
+                  <Text style={styles.postCaption}>
+                    <Text style={styles.postCaptionName}>@agarcia</Text>{" "}
+                    {post.caption}
+                  </Text>
+                </View>
+              ))
+            )}
           </View>
         ) : activeTab === "info" ? (
           <View style={styles.infoSection}>
@@ -581,7 +597,7 @@ export default function ProfileScreen() {
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -792,6 +808,40 @@ const getStyles = (colors: any, isDark: boolean) =>
     },
     postList: {
       gap: 16,
+    },
+    emptyState: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 60,
+      paddingHorizontal: 40,
+    },
+    emptyStateTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontFamily: fonts.semiBold,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    emptyStateText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontFamily: fonts.regular,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    emptyStateButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#3867FF",
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+    },
+    emptyStateButtonText: {
+      color: "#FFFFFF",
+      fontSize: 15,
+      fontFamily: fonts.semiBold,
     },
     postCard: {
       backgroundColor: isDark ? "#121418" : colors.surface,

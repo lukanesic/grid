@@ -11,8 +11,8 @@ export default function NotificationSection({
   title,
   children,
 }: NotificationSectionProps) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   return (
     <View style={styles.section}>
@@ -22,7 +22,7 @@ export default function NotificationSection({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     section: {
       marginBottom: 20,
@@ -34,6 +34,7 @@ const getStyles = (colors: any) =>
       marginBottom: 12,
       textTransform: "uppercase",
       letterSpacing: 0.6,
+      fontFamily: fonts.semiBold,
     },
     card: {
       backgroundColor: colors.surface,

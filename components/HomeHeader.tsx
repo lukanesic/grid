@@ -14,7 +14,7 @@ interface HomeHeaderProps {
 
 export default function HomeHeader({ styles }: HomeHeaderProps) {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { profile } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -110,10 +110,10 @@ export default function HomeHeader({ styles }: HomeHeaderProps) {
       <View style={styles.actionsRow}>
         <Pressable
           style={[styles.pushButton, { backgroundColor: "#1E1F23" }]}
-          onPress={() => {}}
+          onPress={() => router.push("/(home)/openMatches")}
         >
-          <FontAwesome name="bell" size={16} color={colors.accent} />
-          <Text style={styles.pushButtonText}>Push za mečeve</Text>
+          <FontAwesome name="users" size={16} color={colors.accent} />
+          <Text style={styles.pushButtonText}>Pridruži se meču</Text>
         </Pressable>
         <Pressable
           style={styles.createButton}

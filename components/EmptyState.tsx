@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface EmptyStateProps {
   icon?: string;
@@ -12,11 +13,16 @@ export default function EmptyState({
   title,
   subtitle,
 }: EmptyStateProps) {
+  const { fonts } = useTheme();
   return (
     <View style={styles.emptyState}>
       <FontAwesome name={icon as any} size={48} color="#3D3D3D" />
-      <Text style={styles.emptyStateTitle}>{title}</Text>
-      <Text style={styles.emptyStateSubtitle}>{subtitle}</Text>
+      <Text style={[styles.emptyStateTitle, { fontFamily: fonts.semiBold }]}>
+        {title}
+      </Text>
+      <Text style={[styles.emptyStateSubtitle, { fontFamily: fonts.regular }]}>
+        {subtitle}
+      </Text>
     </View>
   );
 }

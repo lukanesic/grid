@@ -24,8 +24,8 @@ export default function HotPlayerCard({
   onAddPress,
   onPress,
 }: HotPlayerCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -62,7 +62,7 @@ export default function HotPlayerCard({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 160,
@@ -88,6 +88,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: "#FFFFFF",
       fontSize: 10,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     avatar: {
       width: 60,
@@ -109,6 +110,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       textAlign: "center",
       marginBottom: 8,
       minHeight: 36,
+      fontFamily: fonts.semiBold,
     },
     levelRow: {
       flexDirection: "row",
@@ -119,11 +121,13 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.textSecondary,
       fontSize: 12,
       marginRight: 4,
+      fontFamily: fonts.regular,
     },
     levelValue: {
       color: "#FF6B35",
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     reasonContainer: {
       backgroundColor: colors.border,
@@ -137,6 +141,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 10,
       fontWeight: "600",
       textAlign: "center",
+      fontFamily: fonts.semiBold,
     },
     percentageContainer: {
       alignItems: "center",
@@ -146,10 +151,12 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.blue,
       fontSize: 20,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     percentageLabel: {
       color: colors.textSecondary,
       fontSize: 10,
+      fontFamily: fonts.regular,
     },
     winsContainer: {
       alignItems: "center",
@@ -159,6 +166,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: isDark ? "#FFD700" : "#B8A900",
       fontSize: 11,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     addButton: {
       backgroundColor: colors.blue,

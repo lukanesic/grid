@@ -1,16 +1,18 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { StyleSheet, TextInput, TextInputProps, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface InputFieldProps extends TextInputProps {
   icon: string;
 }
 
 export default function InputField({ icon, ...props }: InputFieldProps) {
+  const { fonts } = useTheme();
   return (
     <View style={styles.container}>
       <FontAwesome name={icon as any} size={16} color="#8B8B8B" />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { fontFamily: fonts.regular }]}
         placeholderTextColor="#8B8B8B"
         {...props}
       />

@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthButtonProps {
   onPress: () => void;
@@ -14,6 +15,7 @@ export default function AuthButton({
   loading = false,
 }: AuthButtonProps) {
   const isDisabled = disabled || loading;
+  const { fonts } = useTheme();
 
   return (
     <Pressable
@@ -24,7 +26,9 @@ export default function AuthButton({
       {loading ? (
         <ActivityIndicator size="small" color="#111111" />
       ) : (
-        <Text style={styles.buttonText}>{children}</Text>
+        <Text style={[styles.buttonText, { fontFamily: fonts.semiBold }]}>
+          {children}
+        </Text>
       )}
     </Pressable>
   );

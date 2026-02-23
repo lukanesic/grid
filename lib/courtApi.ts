@@ -186,6 +186,55 @@ export async function fetchCourtsWithAvailability(
 }
 
 /**
+ * Check if a court is fully booked for a specific date
+ * Returns true if ALL time slots are occupied
+ */
+export async function isCourtFullyBooked(
+  courtId: string,
+  date: string,
+): Promise<boolean> {
+  try {
+    const availableSlots = await fetchAvailableTimeSlots(courtId, date);
+
+    // If no slots at all, consider it fully booked
+    if (availableSlots.length === 0) {
+      return true;
+    }
+
+    // Check if all slots are unavailable
+    const allBooked = availableSlots.every((slot) => !slot.is_available);
+    return allBooked;
+  } catch (error) {
+    console.error("Error checking if court is fully booked:", error);
+    // On error, assume court is not fully booked (fail open)
+    return false;
+  }
+}
+
+/**
+ * Fetch courts by club with fully booked status for a specific date
+ * Enhances Court objects with is_available flag based on date availability
+ */
+export async function fetchCourtsByClubWithAvailability(
+  clubId: string,
+  date: string,
+): Promise<Court[]> {
+  const courts = await fetchCourtsByClub(clubId);
+
+  const courtsWithStatus = await Promise.all(
+    courts.map(async (court) => {
+      const fullyBooked = await isCourtFullyBooked(court.id, date);
+      return {
+        ...court,
+        is_available: !fullyBooked,
+      };
+    }),
+  );
+
+  return courtsWithStatus;
+}
+
+/**
  * Create a new court reservation
  */
 export async function createCourtReservation(
@@ -210,6 +259,9 @@ export async function createCourtReservation(
     currency: payload.currency || "RSD",
     notes: payload.notes || null,
     invited_players: payload.invited_players || [],
+    is_open_match:
+      payload.is_open_match !== undefined ? payload.is_open_match : true,
+    match_type: payload.match_type || "friendly",
     status: "confirmed",
     payment_status: "pending",
   };
@@ -348,7 +400,7 @@ export async function cancelReservation(
 
 /**
  * Fetch open reservations (matches looking for players)
- * Returns reservations with status='confirmed' from today onwards
+ * Returns reservations with status='confirmed' and is_open_match=true from today onwards
  */
 export async function fetchOpenReservations(): Promise<any[]> {
   const today = new Date().toISOString().split("T")[0];
@@ -362,7 +414,7 @@ export async function fetchOpenReservations(): Promise<any[]> {
         id,
         name,
         club_id,
-        club:clubs(
+        clubs(
           id,
           name,
           location,
@@ -377,13 +429,94 @@ export async function fetchOpenReservations(): Promise<any[]> {
     `,
     )
     .eq("status", "confirmed")
+    .eq("is_open_match", true)
     .gte("reservation_date", today)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("Error fetching open reservations:", error);
+    throw new Error(error.message);
+  }
+
+  // Fetch invited players for each reservation
+  if (data && data.length > 0) {
+    const reservationsWithInvited = await Promise.all(
+      data.map(async (reservation) => {
+        if (
+          reservation.invited_players &&
+          reservation.invited_players.length > 0
+        ) {
+          const { data: invitedData, error: invitedError } = await supabase
+            .from("profiles")
+            .select("id, full_name, avatar_url")
+            .in("id", reservation.invited_players);
+
+          if (!invitedError && invitedData) {
+            return {
+              ...reservation,
+              invited_players_profiles: invitedData,
+            } as any;
+          }
+        }
+        return reservation as any;
+      }),
+    );
+    return reservationsWithInvited;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch closed reservations (closed matches) for current user
+ */
+export async function fetchClosedReservations(): Promise<any[]> {
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("court_reservations")
+    .select(
+      `
+      *,
+      court:courts(
+        id,
+        name,
+        club_id,
+        clubs(
+          id,
+          name,
+          location,
+          address,
+          image
+        )
+      ),
+      user:profiles!user_id(
+        id,
+        full_name,
+        avatar_url
+      )
+    `,
+    )
+    .eq("status", "confirmed")
+    .eq("is_open_match", false)
+    .gte("reservation_date", today)
+    .or(`user_id.eq.${user.id},invited_players.cs.{${user.id}}`)
     .order("reservation_date", { ascending: true })
     .order("start_time", { ascending: true })
     .limit(10);
 
   if (error) {
-    console.error("Error fetching open reservations:", error);
+    console.error("Error fetching closed reservations:", error);
     throw new Error(error.message);
   }
 
@@ -437,7 +570,8 @@ export async function fetchReservationById(
           id,
           name,
           location,
-          address
+          address,
+          image
         )
       ),
       user:profiles!user_id(

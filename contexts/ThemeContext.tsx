@@ -70,6 +70,12 @@ const darkTheme: ThemeColors = {
 interface ThemeContextType {
   theme: Theme;
   colors: ThemeColors;
+  fonts: {
+    regular: string;
+    medium: string;
+    semiBold: string;
+    bold: string;
+  };
   toggleTheme: () => void;
   isDark: boolean;
 }
@@ -114,8 +120,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const colors = theme === "dark" ? darkTheme : lightTheme;
   const isDark = theme === "dark";
 
+  const fonts = {
+    regular: "Roboto_400Regular",
+    medium: "Roboto_500Medium",
+    semiBold: "Roboto_700Bold",
+    bold: "Roboto_700Bold",
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, colors, toggleTheme, isDark }}>
+    <ThemeContext.Provider
+      value={{ theme, colors, fonts, toggleTheme, isDark }}
+    >
       {children}
     </ThemeContext.Provider>
   );

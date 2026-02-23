@@ -1,6 +1,7 @@
 export { ClubSelection } from "./ClubSelection";
 export { CourtSelection } from "./CourtSelection";
 export { DateSelection } from "./DateSelection";
+export { GameModeSelection } from "./GameModeSelection";
 export { MatchTypeSelection } from "./MatchTypeSelection";
 export { OpponentSelection } from "./OpponentSelection";
 export { PaymentSelection } from "./PaymentSelection";

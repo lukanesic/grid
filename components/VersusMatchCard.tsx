@@ -1,3 +1,4 @@
+import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
@@ -18,6 +19,11 @@ interface VersusMatchCardProps {
   teamA: Player[];
   teamB: Player[];
   score?: string;
+  duration?: string;
+  isFinished?: boolean;
+  gameMode?: "competitive" | "friendly" | "training";
+  startTime?: string;
+  endTime?: string;
   onPress?: () => void;
 }
 
@@ -31,10 +37,27 @@ export default function VersusMatchCard({
   teamA,
   teamB,
   score,
+  duration,
+  isFinished,
+  gameMode,
+  startTime,
+  endTime,
   onPress,
 }: VersusMatchCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
+
+  // Get game mode label and color
+  const getGameModeInfo = () => {
+    if (gameMode === "competitive") {
+      return { label: "Kompetativan", icon: "trophy", color: "#F59E0B" };
+    } else if (gameMode === "training") {
+      return { label: "Trening", icon: "line-chart", color: "#3B82F6" };
+    }
+    return { label: "Prijateljski", icon: "smile-o", color: "#10B981" };
+  };
+
+  const gameModeInfo = getGameModeInfo();
 
   // Get player initials for fallback avatar
   const getInitials = (name: string) => {
@@ -81,11 +104,40 @@ export default function VersusMatchCard({
   return (
     <Pressable onPress={onPress}>
       <LinearGradient
-        colors={["#B8FF00", "#4A7CFF", "#1B47FF"]}
+        colors={
+          isFinished
+            ? ["#2F52D5", "#05003F"]
+            : ["#B8FF00", "#4A7CFF", "#1B47FF"]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
+        {/* Header with Game Mode and Time Range/Duration */}
+        <View style={styles.header}>
+          <View style={styles.gameModeSection}>
+            <FontAwesome
+              name={gameModeInfo.icon as any}
+              size={12}
+              color="#FFFFFF"
+            />
+            <Text style={styles.gameModeText}>{gameModeInfo.label}</Text>
+          </View>
+          {duration ? (
+            <View style={styles.timeRangeSection}>
+              <FontAwesome name="hourglass-end" size={12} color="#FFFFFF" />
+              <Text style={styles.timeRangeText}>{duration}</Text>
+            </View>
+          ) : startTime && endTime ? (
+            <View style={styles.timeRangeSection}>
+              <FontAwesome name="clock-o" size={12} color="#FFFFFF" />
+              <Text style={styles.timeRangeText}>
+                {startTime} - {endTime}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
         {/* Main Content */}
         <View style={styles.content}>
           {/* Team A */}
@@ -114,26 +166,24 @@ export default function VersusMatchCard({
         {/* Footer */}
         <View style={styles.footer}>
           <View style={styles.footerContent}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("../assets/logo/home-icon.png")}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+            <View style={styles.footerLeft}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("../assets/logo/home-icon.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.footerInfo}>
+                <Text style={styles.dateText}>{date}</Text>
+                <Text style={styles.clubText}>{club}</Text>
+              </View>
             </View>
-            <View style={styles.footerInfo}>
-              {score ? (
-                <>
-                  <Text style={styles.scoreText}>{score}</Text>
-                  <Text style={styles.clubText}>{club}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.dateText}>{date}</Text>
-                  <Text style={styles.clubText}>{club}</Text>
-                </>
-              )}
-            </View>
+            {score && (
+              <Text style={styles.scoreText} numberOfLines={1}>
+                {score}
+              </Text>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -141,7 +191,7 @@ export default function VersusMatchCard({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 320,
@@ -154,19 +204,44 @@ const getStyles = (colors: any, isDark: boolean) =>
       justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 20,
-      paddingVertical: 16,
-      backgroundColor: "rgba(255,255,255,0.1)",
+      paddingVertical: 14,
+      backgroundColor: "rgba(0,0,0,0.15)",
+    },
+    gameModeSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    gameModeText: {
+      color: "#FFFFFF",
+      fontSize: 12,
+      fontWeight: "600",
+      letterSpacing: -0.3,
+      fontFamily: fonts.semiBold,
+    },
+    timeRangeSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    timeRangeText: {
+      color: "rgba(255,255,255,0.9)",
+      fontSize: 11,
+      fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     matchType: {
       color: "#FFFFFF",
       fontSize: 12,
       fontWeight: "700",
       letterSpacing: 0.5,
+      fontFamily: fonts.bold,
     },
     vsText: {
       color: "#FFFFFF",
       fontSize: 14,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     content: {
       flexDirection: "row",
@@ -213,6 +288,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: "#FFFFFF",
       fontSize: 12,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     levelBadge: {
       position: "absolute",
@@ -228,6 +304,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: "#111111",
       fontSize: 9,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     playerName: {
       color: "#FFFFFF",
@@ -235,6 +312,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontWeight: "500",
       textAlign: "center",
       marginTop: 6,
+      fontFamily: fonts.medium,
     },
     centerTime: {
       alignItems: "center",
@@ -245,11 +323,13 @@ const getStyles = (colors: any, isDark: boolean) =>
       fontSize: 24,
       fontWeight: "700",
       marginBottom: 4,
+      fontFamily: fonts.bold,
     },
     matchTypeText: {
       color: "rgba(255,255,255,0.8)",
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     footer: {
       backgroundColor: "rgba(0,0,0,0.1)",
@@ -257,6 +337,11 @@ const getStyles = (colors: any, isDark: boolean) =>
       paddingVertical: 12,
     },
     footerContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    footerLeft: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
@@ -271,23 +356,23 @@ const getStyles = (colors: any, isDark: boolean) =>
       width: 24,
       height: 24,
     },
-    footerInfo: {
-      flex: 1,
-    },
+    footerInfo: {},
     dateText: {
       color: "#FFFFFF",
       fontSize: 12,
       fontWeight: "600",
       marginBottom: 2,
+      fontFamily: fonts.semiBold,
     },
     scoreText: {
       color: "#B8FF00",
-      fontSize: 16,
+      fontSize: 13,
       fontWeight: "700",
-      marginBottom: 2,
+      fontFamily: fonts.bold,
     },
     clubText: {
       color: "rgba(255,255,255,0.8)",
       fontSize: 11,
+      fontFamily: fonts.regular,
     },
   });

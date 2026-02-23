@@ -25,8 +25,8 @@ export default function InstagramPlayerCard({
   onPress,
   style,
 }: InstagramPlayerCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors, isDark);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, isDark, fonts);
 
   // Use full name instead of just first name
   const displayName = name;
@@ -57,7 +57,7 @@ export default function InstagramPlayerCard({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean) =>
+const getStyles = (colors: any, isDark: boolean, fonts: any) =>
   StyleSheet.create({
     container: {
       alignItems: "center",
@@ -94,6 +94,7 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: isDark ? colors.text : "#666666",
       fontSize: 16,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     name: {
       color: colors.text,
@@ -103,5 +104,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       marginTop: 6,
       paddingHorizontal: 2,
       lineHeight: 13,
+      fontFamily: fonts.medium,
     },
   });

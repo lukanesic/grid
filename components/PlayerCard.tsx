@@ -20,8 +20,8 @@ export default function PlayerCard({
   isFollowing,
   onPress,
 }: PlayerCardProps) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   return (
     <View style={styles.card}>
@@ -48,7 +48,7 @@ export default function PlayerCard({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 160,
@@ -81,6 +81,7 @@ const getStyles = (colors: any) =>
       color: "#B8FF00",
       fontSize: 12,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
     name: {
       color: colors.text,
@@ -88,6 +89,7 @@ const getStyles = (colors: any) =>
       fontWeight: "600",
       textAlign: "center",
       marginTop: 4,
+      fontFamily: fonts.semiBold,
     },
     friendsText: {
       color: colors.textSecondary,
@@ -95,6 +97,7 @@ const getStyles = (colors: any) =>
       textAlign: "center",
       marginTop: 4,
       marginBottom: 8,
+      fontFamily: fonts.regular,
     },
     addButton: {
       paddingHorizontal: 24,
@@ -106,5 +109,6 @@ const getStyles = (colors: any) =>
       color: "#FFFFFF",
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });

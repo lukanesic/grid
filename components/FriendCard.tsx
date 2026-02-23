@@ -17,8 +17,8 @@ interface FriendCardProps {
 }
 
 export default function FriendCard({ friend, onConnect }: FriendCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   const buttonColor = isDark ? colors.accent : colors.blue;
 
@@ -50,7 +50,7 @@ export default function FriendCard({ friend, onConnect }: FriendCardProps) {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     friendCard: {
       flexDirection: "row",
@@ -75,16 +75,19 @@ const getStyles = (colors: any) =>
       fontSize: 16,
       fontWeight: "600",
       marginBottom: 2,
+      fontFamily: fonts.semiBold,
     },
     friendUsername: {
       color: colors.textSecondary,
       fontSize: 14,
       marginBottom: 4,
+      fontFamily: fonts.regular,
     },
     mutualFriends: {
       color: colors.blue,
       fontSize: 12,
       fontWeight: "500",
+      fontFamily: fonts.medium,
     },
     connectButton: {
       borderRadius: 20,
@@ -95,6 +98,7 @@ const getStyles = (colors: any) =>
       color: colors.background,
       fontSize: 14,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     connectedBadge: {
       flexDirection: "row",
@@ -108,5 +112,6 @@ const getStyles = (colors: any) =>
       color: colors.background,
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });

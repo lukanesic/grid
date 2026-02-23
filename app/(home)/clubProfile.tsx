@@ -3,27 +3,28 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  Dimensions,
-  Image,
-  Linking,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    Image,
+    Linking,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { StatItem } from "../../components/playerProfile";
 import VersusMatchCard from "../../components/VersusMatchCard";
+import { FINISHED_MATCHES } from "../../constants/data";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  fetchClubById,
-  fetchClubFollowStatus,
-  followClub,
-  unfollowClub,
+    fetchClubById,
+    fetchClubFollowStatus,
+    followClub,
+    unfollowClub,
 } from "../../lib/clubApi";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -269,14 +270,14 @@ export default function ClubProfileScreen() {
               number={followStatus?.followers_count || 0}
               label="Pratioci"
               onPress={() => {
-                // TODO: Navigate to followers list
+                router.push(`/(home)/followers?clubId=${clubId}`);
               }}
             />
             <StatItem
               number={followStatus?.following_count || 0}
               label="Praćenje"
               onPress={() => {
-                // TODO: Navigate to following list
+                router.push(`/(home)/following?clubId=${clubId}`);
               }}
             />
           </View>
@@ -424,88 +425,32 @@ export default function ClubProfileScreen() {
             style={styles.matchesScroll}
             contentContainerStyle={styles.matchesScrollContent}
           >
-            <VersusMatchCard
-              id="1"
-              type="SINGL"
-              time="18:00"
-              date="15. februar 2024"
-              club={club.name}
-              matchType="1v1"
-              teamA={[
-                {
-                  name: "Marko Petrović",
-                  avatar: "https://i.pravatar.cc/150?img=33",
-                  level: "4.5",
-                },
-              ]}
-              teamB={[
-                {
-                  name: "Stefan Jovanović",
-                  avatar: "https://i.pravatar.cc/150?img=12",
-                  level: "4.2",
-                },
-              ]}
-              score="6-4, 6-3"
-              onPress={() => console.log("Match pressed")}
-            />
-            <VersusMatchCard
-              id="2"
-              type="DUBL"
-              time="19:30"
-              date="14. februar 2024"
-              club={club.name}
-              matchType="2v2"
-              teamA={[
-                {
-                  name: "Ana Marković",
-                  avatar: "https://i.pravatar.cc/150?img=47",
-                  level: "4.0",
-                },
-                {
-                  name: "Lena Nikolić",
-                  avatar: "https://i.pravatar.cc/150?img=28",
-                  level: "3.8",
-                },
-              ]}
-              teamB={[
-                {
-                  name: "Maja Stojanović",
-                  avatar: "https://i.pravatar.cc/150?img=44",
-                  level: "4.1",
-                },
-                {
-                  name: "Sara Đorđević",
-                  avatar: "https://i.pravatar.cc/150?img=25",
-                  level: "3.9",
-                },
-              ]}
-              score="7-5, 4-6, 6-2"
-              onPress={() => console.log("Match pressed")}
-            />
-            <VersusMatchCard
-              id="3"
-              type="SINGL"
-              time="17:00"
-              date="13. februar 2024"
-              club={club.name}
-              matchType="1v1"
-              teamA={[
-                {
-                  name: "Nikola Vasić",
-                  avatar: "https://i.pravatar.cc/150?img=20",
-                  level: "5.0",
-                },
-              ]}
-              teamB={[
-                {
-                  name: "Dušan Milić",
-                  avatar: "https://i.pravatar.cc/150?img=30",
-                  level: "4.8",
-                },
-              ]}
-              score="6-2, 6-1"
-              onPress={() => console.log("Match pressed")}
-            />
+            {FINISHED_MATCHES.slice(0, 3).map((match, index) => {
+              // Transform score object to string for VersusMatchCard
+              const scoreString = match.score.sets.join(", ");
+              const formattedTime = match.time.replace("h", "").trim();
+
+              return (
+                <VersusMatchCard
+                  key={match.id || index}
+                  id={match.id}
+                  type={match.type}
+                  time={formattedTime}
+                  date={match.date}
+                  club={match.club}
+                  matchType={match.matchType}
+                  gameMode={match.gameMode}
+                  teamA={match.teamA}
+                  teamB={match.teamB}
+                  score={scoreString}
+                  duration={match.duration}
+                  isFinished={true}
+                  onPress={() =>
+                    router.push(`/(home)/matchScreen?id=${match.id}`)
+                  }
+                />
+              );
+            })}
           </ScrollView>
 
           {/* Bottom Padding */}

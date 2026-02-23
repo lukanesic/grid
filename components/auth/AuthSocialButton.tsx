@@ -1,5 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthSocialButtonProps {
   icon: keyof typeof FontAwesome.glyphMap;
@@ -12,10 +13,13 @@ export default function AuthSocialButton({
   onPress,
   children,
 }: AuthSocialButtonProps) {
+  const { fonts } = useTheme();
   return (
     <Pressable style={styles.button} onPress={onPress}>
       <FontAwesome name={icon} size={18} color="#FFFFFF" />
-      <Text style={styles.buttonText}>{children}</Text>
+      <Text style={[styles.buttonText, { fontFamily: fonts.semiBold }]}>
+        {children}
+      </Text>
     </Pressable>
   );
 }

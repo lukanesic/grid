@@ -25,8 +25,8 @@ export default function TrendingMatchCard({
   prize,
   onPress,
 }: TrendingMatchCardProps) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -60,7 +60,7 @@ export default function TrendingMatchCard({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     card: {
       width: 280,
@@ -87,6 +87,7 @@ const getStyles = (colors: any) =>
       fontSize: 10,
       fontWeight: "700",
       letterSpacing: 0.5,
+      fontFamily: fonts.bold,
     },
     header: {
       flexDirection: "row",
@@ -99,17 +100,20 @@ const getStyles = (colors: any) =>
       fontSize: 18,
       fontWeight: "700",
       flex: 1,
+      fontFamily: fonts.bold,
     },
     date: {
       color: colors.blue,
       fontSize: 14,
       fontWeight: "600",
       marginBottom: 4,
+      fontFamily: fonts.semiBold,
     },
     location: {
       color: colors.textSecondary,
       fontSize: 13,
       marginBottom: 12,
+      fontFamily: fonts.regular,
     },
     metaRow: {
       flexDirection: "row",
@@ -126,6 +130,7 @@ const getStyles = (colors: any) =>
       color: colors.text,
       fontSize: 11,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     statsRow: {
       marginBottom: 12,
@@ -137,6 +142,7 @@ const getStyles = (colors: any) =>
       color: colors.blue,
       fontSize: 12,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
     prizeContainer: {
       backgroundColor: colors.background,
@@ -147,5 +153,6 @@ const getStyles = (colors: any) =>
       color: "#FFD700",
       fontSize: 14,
       fontWeight: "700",
+      fontFamily: fonts.bold,
     },
   });

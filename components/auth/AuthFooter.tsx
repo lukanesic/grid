@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface AuthFooterProps {
   text: string;
@@ -11,11 +12,17 @@ export default function AuthFooter({
   linkText,
   onLinkPress,
 }: AuthFooterProps) {
+  const { fonts } = useTheme();
   return (
     <View style={styles.footerRow}>
-      <Text style={styles.footerText}>{text}</Text>
+      <Text style={[styles.footerText, { fontFamily: fonts.regular }]}>
+        {text}
+      </Text>
       <Pressable onPress={onLinkPress}>
-        <Text style={styles.footerLink}> {linkText}</Text>
+        <Text style={[styles.footerLink, { fontFamily: fonts.semiBold }]}>
+          {" "}
+          {linkText}
+        </Text>
       </Pressable>
     </View>
   );

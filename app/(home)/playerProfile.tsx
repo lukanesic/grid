@@ -6,23 +6,22 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FollowButton, IconButton } from "../../components";
 import {
-  ActivityCard,
-  HistoryCard,
-  InfoCard,
-  StatItem,
+    HistoryCard,
+    InfoCard,
+    StatItem,
 } from "../../components/playerProfile";
 
 export default function PlayerProfileScreen() {
@@ -37,7 +36,7 @@ export default function PlayerProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { profile: currentUserProfile } = useAuth();
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
 
   // Load profile and follow status from database
   useEffect(() => {
@@ -272,7 +271,7 @@ export default function PlayerProfileScreen() {
     ]);
   };
 
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, fonts);
 
   // Loading state
   if (loading) {
@@ -506,38 +505,19 @@ export default function PlayerProfileScreen() {
           <>
             {activeTab === "activity" ? (
               <View style={styles.activityList}>
-                {[
-                  {
-                    type: "match",
-                    title: "Pobeda u dablovima",
-                    description: "6-4, 6-3",
-                    time: "Pre 2 dana",
-                    icon: "trophy",
-                  },
-                  {
-                    type: "post",
-                    title: "Odličan trening danas!",
-                    description:
-                      "Radili smo na servisima i volejima. Spremni za sutra.",
-                    time: "Pre 4 dana",
-                    icon: "comment",
-                  },
-                  {
-                    type: "achievement",
-                    title: "Nova titula",
-                    description: "Pobednik turnira - Otvoreno prvenstvo grada",
-                    time: "Pre 1 nedelju",
-                    icon: "star",
-                  },
-                ].map((activity, index) => (
-                  <ActivityCard
-                    key={index}
-                    icon={activity.icon}
-                    title={activity.title}
-                    description={activity.description}
-                    time={activity.time}
+                {/* Empty state for no activities */}
+                <View style={styles.emptyState}>
+                  <FontAwesome
+                    name="inbox"
+                    size={48}
+                    color={colors.textSecondary}
+                    style={{ marginBottom: 16 }}
                   />
-                ))}
+                  <Text style={styles.emptyStateTitle}>Nema aktivnosti</Text>
+                  <Text style={styles.emptyStateText}>
+                    Korisnik još uvek nema nikakvu aktivnost
+                  </Text>
+                </View>
               </View>
             ) : activeTab === "info" ? (
               <View style={styles.infoSection}>
@@ -680,7 +660,7 @@ export default function PlayerProfileScreen() {
   );
 }
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -995,6 +975,26 @@ const createStyles = (colors: any) =>
     },
     activityList: {
       gap: 12,
+    },
+    emptyState: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 60,
+      paddingHorizontal: 40,
+    },
+    emptyStateTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontFamily: fonts.semiBold,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    emptyStateText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontFamily: fonts.regular,
+      textAlign: "center",
+      lineHeight: 20,
     },
     contentPlaceholder: {
       padding: 40,

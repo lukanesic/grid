@@ -15,6 +15,11 @@ export const SummaryStep = ({
 }: SummaryStepProps) => {
   const styles = getStyles(colors, isDark);
 
+  // Calculate total price
+  const hoursCount = selectedData.times?.length || 1;
+  const pricePerHour = parseInt(selectedData.club?.price || "1200", 10);
+  const totalPrice = hoursCount * pricePerHour;
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("sr-RS", {
       day: "numeric",
@@ -98,6 +103,17 @@ export const SummaryStep = ({
 
         <View style={styles.summaryDivider} />
 
+        <Text style={styles.summaryDetailLabel}>Mod igre</Text>
+        <Text style={styles.summaryDetailValue}>
+          {selectedData.gameMode === "competitive"
+            ? "Kompetativan"
+            : selectedData.gameMode === "training"
+              ? "Trening"
+              : "Prijateljski"}
+        </Text>
+
+        <View style={styles.summaryDivider} />
+
         <Text style={styles.summaryDetailLabel}>Tip meča</Text>
         <Text style={styles.summaryDetailValue}>
           {selectedData.matchType === "open" ? "Otvoren meč" : "Zatvoren meč"}
@@ -113,9 +129,7 @@ export const SummaryStep = ({
         <View style={styles.summaryDivider} />
 
         <Text style={styles.summaryDetailLabel}>Ukupna cena</Text>
-        <Text style={styles.summaryTotalPrice}>
-          {selectedData.club?.price || "1200"} RSD
-        </Text>
+        <Text style={styles.summaryTotalPrice}>{totalPrice} RSD</Text>
         <Text style={styles.summaryPriceNote}>
           Vaša cena je ispod proseka za period od 60 dana
         </Text>
@@ -141,19 +155,16 @@ export const SummaryStep = ({
         <Text style={styles.summaryPriceHeader}>Detalji cene</Text>
         <View style={styles.summaryPriceBreakdownRow}>
           <Text style={styles.summaryPriceBreakdownLabel}>
-            {selectedData.times?.length || 1} sat x{" "}
-            {selectedData.club?.price || "1200"}
+            {hoursCount} sat x {pricePerHour}
           </Text>
           <Text style={styles.summaryPriceBreakdownValue}>
-            {selectedData.club?.price || "1200"} RSD
+            {totalPrice} RSD
           </Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryPriceTotalRow}>
           <Text style={styles.summaryPriceTotalLabel}>Ukupno</Text>
-          <Text style={styles.summaryPriceTotalValue}>
-            {selectedData.club?.price || "1200"} RSD
-          </Text>
+          <Text style={styles.summaryPriceTotalValue}>{totalPrice} RSD</Text>
         </View>
       </View>
 

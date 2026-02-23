@@ -1,15 +1,19 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface BadgeProps {
   count: number;
 }
 
 export default function Badge({ count }: BadgeProps) {
+  const { fonts } = useTheme();
   if (count === 0) return null;
 
   return (
     <View style={styles.badge}>
-      <Text style={styles.text}>{count > 99 ? "99+" : count}</Text>
+      <Text style={[styles.text, { fontFamily: fonts.bold }]}>
+        {count > 99 ? "99+" : count}
+      </Text>
     </View>
   );
 }

@@ -3,17 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
+    ActivityIndicator,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
 } from "react-native";
-import { SUGGESTED_FRIENDS, UPCOMING_VERSUS_MATCHES } from "../constants/data";
+import { FINISHED_MATCHES, SUGGESTED_FRIENDS } from "../constants/data";
 import { useTheme } from "../contexts/ThemeContext";
 import { fetchTopClubs } from "../lib/clubApi";
-import { fetchOpenReservations } from "../lib/courtApi";
+import {
+    fetchClosedReservations,
+    fetchOpenReservations,
+} from "../lib/courtApi";
 import { supabase } from "../lib/supabase";
 import Button from "./Button";
 import InstagramPlayerCard from "./InstagramPlayerCard";
@@ -55,6 +58,20 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
     queryFn: fetchOpenReservations,
     staleTime: 0, // Always consider data stale for real-time updates
     refetchInterval: 1000 * 3, // Auto-refresh every 3 seconds
+    refetchOnFocus: true,
+    refetchOnMount: true,
+  });
+
+  // Fetch closed reservations (upcoming matches for current user)
+  const {
+    data: closedReservations = [],
+    isLoading: closedLoading,
+    error: closedError,
+  } = useQuery({
+    queryKey: ["closedReservations"],
+    queryFn: fetchClosedReservations,
+    staleTime: 0,
+    refetchInterval: 1000 * 3,
     refetchOnFocus: true,
     refetchOnMount: true,
   });
@@ -151,9 +168,12 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
       author: shortenName(reservation.user?.full_name) || "Korisnik",
       time: timeAgo,
       type: "OTVORENI MEČ",
+      gameMode: reservation.match_type || "friendly",
       duration: `${reservation.duration_minutes} MIN`,
       level: "1.0-2.0",
       date: formattedDate,
+      clubName: reservation.court?.clubs?.name || "Klub",
+      courtName: reservation.court?.name || "Teren",
       location: `${reservation.court?.clubs?.name || "Klub"} · ${reservation.court?.name || "Teren"}`,
       participants,
       price: `${Math.round(reservation.total_price || 0)} RSD`,
@@ -168,6 +188,87 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
   };
 
   const openMatches = openReservations.map(transformReservationToMatch);
+
+  // Transform closed reservations to VersusMatchCard format
+  const transformClosedReservationToVersusMatch = (reservation: any) => {
+    const resDate = new Date(
+      `${reservation.reservation_date}T${reservation.start_time}`,
+    );
+    const dayNames = ["Ned", "Pon", "Uto", "Sre", "Čet", "Pet", "Sub"];
+    const monthNames = [
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "maj",
+      "jun",
+      "jul",
+      "avg",
+      "sep",
+      "okt",
+      "nov",
+      "dec",
+    ];
+
+    const formattedDate = `${dayNames[resDate.getDay()]}, ${resDate.getDate()}. ${monthNames[resDate.getMonth()]}`;
+    const formattedTime = `${reservation.start_time.substring(0, 5)}h`;
+    const startTime = reservation.start_time.substring(0, 5);
+    const endTime = reservation.end_time.substring(0, 5);
+
+    // Helper function to shorten name
+    const shortenName = (fullName: string) => {
+      if (!fullName) return "Korisnik";
+      const parts = fullName.trim().split(" ");
+      if (parts.length === 1) return parts[0];
+      return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+    };
+
+    // Build team arrays
+    const allPlayers = [];
+
+    // Add creator
+    if (reservation.user) {
+      allPlayers.push({
+        name: shortenName(reservation.user.full_name),
+        avatar: reservation.user.avatar_url || null,
+        id: reservation.user_id,
+      });
+    }
+
+    // Add invited players
+    if (reservation.invited_players_profiles) {
+      reservation.invited_players_profiles.forEach((player: any) => {
+        allPlayers.push({
+          name: shortenName(player.full_name),
+          avatar: player.avatar_url || null,
+          id: player.id,
+        });
+      });
+    }
+
+    // Split into two teams (for now, split evenly)
+    const midPoint = Math.ceil(allPlayers.length / 2);
+    const teamA = allPlayers.slice(0, midPoint);
+    const teamB = allPlayers.slice(midPoint);
+
+    return {
+      id: reservation.id,
+      type: "ZATVOREN MEČ",
+      time: formattedTime,
+      date: formattedDate,
+      club: reservation.court?.clubs?.name || "Klub",
+      matchType: reservation.match_type || "friendly",
+      gameMode: reservation.match_type || "friendly",
+      startTime,
+      endTime,
+      teamA,
+      teamB,
+    };
+  };
+
+  const upcomingMatches = closedReservations.map(
+    transformClosedReservationToVersusMatch,
+  );
 
   const handlePlayerPress = (player: any) => {
     if (player.isConnected) {
@@ -262,39 +363,15 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
         )}
       </View>
 
-      {/* Upcoming Matches */}
-      <View style={styles.matchesSection}>
-        <Text style={styles.sectionTitle}>Predstojeći mečevi</Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.matchesScroll}
-        >
-          {UPCOMING_VERSUS_MATCHES.map((match, index) => (
-            <VersusMatchCard
-              key={index}
-              id={match.id}
-              type={match.type}
-              time={match.time}
-              date={match.date}
-              club={match.club}
-              matchType={match.matchType}
-              teamA={match.teamA}
-              teamB={match.teamB}
-              onPress={() => router.push(`/(home)/matchScreen?id=${match.id}`)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
       {/* Open Match */}
       <View style={styles.openMatchSection}>
         <View style={styles.matchHeader}>
           <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
-            OTVORENI MEČEVI
+            Otvoreni mečevi
           </Text>
-          <Text style={styles.seeAllLink}>Vidi sve</Text>
+          <Pressable onPress={() => router.push("/(home)/openMatches")}>
+            <Text style={styles.seeAllLink}>Vidi sve</Text>
+          </Pressable>
         </View>
 
         {reservationsLoading ? (
@@ -321,18 +398,87 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
                   router.push(`/(home)/matchScreen?id=${match.id}`)
                 }
               >
+                {/* Header - Author & Time */}
                 <View style={styles.matchCardHeader}>
-                  <Text style={styles.matchCardAuthor}>
-                    {match.author} · {match.time}
-                  </Text>
-                  <FontAwesome name="ellipsis-h" size={16} color="#8B8B8B" />
+                  <View style={styles.authorContainer}>
+                    {match.creator.avatar_url ? (
+                      <Image
+                        source={{ uri: match.creator.avatar_url }}
+                        style={styles.authorAvatar}
+                      />
+                    ) : (
+                      <View style={styles.authorAvatarPlaceholder}>
+                        <Text style={styles.authorAvatarText}>
+                          {match.author
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .join("")}
+                        </Text>
+                      </View>
+                    )}
+                    <View style={styles.authorInfo}>
+                      <Text style={styles.matchCardAuthor}>{match.author}</Text>
+                      <Text style={styles.authorAction}>kreirao meč</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.matchCardTime}>{match.time}</Text>
                 </View>
 
+                {/* Title & Badges */}
                 <View style={styles.openMatchType}>
                   <Text style={styles.openMatchTitle}>{match.type}</Text>
                 </View>
 
-                <View style={styles.matchMetaRow}>
+                <View style={styles.badgesRow}>
+                  {/* Game Mode Badge */}
+                  <View
+                    style={[
+                      styles.gameModeBadge,
+                      match.gameMode === "competitive" &&
+                        styles.gameModeBadgeCompetitive,
+                      match.gameMode === "friendly" &&
+                        styles.gameModeBadgeFriendly,
+                      match.gameMode === "training" &&
+                        styles.gameModeBadgeTraining,
+                    ]}
+                  >
+                    <FontAwesome
+                      name={
+                        match.gameMode === "competitive"
+                          ? "trophy"
+                          : match.gameMode === "training"
+                            ? "line-chart"
+                            : "smile-o"
+                      }
+                      size={10}
+                      color={
+                        match.gameMode === "competitive"
+                          ? "#F59E0B"
+                          : match.gameMode === "training"
+                            ? "#3B82F6"
+                            : "#10B981"
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.gameModeBadgeText,
+                        match.gameMode === "competitive" &&
+                          styles.gameModeBadgeTextCompetitive,
+                        match.gameMode === "friendly" &&
+                          styles.gameModeBadgeTextFriendly,
+                        match.gameMode === "training" &&
+                          styles.gameModeBadgeTextTraining,
+                      ]}
+                    >
+                      {match.gameMode === "competitive"
+                        ? "Kompetativan"
+                        : match.gameMode === "training"
+                          ? "Trening"
+                          : "Prijateljski"}
+                    </Text>
+                  </View>
+
+                  {/* Duration & Level */}
                   <View style={styles.metaTag}>
                     <Text style={styles.metaTagText}>{match.duration}</Text>
                   </View>
@@ -341,15 +487,39 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
                   </View>
                 </View>
 
-                <Text style={styles.openMatchDate}>{match.date}</Text>
-                <Text style={styles.openMatchLocation}>{match.location}</Text>
+                {/* Date & Location */}
+                <View style={styles.dateLocationSection}>
+                  <FontAwesome
+                    name="calendar"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
+                  <Text style={styles.openMatchDate}>{match.date}</Text>
+                </View>
 
+                <View style={styles.dateLocationSection}>
+                  <FontAwesome
+                    name="map-marker"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
+                  <View style={styles.locationTextContainer}>
+                    <Text style={styles.openMatchClub}>{match.clubName}</Text>
+                    <Text style={styles.openMatchCourt}>{match.courtName}</Text>
+                  </View>
+                </View>
+
+                {/* Participants */}
                 <View style={styles.participantsSection}>
+                  <Text style={styles.participantsLabel}>
+                    Igrači (
+                    {match.participants.filter((p: any) => p.name).length}/4)
+                  </Text>
                   <View style={styles.participantsList}>
-                    {match.participants.map((participant, index) => (
-                      <View key={index} style={styles.participantItem}>
-                        {participant.name === "" ? (
-                          <>
+                    {match.participants.map(
+                      (participant: any, index: number) => (
+                        <View key={index} style={styles.participantItem}>
+                          {participant.name === "" ? (
                             <View
                               style={[
                                 styles.participantAvatar,
@@ -362,68 +532,52 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
                                 color="#3867FF"
                               />
                             </View>
-                            <Text style={styles.participantAction}>
-                              {participant.level}
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <View style={styles.participantAvatar}>
+                          ) : (
+                            <>
                               {participant.avatar ? (
                                 <Image
                                   source={{ uri: participant.avatar }}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: 20,
-                                  }}
+                                  style={styles.participantAvatar}
                                 />
                               ) : (
                                 <View
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: 20,
-                                    backgroundColor: "#3867FF",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                  }}
+                                  style={[
+                                    styles.participantAvatar,
+                                    styles.participantAvatarPlaceholder,
+                                  ]}
                                 >
-                                  <Text
-                                    style={{
-                                      color: "#FFFFFF",
-                                      fontSize: 14,
-                                      fontWeight: "700",
-                                    }}
-                                  >
+                                  <Text style={styles.participantAvatarText}>
                                     {participant.name
                                       .split(" ")
-                                      .map((n) => n[0])
+                                      .map((n: string) => n[0])
                                       .join("")}
                                   </Text>
                                 </View>
                               )}
-                            </View>
-                            <Text style={styles.participantLevel}>
-                              {participant.level}
-                            </Text>
-                            <Text style={styles.participantName}>
-                              {participant.name}
-                            </Text>
-                          </>
-                        )}
-                      </View>
-                    ))}
+                              <View style={styles.participantLevelBadge}>
+                                <Text style={styles.participantLevelText}>
+                                  {participant.level}
+                                </Text>
+                              </View>
+                              <Text style={styles.participantName}>
+                                {participant.name}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      ),
+                    )}
                   </View>
                 </View>
 
+                {/* Action Button */}
                 <Button
                   title={
                     currentUserId &&
                     (match.user_id === currentUserId ||
                       match.invited_players?.includes(currentUserId))
                       ? "Detaljnije"
-                      : `Priključi se meču · ${match.price}`
+                      : `Priključi se · ${match.price}`
                   }
                   onPress={() =>
                     router.push(`/(home)/matchScreen?id=${match.id}`)
@@ -434,6 +588,92 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
             ))}
           </ScrollView>
         )}
+      </View>
+
+      {/* Closed Matches */}
+      <View style={styles.matchesSection}>
+        <Text style={styles.sectionTitle}>Zatvoreni mečevi</Text>
+
+        {closedLoading ? (
+          <View style={{ paddingVertical: 40, alignItems: "center" }}>
+            <ActivityIndicator size="large" color={colors.accent} />
+          </View>
+        ) : closedError ? (
+          <View style={{ paddingVertical: 20, alignItems: "center" }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+              Greška pri učitavanju mečeva
+            </Text>
+          </View>
+        ) : upcomingMatches.length === 0 ? (
+          <View style={{ paddingVertical: 20, alignItems: "center" }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+              Nemate zatvorenih mečeva
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.matchesScroll}
+          >
+            {upcomingMatches.map((match, index) => (
+              <VersusMatchCard
+                key={match.id || index}
+                id={match.id}
+                type={match.type}
+                time={match.time}
+                date={match.date}
+                club={match.club}
+                matchType={match.matchType}
+                gameMode={match.gameMode}
+                startTime={match.startTime}
+                endTime={match.endTime}
+                teamA={match.teamA}
+                teamB={match.teamB}
+                onPress={() =>
+                  router.push(`/(home)/matchScreen?id=${match.id}`)
+                }
+              />
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Finished Matches */}
+      <View style={styles.matchesSection}>
+        <Text style={styles.sectionTitle}>Završeni mečevi</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.matchesScroll}
+        >
+          {FINISHED_MATCHES.map((match, index) => {
+            // Transform score object to string for VersusMatchCard
+            const scoreString = match.score.sets.join(", ");
+            const formattedTime = match.time.replace("h", "").trim();
+
+            return (
+              <VersusMatchCard
+                key={match.id || index}
+                id={match.id}
+                type={match.type}
+                time={formattedTime}
+                date={match.date}
+                club={match.club}
+                matchType={match.matchType}
+                gameMode={match.gameMode}
+                teamA={match.teamA}
+                teamB={match.teamB}
+                score={scoreString}
+                duration={match.duration}
+                isFinished={true}
+                onPress={() =>
+                  router.push(`/(home)/matchScreen?id=${match.id}`)
+                }
+              />
+            );
+          })}
+        </ScrollView>
       </View>
     </>
   );

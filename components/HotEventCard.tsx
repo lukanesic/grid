@@ -25,8 +25,8 @@ export default function HotEventCard({
   type,
   onPress,
 }: HotEventCardProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
+  const { colors, isDark, fonts } = useTheme();
+  const styles = getStyles(colors, fonts);
 
   const getTypeColor = () => {
     switch (type) {
@@ -103,7 +103,7 @@ export default function HotEventCard({
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: any, fonts: any) =>
   StyleSheet.create({
     card: {
       backgroundColor: colors.surface,
@@ -150,18 +150,21 @@ const getStyles = (colors: any) =>
       fontSize: 10,
       fontWeight: "700",
       letterSpacing: 0.5,
+      fontFamily: fonts.bold,
     },
     title: {
       color: colors.text,
       fontSize: 16,
       fontWeight: "700",
       marginBottom: 4,
+      fontFamily: fonts.bold,
     },
     subtitle: {
       color: colors.textSecondary,
       fontSize: 13,
       marginBottom: 12,
       lineHeight: 18,
+      fontFamily: fonts.regular,
     },
     infoRow: {
       marginBottom: 6,
@@ -174,6 +177,7 @@ const getStyles = (colors: any) =>
     infoText: {
       color: colors.textSecondary,
       fontSize: 12,
+      fontFamily: fonts.regular,
     },
     footer: {
       marginTop: 12,
@@ -189,5 +193,6 @@ const getStyles = (colors: any) =>
     participants: {
       fontSize: 13,
       fontWeight: "600",
+      fontFamily: fonts.semiBold,
     },
   });
