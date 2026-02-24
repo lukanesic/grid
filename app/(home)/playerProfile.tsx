@@ -1,4 +1,3 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/lib/supabase";
 import { FollowStatus, Profile } from "@/types/profile";
@@ -6,23 +5,20 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FollowButton, IconButton } from "../../components";
-import {
-    HistoryCard,
-    InfoCard,
-    StatItem,
-} from "../../components/playerProfile";
+import VersusMatchCard from "../../components/VersusMatchCard";
+import { InfoCard, StatItem } from "../../components/playerProfile";
 
 export default function PlayerProfileScreen() {
   const [activeTab, setActiveTab] = useState<"activity" | "info" | "stats">(
@@ -35,7 +31,6 @@ export default function PlayerProfileScreen() {
   const [isBlocked, setIsBlocked] = useState(false);
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { profile: currentUserProfile } = useAuth();
   const { colors, fonts } = useTheme();
 
   // Load profile and follow status from database
@@ -605,51 +600,106 @@ export default function PlayerProfileScreen() {
               <View style={styles.historyList}>
                 {[
                   {
-                    type: "ZAVRSEN MEČ 🎾",
-                    date: "Sri 2. feb · 15:00h",
-                    location: `${profile.location || "Nepoznato"} · Lokalni teren`,
-                    duration: "90 MIN",
-                    level: profile.rating?.toFixed(1) || "0.0",
-                    result: "W 6-4 6-3",
-                    win: true,
-                    teamA: `${profile.full_name?.split(" ")[0] || "User"} / Partner`,
-                    teamB: "Protivnik 1 / Protivnik 2",
+                    id: "1",
+                    type: "ZAVRŠEN MEČ",
+                    time: "15:00",
+                    date: "Sri, 2. feb",
+                    club: profile.location || "Teniski klub",
+                    matchType: "2v2" as const,
+                    teamA: [
+                      {
+                        name: profile.full_name || "User",
+                        avatar: profile.avatar_url || undefined,
+                        level: profile.rating?.toFixed(1) || "0.0",
+                      },
+                      {
+                        name: "Partner",
+                        level: "1.2",
+                      },
+                    ],
+                    teamB: [
+                      {
+                        name: "Protivnik 1",
+                        level: "1.1",
+                      },
+                      {
+                        name: "Protivnik 2",
+                        level: "1.3",
+                      },
+                    ],
+                    score: "6:4, 6:3",
+                    duration: "1h 30min",
+                    isFinished: true,
+                    gameMode: "competitive" as const,
                   },
                   {
-                    type: "ZAVRSEN MEČ 🎾",
-                    date: "Čet 3. feb · 18:00h",
-                    location: `${profile.location || "Nepoznato"} · Teniski klub`,
-                    duration: "60 MIN",
-                    level: profile.rating?.toFixed(1) || "0.0",
-                    result: "L 4-6 7-6",
-                    win: false,
-                    teamA: `${profile.full_name?.split(" ")[0] || "User"} / Partner`,
-                    teamB: "Protivnik 3 / Protivnik 4",
+                    id: "2",
+                    type: "ZAVRŠEN MEČ",
+                    time: "18:00",
+                    date: "Čet, 3. feb",
+                    club: profile.location || "Teniski klub",
+                    matchType: "2v2" as const,
+                    teamA: [
+                      {
+                        name: profile.full_name || "User",
+                        avatar: profile.avatar_url || undefined,
+                        level: profile.rating?.toFixed(1) || "0.0",
+                      },
+                      {
+                        name: "Partner",
+                        level: "1.1",
+                      },
+                    ],
+                    teamB: [
+                      {
+                        name: "Protivnik 3",
+                        level: "1.4",
+                      },
+                      {
+                        name: "Protivnik 4",
+                        level: "1.2",
+                      },
+                    ],
+                    score: "4:6, 7:6, 3:6",
+                    duration: "2h 15min",
+                    isFinished: true,
+                    gameMode: "friendly" as const,
                   },
                   {
-                    type: "ZAVRSEN MEČ 🎾",
-                    date: "Pet 4. feb · 20:00h",
-                    location: `${profile.location || "Nepoznato"} · Sportski centar`,
-                    duration: "120 MIN",
-                    level: profile.rating?.toFixed(1) || "0.0",
-                    result: "W 6-2 6-1",
-                    win: true,
-                    teamA: `${profile.full_name?.split(" ")[0] || "User"} / Partner`,
-                    teamB: "Protivnik 5 / Protivnik 6",
+                    id: "3",
+                    type: "ZAVRŠEN MEČ",
+                    time: "20:00",
+                    date: "Pet, 4. feb",
+                    club: profile.location || "Sportski centar",
+                    matchType: "2v2" as const,
+                    teamA: [
+                      {
+                        name: profile.full_name || "User",
+                        avatar: profile.avatar_url || undefined,
+                        level: profile.rating?.toFixed(1) || "0.0",
+                      },
+                      {
+                        name: "Partner",
+                        level: "1.3",
+                      },
+                    ],
+                    teamB: [
+                      {
+                        name: "Protivnik 5",
+                        level: "1.0",
+                      },
+                      {
+                        name: "Protivnik 6",
+                        level: "1.2",
+                      },
+                    ],
+                    score: "6:2, 6:1",
+                    duration: "1h 45min",
+                    isFinished: true,
+                    gameMode: "competitive" as const,
                   },
-                ].map((match, index) => (
-                  <HistoryCard
-                    key={index}
-                    type={match.type}
-                    date={match.date}
-                    location={match.location}
-                    duration={match.duration}
-                    level={match.level}
-                    result={match.result}
-                    win={match.win}
-                    teamA={match.teamA}
-                    teamB={match.teamB}
-                  />
+                ].map((match) => (
+                  <VersusMatchCard key={match.id} {...match} fullWidth />
                 ))}
               </View>
             ) : null}
@@ -669,7 +719,7 @@ const createStyles = (colors: any, fonts: any) =>
     scrollContent: {
       paddingHorizontal: 20,
       paddingTop: 20,
-      paddingBottom: 100,
+      paddingBottom: 50,
     },
     errorContainer: {
       flex: 1,
@@ -971,7 +1021,7 @@ const createStyles = (colors: any, fonts: any) =>
       fontWeight: "600",
     },
     historyList: {
-      gap: 16,
+      paddingTop: 8,
     },
     activityList: {
       gap: 12,

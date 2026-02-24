@@ -106,6 +106,39 @@
     "edit": "Izmijeni",
     "done": "Gotovo",
     "error": "Greška",
-    "success": "Uspješno"
+    "success": "Uspješno",
+    "today": "Danas"
+  },
+  "calendar": {
+    "days": {
+      "short": {
+        "monday": "Pon",
+        "tuesday": "Uto",
+        "wednesday": "Sri",
+        "thursday": "Čet",
+        "friday": "Pet",
+        "saturday": "Sub",
+        "sunday": "Ned"
+      }
+    },
+    "months": {
+      "january": "Januar",
+      "february": "Februar",
+      "march": "Mart",
+      "april": "April",
+      "may": "Maj",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "August",
+      "september": "Septembar",
+      "october": "Oktobar",
+      "november": "Novembar",
+      "december": "Decembar"
+    }
+  },
+  "community": {
+    "title": "Scores and Schedule",
+    "searchPlaceholder": "Search",
+    "availableSlots": "Slobodni termini"
   }
 }

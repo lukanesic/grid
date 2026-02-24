@@ -1,13 +1,13 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { Court } from "../../../types/court";
+import { Court, CourtWithSlotCount } from "../../../types/court";
 import { AnimatedCheckmark } from "../AnimatedCheckmark";
 import { AnimatedSelectionCard } from "../AnimatedSelectionCard";
 import { ThemeColors } from "../types";
 
 interface CourtSelectionProps {
-  courts: Court[];
+  courts: CourtWithSlotCount[];
   selectedCourt?: Court;
-  onSelectCourt: (court: Court) => void;
+  onSelectCourt: (court: CourtWithSlotCount) => void;
   colors: ThemeColors;
   isDark: boolean;
 }
@@ -57,10 +57,21 @@ export const CourtSelection = ({
         >
           <View style={styles.cardContent}>
             <View style={styles.cardInfo}>
-              <Text style={styles.cardTitle}>{court.name}</Text>
-              <Text style={styles.cardSubtitle}>
-                {getCourtTypeName(court.surface_type)}
-              </Text>
+              <View style={styles.titleRow}>
+                <View style={styles.titleContainer}>
+                  <Text style={styles.cardTitle}>{court.name}</Text>
+                  <Text style={styles.cardSubtitle}>
+                    {getCourtTypeName(court.surface_type)}
+                  </Text>
+                </View>
+                {court.is_available && (
+                  <View style={styles.slotsBadge}>
+                    <Text style={styles.slotsBadgeText}>
+                      {court.available_slots_count}/{court.total_slots_count}
+                    </Text>
+                  </View>
+                )}
+              </View>
               {!court.is_available && (
                 <Text style={styles.unavailableText}>Nedostupan</Text>
               )}
@@ -101,20 +112,43 @@ const getStyles = (colors: ThemeColors, isDark: boolean) =>
     cardInfo: {
       flex: 1,
     },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    titleContainer: {
+      flex: 1,
+    },
     cardTitle: {
       fontSize: 16,
       fontWeight: "600",
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     cardSubtitle: {
       fontSize: 14,
       color: colors.textSecondary,
     },
+    slotsBadge: {
+      backgroundColor: "#007AFF",
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+      minWidth: 55,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    slotsBadgeText: {
+      fontSize: 13,
+      color: "#FFFFFF",
+      fontWeight: "600",
+    },
     unavailableText: {
       fontSize: 12,
       color: "#FF3B30",
       marginTop: 4,
+      fontWeight: "500",
     },
     checkmark: {
       marginLeft: 12,

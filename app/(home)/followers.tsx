@@ -5,14 +5,14 @@ import { FollowerProfile } from "@/types/profile";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Pressable,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -245,7 +245,7 @@ export default function FollowersScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
-        <IconButton icon="arrow-left" onPress={() => router.back()} />
+        <IconButton icon="chevron-left" onPress={() => router.back()} />
         <Text style={styles.headerTitle}>
           {isClub ? "Pratioci kluba" : "Pratioci"}
         </Text>
@@ -291,7 +291,7 @@ const createStyles = (colors: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
+      paddingHorizontal: 10,
       paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,

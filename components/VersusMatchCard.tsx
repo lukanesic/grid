@@ -25,6 +25,7 @@ interface VersusMatchCardProps {
   startTime?: string;
   endTime?: string;
   onPress?: () => void;
+  fullWidth?: boolean;
 }
 
 export default function VersusMatchCard({
@@ -43,9 +44,10 @@ export default function VersusMatchCard({
   startTime,
   endTime,
   onPress,
+  fullWidth = false,
 }: VersusMatchCardProps) {
   const { colors, isDark, fonts } = useTheme();
-  const styles = getStyles(colors, isDark, fonts);
+  const styles = getStyles(colors, isDark, fonts, fullWidth);
 
   // Get game mode label and color
   const getGameModeInfo = () => {
@@ -191,12 +193,18 @@ export default function VersusMatchCard({
   );
 }
 
-const getStyles = (colors: any, isDark: boolean, fonts: any) =>
+const getStyles = (
+  colors: any,
+  isDark: boolean,
+  fonts: any,
+  fullWidth: boolean = false,
+) =>
   StyleSheet.create({
     card: {
-      width: 320,
+      width: fullWidth ? "100%" : 320,
       borderRadius: 20,
-      marginRight: 16,
+      marginRight: fullWidth ? 0 : 16,
+      marginBottom: fullWidth ? 16 : 0,
       overflow: "hidden",
     },
     header: {

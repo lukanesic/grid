@@ -235,6 +235,36 @@ export async function fetchCourtsByClubWithAvailability(
 }
 
 /**
+ * Fetch courts by club with slot count information for a specific date
+ * Returns courts with available_slots_count and total_slots_count
+ */
+export async function fetchCourtsByClubWithSlotCounts(
+  clubId: string,
+  date: string,
+): Promise<import("../types/court").CourtWithSlotCount[]> {
+  const courts = await fetchCourtsByClub(clubId);
+
+  const courtsWithSlotCounts = await Promise.all(
+    courts.map(async (court) => {
+      const timeSlots = await fetchAvailableTimeSlots(court.id, date);
+      const availableCount = timeSlots.filter(
+        (slot) => slot.is_available,
+      ).length;
+      const totalCount = timeSlots.length;
+
+      return {
+        ...court,
+        is_available: availableCount > 0,
+        available_slots_count: availableCount,
+        total_slots_count: totalCount,
+      };
+    }),
+  );
+
+  return courtsWithSlotCounts;
+}
+
+/**
  * Create a new court reservation
  */
 export async function createCourtReservation(

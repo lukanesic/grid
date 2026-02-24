@@ -1,23 +1,58 @@
 import { FontAwesome } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import CourtSearchBar from "../../../components/CourtSearchBar";
+import HorizontalCalendar from "../../../components/HorizontalCalendar";
+import LocationFilterModal from "../../../components/LocationFilterModal";
 import { SUGGESTED_CLUBS, SUGGESTED_FRIENDS } from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { fetchAllClubs } from "../../../lib/clubApi";
+import {
+  fetchAvailableTimeSlots,
+  fetchCourtsByClub,
+} from "../../../lib/courtApi";
+import type { TimeSlot } from "../../../types/court";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const HEADER_HEIGHT = 320;
 
 export default function CommunityScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = getStyles(colors);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toLocaleDateString("en-CA").split("T")[0],
+  );
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Animated scroll position for parallax effect
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Fetch all clubs from the database
+  const {
+    data: clubs = [],
+    isLoading: clubsLoading,
+    error: clubsError,
+  } = useQuery({
+    queryKey: ["allClubs"],
+    queryFn: fetchAllClubs,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   // Use static suggested friends and clubs data
   const suggestedPeople = SUGGESTED_FRIENDS;
@@ -44,198 +79,517 @@ export default function CommunityScreen() {
     // Handle remove logic
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ width: 36 }} />
-        <Text style={styles.headerTitle}>Community</Text>
-        <Pressable>
-          <FontAwesome name="search" size={24} color={colors.text} />
-        </Pressable>
-      </View>
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+  };
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <Text style={styles.heroText}>
-            Povežite se sa igračima i pratite njihove mečeve
-          </Text>
+  // Filter clubs by location and search query
+  const filteredClubs = clubs.filter((club) => {
+    const matchesLocation = selectedLocation
+      ? club.location?.toLowerCase().includes(selectedLocation.toLowerCase())
+      : true;
+    const matchesSearch = searchQuery
+      ? club.name.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+    return matchesLocation && matchesSearch;
+  });
+
+  return (
+    <View style={styles.container}>
+      {/* Scrollable Content */}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+      >
+        {/* Hero Image Placeholder */}
+        {!imageLoaded && <View style={styles.imagePlaceholder} />}
+
+        {/* Hero Image with Parallax */}
+        <Animated.Image
+          source={require("../../../assets/images/community.jpg")}
+          onLoad={() => setImageLoaded(true)}
+          style={[
+            styles.heroImage,
+            {
+              opacity: imageLoaded ? 1 : 0,
+              transform: [
+                {
+                  translateY: scrollY.interpolate({
+                    inputRange: [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+                    outputRange: [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.5],
+                  }),
+                },
+                {
+                  scale: scrollY.interpolate({
+                    inputRange: [-HEADER_HEIGHT, 0],
+                    outputRange: [2, 1],
+                    extrapolate: "clamp",
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+
+        {/* Text over the image - Absolute positioned */}
+        <View style={styles.heroTextContainer}>
+          <Text style={styles.heroText}>Rezerviši termin</Text>
         </View>
 
-        {/* Contacts Section */}
-        <View style={styles.contactsSection}>
-          <View style={styles.contactsLeft}>
-            <View style={styles.contactsIcon}>
-              <FontAwesome name="phone" size={32} color="#FFFFFF" />
+        {/* Horizontal Calendar below the image - Absolute positioned */}
+        <View style={styles.calendarOverlay}>
+          <HorizontalCalendar onDateSelect={handleDateSelect} />
+        </View>
+
+        {/* Content Sheet with rounded corners */}
+        <View style={styles.sheetContent}>
+          {/* Search Bar */}
+          <CourtSearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFilterPress={() => setFilterModalVisible(true)}
+          />
+
+          {/* Loading State */}
+          {clubsLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Učitavanje klubova...</Text>
             </View>
-            <View style={styles.contactsTextContainer}>
-              <Text style={styles.contactsTitle}>Kontakti</Text>
-              <Text style={styles.contactsSubtitle}>
-                Pronađite svoje kontakte
+          )}
+
+          {/* Error State */}
+          {clubsError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Greška pri učitavanju klubova
               </Text>
             </View>
-          </View>
-          <Pressable style={styles.findButton}>
-            <Text style={styles.findButtonText}>Pronađi</Text>
-          </Pressable>
-        </View>
+          )}
 
-        {/* Suggested People & Clubs */}
-        {combinedList.map((item, idx) => {
-          if (item.type === "person") {
-            const person = item.data;
-            const isFollowing = followingIds.includes(person.id.toString());
-            const suggestionTypes = [
-              "People you may know",
-              "Shared with you",
-              "Followed by",
-            ];
-            const suggestionType =
-              suggestionTypes[item.index % suggestionTypes.length];
+          {/* Clubs List with Available Time Slots */}
+          {!clubsLoading &&
+            !clubsError &&
+            filteredClubs.map((club, index) => (
+              <ClubWithAvailability
+                key={club.id}
+                club={club}
+                selectedDate={selectedDate}
+                isLast={index === filteredClubs.length - 1}
+                onPress={() => router.push(`/(home)/clubProfile?id=${club.id}`)}
+              />
+            ))}
 
-            return (
-              <View key={`person-${person.id}`} style={styles.personCard}>
+          {/* Empty state for filtered results */}
+          {!clubsLoading && !clubsError && filteredClubs.length === 0 && (
+            <View style={styles.emptyStateContainer}>
+              <View style={styles.emptyStateIconContainer}>
+                <FontAwesome
+                  name="map-marker"
+                  size={48}
+                  color={colors.textSecondary}
+                />
+              </View>
+              <Text style={styles.emptyStateTitle}>
+                Nema klubova na ovoj lokaciji
+              </Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Pokušajte sa drugom lokacijom ili uklonite filter
+              </Text>
+              {selectedLocation && (
                 <Pressable
-                  onPress={() =>
-                    router.push(`/(home)/playerProfile?id=${person.id}`)
-                  }
+                  style={styles.resetFilterButton}
+                  onPress={() => setSelectedLocation(null)}
                 >
-                  <Image
-                    source={{
-                      uri: person.avatar,
-                    }}
-                    style={styles.personAvatar}
-                  />
+                  <Text style={styles.resetFilterButtonText}>
+                    Ukloni filter
+                  </Text>
                 </Pressable>
-                <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{person.name}</Text>
-                  {suggestionType === "Followed by" ? (
-                    <View style={styles.followedByContainer}>
-                      <Text style={styles.followedByText}>Followed by </Text>
-                      <View style={styles.miniAvatarsContainer}>
-                        <Image
-                          source={{
-                            uri: `https://i.pravatar.cc/150?img=${(item.index + 1) % 50}`,
-                          }}
-                          style={styles.miniAvatar}
-                        />
-                        <Image
-                          source={{
-                            uri: `https://i.pravatar.cc/150?img=${(item.index + 2) % 50}`,
-                          }}
-                          style={[styles.miniAvatar, { marginLeft: -8 }]}
-                        />
-                        <View
-                          style={[
-                            styles.miniAvatar,
-                            styles.miniAvatarMore,
-                            { marginLeft: -8 },
-                          ]}
-                        >
-                          <Text style={styles.miniAvatarMoreText}>+1</Text>
+              )}
+            </View>
+          )}
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Contacts Section */}
+          <View style={styles.contactsSection}>
+            <View style={styles.contactsLeft}>
+              <View style={styles.contactsIcon}>
+                <FontAwesome name="phone" size={32} color="#FFFFFF" />
+              </View>
+              <View style={styles.contactsTextContainer}>
+                <Text style={styles.contactsTitle}>Kontakti</Text>
+                <Text style={styles.contactsSubtitle}>
+                  Pronađite svoje kontakte
+                </Text>
+              </View>
+            </View>
+            <Pressable style={styles.findButton}>
+              <Text style={styles.findButtonText}>Pronađi</Text>
+            </Pressable>
+          </View>
+
+          {/* Suggested People & Clubs */}
+          {combinedList.map((item, idx) => {
+            if (item.type === "person") {
+              const person = item.data as (typeof SUGGESTED_FRIENDS)[0];
+              const isFollowing = followingIds.includes(person.id.toString());
+              const suggestionTypes = [
+                "People you may know",
+                "Shared with you",
+                "Followed by",
+              ];
+              const suggestionType =
+                suggestionTypes[item.index % suggestionTypes.length];
+
+              return (
+                <View key={`person-${person.id}`} style={styles.personCard}>
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/(home)/playerProfile?id=${person.id}`)
+                    }
+                  >
+                    <Image
+                      source={{
+                        uri: person.avatar,
+                      }}
+                      style={styles.personAvatar}
+                    />
+                  </Pressable>
+                  <View style={styles.personInfo}>
+                    <Text style={styles.personName}>{person.name}</Text>
+                    {suggestionType === "Followed by" ? (
+                      <View style={styles.followedByContainer}>
+                        <Text style={styles.followedByText}>Followed by </Text>
+                        <View style={styles.miniAvatarsContainer}>
+                          <Image
+                            source={{
+                              uri: `https://i.pravatar.cc/150?img=${(item.index + 1) % 50}`,
+                            }}
+                            style={styles.miniAvatar}
+                          />
+                          <Image
+                            source={{
+                              uri: `https://i.pravatar.cc/150?img=${(item.index + 2) % 50}`,
+                            }}
+                            style={[styles.miniAvatar, { marginLeft: -8 }]}
+                          />
+                          <View
+                            style={[
+                              styles.miniAvatar,
+                              styles.miniAvatarMore,
+                              { marginLeft: -8 },
+                            ]}
+                          >
+                            <Text style={styles.miniAvatarMoreText}>+1</Text>
+                          </View>
                         </View>
                       </View>
+                    ) : (
+                      <Text style={styles.personSubtitle}>
+                        {suggestionType}
+                      </Text>
+                    )}
+                    <View style={styles.actionsContainer}>
+                      {!isFollowing ? (
+                        <>
+                          <Pressable
+                            style={styles.removeButton}
+                            onPress={() => handleRemove(person.id.toString())}
+                          >
+                            <Text style={styles.removeButtonText}>Remove</Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.followButton}
+                            onPress={() => handleFollow(person.id.toString())}
+                          >
+                            <Text style={styles.followButtonText}>Follow</Text>
+                          </Pressable>
+                        </>
+                      ) : (
+                        <Pressable
+                          style={styles.followingButton}
+                          onPress={() =>
+                            setFollowingIds((prev) =>
+                              prev.filter((id) => id !== person.id.toString()),
+                            )
+                          }
+                        >
+                          <Text style={styles.followingButtonText}>
+                            Following
+                          </Text>
+                        </Pressable>
+                      )}
                     </View>
-                  ) : (
-                    <Text style={styles.personSubtitle}>{suggestionType}</Text>
-                  )}
-                  <View style={styles.actionsContainer}>
-                    {!isFollowing ? (
-                      <>
-                        <Pressable
-                          style={styles.removeButton}
-                          onPress={() => handleRemove(person.id.toString())}
-                        >
-                          <Text style={styles.removeButtonText}>Remove</Text>
-                        </Pressable>
-                        <Pressable
-                          style={styles.followButton}
-                          onPress={() => handleFollow(person.id.toString())}
-                        >
-                          <Text style={styles.followButtonText}>Follow</Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <Pressable
-                        style={styles.followingButton}
-                        onPress={() =>
-                          setFollowingIds((prev) =>
-                            prev.filter((id) => id !== person.id.toString()),
-                          )
-                        }
-                      >
-                        <Text style={styles.followingButtonText}>
-                          Following
-                        </Text>
-                      </Pressable>
-                    )}
                   </View>
                 </View>
-              </View>
-            );
-          } else {
-            // Club
-            const club = item.data;
-            const isFollowing = followingIds.includes(`club-${club.id}`);
+              );
+            } else {
+              // Club
+              const club = item.data as (typeof SUGGESTED_CLUBS)[0];
+              const isFollowing = followingIds.includes(`club-${club.id}`);
 
-            return (
-              <View key={`club-${club.id}`} style={styles.personCard}>
-                <Pressable
-                  onPress={() =>
-                    router.push(`/(home)/clubProfile?id=${club.id}`)
-                  }
-                >
-                  <Image
-                    source={{
-                      uri: club.image,
-                    }}
-                    style={styles.personAvatar}
-                  />
-                </Pressable>
-                <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{club.name}</Text>
-                  <Text style={styles.personSubtitle}>
-                    Sports club · {club.distance}
-                  </Text>
-                  <View style={styles.actionsContainer}>
-                    {!isFollowing ? (
-                      <>
+              return (
+                <View key={`club-${club.id}`} style={styles.personCard}>
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/(home)/clubProfile?id=${club.id}`)
+                    }
+                  >
+                    <Image
+                      source={{
+                        uri: club.image,
+                      }}
+                      style={styles.personAvatar}
+                    />
+                  </Pressable>
+                  <View style={styles.personInfo}>
+                    <Text style={styles.personName}>{club.name}</Text>
+                    <Text style={styles.personSubtitle}>
+                      Sports club · {club.distance}
+                    </Text>
+                    <View style={styles.actionsContainer}>
+                      {!isFollowing ? (
+                        <>
+                          <Pressable
+                            style={styles.removeButton}
+                            onPress={() => handleRemove(`club-${club.id}`)}
+                          >
+                            <Text style={styles.removeButtonText}>Remove</Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.followButton}
+                            onPress={() => handleFollow(`club-${club.id}`)}
+                          >
+                            <Text style={styles.followButtonText}>Follow</Text>
+                          </Pressable>
+                        </>
+                      ) : (
                         <Pressable
-                          style={styles.removeButton}
-                          onPress={() => handleRemove(`club-${club.id}`)}
+                          style={styles.followingButton}
+                          onPress={() =>
+                            setFollowingIds((prev) =>
+                              prev.filter((id) => id !== `club-${club.id}`),
+                            )
+                          }
                         >
-                          <Text style={styles.removeButtonText}>Remove</Text>
+                          <Text style={styles.followingButtonText}>
+                            Following
+                          </Text>
                         </Pressable>
-                        <Pressable
-                          style={styles.followButton}
-                          onPress={() => handleFollow(`club-${club.id}`)}
-                        >
-                          <Text style={styles.followButtonText}>Follow</Text>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <Pressable
-                        style={styles.followingButton}
-                        onPress={() =>
-                          setFollowingIds((prev) =>
-                            prev.filter((id) => id !== `club-${club.id}`),
-                          )
-                        }
-                      >
-                        <Text style={styles.followingButtonText}>
-                          Following
-                        </Text>
-                      </Pressable>
-                    )}
+                      )}
+                    </View>
                   </View>
                 </View>
+              );
+            }
+          })}
+        </View>
+      </Animated.ScrollView>
+
+      {/* Location Filter Modal */}
+      <LocationFilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        selectedLocation={selectedLocation}
+        onSelectLocation={setSelectedLocation}
+        colors={colors}
+        isDark={isDark}
+      />
+    </View>
+  );
+}
+
+// Sub-component to display club with available time slots
+function ClubWithAvailability({
+  club,
+  selectedDate,
+  onPress,
+  isLast,
+}: {
+  club: any;
+  selectedDate: string;
+  onPress: () => void;
+  isLast?: boolean;
+}) {
+  const { colors } = useTheme();
+
+  // Fetch courts for this club
+  const { data: courts = [] } = useQuery({
+    queryKey: ["courts", club.id],
+    queryFn: () => fetchCourtsByClub(club.id),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Fetch available time slots for the first court (or all courts)
+  const { data: timeSlots = [], isLoading: timeSlotsLoading } = useQuery<
+    TimeSlot[]
+  >({
+    queryKey: ["timeSlots", club.id, courts[0]?.id, selectedDate],
+    queryFn: () =>
+      courts[0]
+        ? fetchAvailableTimeSlots(courts[0].id, selectedDate)
+        : Promise.resolve([]),
+    enabled: courts.length > 0,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+
+  // Get available time slots (only show first few)
+  const availableSlots = timeSlots
+    .filter((slot) => slot.is_available)
+    .slice(0, 5)
+    .map((slot) => slot.time_slot);
+
+  return (
+    <View
+      style={{
+        marginBottom: 16,
+        borderBottomWidth: isLast ? 0 : 1,
+        borderBottomColor: colors.border,
+        paddingBottom: isLast ? 0 : 16,
+      }}
+    >
+      <Pressable
+        style={{
+          flexDirection: "row",
+          backgroundColor: colors.cardBackground,
+          borderRadius: 16,
+          padding: 16,
+          marginHorizontal: 20,
+          gap: 16,
+        }}
+        onPress={onPress}
+      >
+        <View style={{ flex: 1, gap: 8 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: "700", color: colors.text }}
+            >
+              {club.name}
+            </Text>
+            {club.courts && (
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: "600",
+                  color: colors.textSecondary,
+                }}
+              >
+                {club.courts} {club.courts === 1 ? "teren" : "terena"}
+              </Text>
+            )}
+          </View>
+
+          {club.address && (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              <FontAwesome
+                name="map-marker"
+                size={14}
+                color={colors.textSecondary}
+              />
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                {club.address}
+              </Text>
+            </View>
+          )}
+
+          {timeSlotsLoading ? (
+            <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+              Učitavanje termina...
+            </Text>
+          ) : availableSlots.length > 0 ? (
+            <View style={{ marginTop: 4 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.textSecondary,
+                  marginBottom: 12,
+                  marginTop: 8,
+                }}
+              >
+                Slobodni termini:
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 6,
+                }}
+              >
+                {availableSlots.map((time, index) => (
+                  <View
+                    key={`${time}-${index}`}
+                    style={{
+                      backgroundColor: "#007AFF",
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: "#FFFFFF",
+                      }}
+                    >
+                      {time}
+                    </Text>
+                  </View>
+                ))}
+                {timeSlots.filter((slot) => slot.is_available).length > 5 && (
+                  <View
+                    style={{
+                      backgroundColor: colors.surface,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: colors.textSecondary,
+                      }}
+                    >
+                      +
+                      {timeSlots.filter((slot) => slot.is_available).length - 5}
+                    </Text>
+                  </View>
+                )}
               </View>
-            );
-          }
-        })}
-      </ScrollView>
-    </SafeAreaView>
+            </View>
+          ) : (
+            <Text
+              style={{
+                fontSize: 12,
+                color: colors.textSecondary,
+                fontStyle: "italic",
+              }}
+            >
+              Nema slobodnih termina
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -267,15 +621,50 @@ const getStyles = (colors: any) =>
     content: {
       flex: 1,
     },
-    heroSection: {
+    divider: {
+      height: 8,
+      backgroundColor: colors.surface,
+      marginVertical: 24,
+    },
+    heroImage: {
+      width: SCREEN_WIDTH,
+      height: HEADER_HEIGHT,
+      resizeMode: "cover",
+    },
+    imagePlaceholder: {
+      position: "absolute",
+      top: 0,
+      width: SCREEN_WIDTH,
+      height: HEADER_HEIGHT,
+      backgroundColor: "#808080",
+      zIndex: 0,
+    },
+    heroTextContainer: {
+      position: "absolute",
+      top: HEADER_HEIGHT - 210,
+      left: 0,
+      right: 0,
       paddingHorizontal: 20,
-      paddingVertical: 40,
+      zIndex: 5,
     },
     heroText: {
       fontSize: 28,
       fontWeight: "700",
-      color: colors.text,
+      color: "#FFFFFF",
       lineHeight: 34,
+    },
+    calendarOverlay: {
+      position: "absolute",
+      top: HEADER_HEIGHT - 152,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 0,
+      zIndex: 10,
+    },
+    sheetContent: {
+      backgroundColor: colors.background,
+      marginTop: 0,
+      paddingTop: 20,
     },
     contactsSection: {
       flexDirection: "row",
@@ -420,5 +809,64 @@ const getStyles = (colors: any) =>
       fontSize: 15,
       fontWeight: "600",
       color: colors.textSecondary,
+    },
+    loadingContainer: {
+      padding: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    loadingText: {
+      marginTop: 12,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    errorContainer: {
+      padding: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    errorText: {
+      fontSize: 14,
+      color: colors.error || "#FF3B30",
+      textAlign: "center",
+    },
+    emptyStateContainer: {
+      padding: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+    },
+    emptyStateIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 8,
+    },
+    emptyStateTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: colors.text,
+      textAlign: "center",
+    },
+    emptyStateSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    resetFilterButton: {
+      marginTop: 8,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      backgroundColor: "#007AFF",
+      borderRadius: 24,
+    },
+    resetFilterButtonText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: "#FFFFFF",
     },
   });

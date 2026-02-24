@@ -6,14 +6,14 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -316,103 +316,6 @@ export default function ProfileInfoScreen() {
           </Pressable>
         </View>
 
-        {/* Game Stats */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Igračke informacije</Text>
-
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <FontAwesome name="trophy" size={24} color={accentColor} />
-              <Text style={styles.statValue}>
-                {profile?.matches_played || 0}
-              </Text>
-              <Text style={styles.statLabel}>Mečeva</Text>
-            </View>
-            <View style={styles.statCard}>
-              <FontAwesome name="star" size={24} color={accentColor} />
-              <Text style={styles.statValue}>
-                {profile?.rating?.toFixed(1) || "0.0"}
-              </Text>
-              <Text style={styles.statLabel}>Rejting</Text>
-            </View>
-            <View style={styles.statCard}>
-              <FontAwesome name="percent" size={24} color={accentColor} />
-              <Text style={styles.statValue}>
-                {profile?.win_rate?.toFixed(0) || "0"}%
-              </Text>
-              <Text style={styles.statLabel}>Win rate</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Subscription Status */}
-        <Pressable
-          style={styles.subscriptionCard}
-          onPress={() => router.push("/_menu/upgrade")}
-        >
-          <View style={styles.subscriptionHeader}>
-            <View style={styles.subscriptionInfo}>
-              <Text style={styles.subscriptionTitle}>Plan pretplate</Text>
-              <View style={styles.subscriptionBadgeRow}>
-                <View
-                  style={[
-                    styles.planBadge,
-                    {
-                      backgroundColor:
-                        profile?.subscription_plan === "premium"
-                          ? "#B8FF00"
-                          : "#8B8B8B",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.planBadgeText,
-                      {
-                        color:
-                          profile?.subscription_plan === "premium"
-                            ? "#0B0B0B"
-                            : "#F2F2F2",
-                      },
-                    ]}
-                  >
-                    {profile?.subscription_plan === "premium"
-                      ? "PREMIUM"
-                      : "FREE"}
-                  </Text>
-                </View>
-                {profile?.trial_ends_at && (
-                  <Text style={styles.trialText}>
-                    Probni period do{" "}
-                    {new Date(profile.trial_ends_at).toLocaleDateString(
-                      "sr-RS",
-                    )}
-                  </Text>
-                )}
-              </View>
-            </View>
-            <FontAwesome
-              name="chevron-right"
-              size={16}
-              color={colors.textSecondary}
-            />
-          </View>
-          {profile?.subscription_plan === "premium" &&
-            profile.subscription_expires_at && (
-              <Text style={styles.expiresText}>
-                Važi do:{" "}
-                {new Date(profile.subscription_expires_at).toLocaleDateString(
-                  "sr-RS",
-                )}
-              </Text>
-            )}
-          {profile?.subscription_plan === "free" && (
-            <Text style={styles.upgradePromptText}>
-              Klikni da nadogradiš na Premium
-            </Text>
-          )}
-        </Pressable>
-
         {/* Danger Zone */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Zona opasnosti</Text>
@@ -562,55 +465,6 @@ const getStyles = (colors: any, isDark: boolean) =>
       color: colors.textSecondary,
       fontSize: 13,
       marginTop: 4,
-    },
-    subscriptionCard: {
-      backgroundColor: isDark ? "#121418" : colors.surface,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 24,
-    },
-    subscriptionHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    subscriptionInfo: {
-      flex: 1,
-    },
-    subscriptionTitle: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: "700",
-      marginBottom: 8,
-    },
-    subscriptionBadgeRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    planBadge: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-    },
-    planBadgeText: {
-      fontSize: 11,
-      fontWeight: "700",
-    },
-    trialText: {
-      color: colors.textSecondary,
-      fontSize: 12,
-    },
-    expiresText: {
-      color: colors.textSecondary,
-      fontSize: 13,
-      marginTop: 12,
-    },
-    upgradePromptText: {
-      color: isDark ? "#B8FF00" : colors.blue,
-      fontSize: 13,
-      marginTop: 12,
-      fontWeight: "600",
     },
     statsGrid: {
       flexDirection: "row",

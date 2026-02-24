@@ -67,6 +67,11 @@ export interface CourtWithAvailability extends Court {
   available_slots?: TimeSlot[];
 }
 
+export interface CourtWithSlotCount extends Court {
+  available_slots_count: number;
+  total_slots_count: number;
+}
+
 export interface CreateReservationPayload {
   court_id: string;
   reservation_date: string; // YYYY-MM-DD

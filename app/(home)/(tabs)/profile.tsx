@@ -14,10 +14,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Badge, IconButton } from "../../../components";
-import {
-    PROFILE_INFO_STATS,
-    PROFILE_POSTS
-} from "../../../constants/data";
+import VersusMatchCard from "../../../components/VersusMatchCard";
+import { PROFILE_INFO_STATS, PROFILE_POSTS } from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function ProfileScreen() {
@@ -515,74 +513,106 @@ export default function ProfileScreen() {
           <View style={styles.historyList}>
             {[
               {
-                type: "ZAVRSEN MEC 🎾",
-                date: "Sri 2. feb · 15:00h",
-                location: "Polideportivo de la Concepción · 6km",
-                duration: "90 MIN",
-                level: "1.1",
-                result: "W 6-4 6-3",
-                win: true,
-                teamA: "Alejandra / Marija",
-                teamB: "JR. Sara / Pedro",
+                id: "1",
+                type: "ZAVRŠEN MEČ",
+                time: "15:00",
+                date: "Sri, 2. feb",
+                club: "Polideportivo de la Concepción",
+                matchType: "2v2" as const,
+                teamA: [
+                  {
+                    name: profile?.full_name || "Alejandra",
+                    avatar: profile?.avatar_url,
+                    level: "1.1",
+                  },
+                  {
+                    name: "Marija",
+                    level: "1.2",
+                  },
+                ],
+                teamB: [
+                  {
+                    name: "JR. Sara",
+                    level: "1.0",
+                  },
+                  {
+                    name: "Pedro",
+                    level: "1.3",
+                  },
+                ],
+                score: "6:4, 6:3",
+                duration: "1h 30min",
+                isFinished: true,
+                gameMode: "competitive" as const,
               },
               {
-                type: "ZAVRSEN MEC 🏐",
-                date: "Čet 3. feb · 18:00h",
-                location: "Club de Tenis La Moraleja · 3km",
-                duration: "60 MIN",
-                level: "2.0",
-                result: "L 4-6 7-6",
-                win: false,
-                teamA: "Alejandra / Emma",
-                teamB: "Carlos / Luis",
+                id: "2",
+                type: "ZAVRŠEN MEČ",
+                time: "18:00",
+                date: "Čet, 3. feb",
+                club: "Club de Tenis La Moraleja",
+                matchType: "2v2" as const,
+                teamA: [
+                  {
+                    name: profile?.full_name || "Alejandra",
+                    avatar: profile?.avatar_url,
+                    level: "2.0",
+                  },
+                  {
+                    name: "Emma",
+                    level: "1.8",
+                  },
+                ],
+                teamB: [
+                  {
+                    name: "Carlos",
+                    level: "2.1",
+                  },
+                  {
+                    name: "Luis",
+                    level: "1.9",
+                  },
+                ],
+                score: "4:6, 7:6, 3:6",
+                duration: "2h 15min",
+                isFinished: true,
+                gameMode: "friendly" as const,
               },
               {
-                type: "ZAVRSEN MEC 🎾",
-                date: "Pet 4. feb · 20:00h",
-                location: "Pádel Indoor Centro · 8km",
-                duration: "120 MIN",
-                level: "1.5",
-                result: "W 6-2 6-1",
-                win: true,
-                teamA: "Alejandra / Ana",
-                teamB: "Sofia / Marta",
+                id: "3",
+                type: "ZAVRŠEN MEČ",
+                time: "20:00",
+                date: "Pet, 4. feb",
+                club: "Pádel Indoor Centro",
+                matchType: "2v2" as const,
+                teamA: [
+                  {
+                    name: profile?.full_name || "Alejandra",
+                    avatar: profile?.avatar_url,
+                    level: "1.5",
+                  },
+                  {
+                    name: "Ana",
+                    level: "1.4",
+                  },
+                ],
+                teamB: [
+                  {
+                    name: "Sofia",
+                    level: "1.6",
+                  },
+                  {
+                    name: "Marta",
+                    level: "1.3",
+                  },
+                ],
+                score: "6:2, 6:1",
+                duration: "1h 45min",
+                isFinished: true,
+                gameMode: "competitive" as const,
               },
-            ].map((match, index) => (
-              <View key={index} style={styles.historyCard}>
-                <View style={styles.historyHeader}>
-                  <Text style={styles.historyType}>{match.type}</Text>
-                  <Text style={styles.historyDate}>{match.date}</Text>
-                </View>
-                <Text style={styles.historyLocation}>{match.location}</Text>
-
-                <View style={styles.historyMetaRow}>
-                  <View style={styles.historyTag}>
-                    <Text style={styles.historyTagText}>{match.duration}</Text>
-                  </View>
-                  <View style={styles.historyTag}>
-                    <Text style={styles.historyTagText}>{match.level}</Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.resultTag,
-                      match.win ? styles.resultWin : styles.resultLoss,
-                    ]}
-                  >
-                    <Text style={styles.resultTagText}>{match.result}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.historyTeams}>
-                  <View style={styles.teamRow}>
-                    <View style={styles.teamDot} />
-                    <Text style={styles.teamName}>{match.teamA}</Text>
-                  </View>
-                  <View style={styles.teamRow}>
-                    <View style={styles.teamDotMuted} />
-                    <Text style={styles.teamNameMuted}>{match.teamB}</Text>
-                  </View>
-                </View>
-              </View>
+            ].map((match) => (
+              <VersusMatchCard key={match.id} {...match} fullWidth />
             ))}
           </View>
         ) : (
@@ -606,7 +636,7 @@ const getStyles = (colors: any, isDark: boolean, fonts: any) =>
     scrollContent: {
       paddingHorizontal: 20,
       paddingTop: 16,
-      paddingBottom: 100,
+      paddingBottom: 50,
     },
     header: {
       flexDirection: "row",
@@ -1001,7 +1031,7 @@ const getStyles = (colors: any, isDark: boolean, fonts: any) =>
       fontWeight: "600",
     },
     historyList: {
-      gap: 16,
+      paddingTop: 8,
     },
     historyCard: {
       backgroundColor: isDark ? "#121418" : colors.surface,

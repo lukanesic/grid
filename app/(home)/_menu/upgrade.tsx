@@ -2,12 +2,12 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PREMIUM_FEATURES, UPGRADE_PLANS } from "../../../constants/data";
@@ -123,7 +123,7 @@ export default function UpgradeScreen() {
 
         {/* Features */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Šta dobijaš</Text>
+          <Text style={styles.sectionTitle}>Šta dobijaš (uskoro)</Text>
           <View style={styles.featuresGrid}>
             {PREMIUM_FEATURES.map((feature, index) => (
               <View key={index} style={styles.featureCard}>

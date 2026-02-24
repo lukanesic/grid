@@ -3,17 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
-    Animated,
-    Dimensions,
-    Image,
-    Linking,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Image,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { StatItem } from "../../components/playerProfile";
 import VersusMatchCard from "../../components/VersusMatchCard";
@@ -21,10 +21,10 @@ import { FINISHED_MATCHES } from "../../constants/data";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-    fetchClubById,
-    fetchClubFollowStatus,
-    followClub,
-    unfollowClub,
+  fetchClubById,
+  fetchClubFollowStatus,
+  followClub,
+  unfollowClub,
 } from "../../lib/clubApi";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -137,10 +137,13 @@ export default function ClubProfileScreen() {
     <View style={styles.container}>
       {/* Sticky Header with Animation */}
       <Animated.View style={[styles.stickyHeader, { opacity: headerOpacity }]}>
+        <Pressable
+          style={styles.stickyBackButton}
+          onPress={() => router.back()}
+        >
+          <FontAwesome name="chevron-left" size={20} color={colors.text} />
+        </Pressable>
         <View style={styles.stickyHeaderContent}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <FontAwesome name="chevron-left" size={20} color={colors.text} />
-          </Pressable>
           <Text style={styles.stickyHeaderTitle} numberOfLines={1}>
             {club?.name}
           </Text>
@@ -513,15 +516,22 @@ const getStyles = (colors: any, isDark: boolean) =>
       paddingBottom: 12,
       paddingHorizontal: 24,
       zIndex: 20,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    stickyBackButton: {
+      paddingVertical: 8,
+      marginRight: 12,
     },
     stickyHeaderContent: {
+      flex: 1,
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
     },
     stickyHeaderTitle: {
       flex: 1,
-      marginHorizontal: 16,
+      marginRight: 16,
       fontSize: 18,
       fontWeight: "600",
       color: colors.text,

@@ -1,6 +1,6 @@
 import { EvilIcons, FontAwesome } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -26,27 +26,32 @@ import {
     TimeSelection,
 } from "../../components/createMatch";
 import { useTheme } from "../../contexts/ThemeContext";
-import { fetchTopClubs } from "../../lib/clubApi";
+import { fetchClubById, fetchTopClubs } from "../../lib/clubApi";
 import {
     createCourtReservation,
     fetchAvailableTimeSlots,
-    fetchCourtsByClubWithAvailability,
+    fetchCourtsByClubWithSlotCounts,
 } from "../../lib/courtApi";
 import { fetchSuggestedPlayers } from "../../lib/profileApi";
 import type { TimeSlot } from "../../types/court";
 
 export default function CreateMatchNewScreen() {
   const router = useRouter();
+  const { clubId, clubName } = useLocalSearchParams();
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors, isDark);
   const queryClient = useQueryClient();
 
-  const [currentStep, setCurrentStep] = useState<Step>("club");
+  const [currentStep, setCurrentStep] = useState<Step>(
+    clubId ? "date" : "club",
+  );
   const [selectedData, setSelectedData] = useState<SelectedData>({});
   const [selectionFadeAnim] = useState(new Animated.Value(0));
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const progressWidthAnim = useRef(new Animated.Value((1 / 8) * 100)).current;
+  const progressWidthAnim = useRef(
+    new Animated.Value(((clubId ? 2 : 1) / 8) * 100),
+  ).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -69,7 +74,7 @@ export default function CreateMatchNewScreen() {
 
   // Animate progress bar and content when step changes
   useEffect(() => {
-    const steps: Step[] = [
+    const allSteps: Step[] = [
       "club",
       "date",
       "court",
@@ -80,9 +85,13 @@ export default function CreateMatchNewScreen() {
       "payment",
       "summary",
     ];
+    // If clubId was provided, exclude club step from progress calculation
+    const steps = clubId ? allSteps.filter((s) => s !== "club") : allSteps;
     const stepNumber = steps.indexOf(currentStep) + 1;
-    // Progress bar uses 8 steps (excluding summary)
-    const targetProgress = (Math.min(stepNumber, 8) / 8) * 100;
+    // Progress bar uses 8 steps (excluding summary, and club if pre-selected)
+    const totalSteps = clubId ? 7 : 8;
+    const targetProgress =
+      (Math.min(stepNumber, totalSteps) / totalSteps) * 100;
 
     // Animate progress bar
     Animated.timing(progressWidthAnim, {
@@ -132,6 +141,26 @@ export default function CreateMatchNewScreen() {
     queryFn: () => fetchTopClubs(20),
   });
 
+  // Fetch the preselected club if clubId is provided
+  const { data: preselectedClub, isLoading: preselectedClubLoading } = useQuery(
+    {
+      queryKey: ["club", clubId],
+      queryFn: () => fetchClubById(clubId as string),
+      enabled: !!clubId,
+      staleTime: 1000 * 60 * 5,
+    },
+  );
+
+  // Auto-select club if clubId was provided
+  useEffect(() => {
+    if (preselectedClub && !selectedData.club) {
+      setSelectedData((prev) => ({
+        ...prev,
+        club: preselectedClub,
+      }));
+    }
+  }, [preselectedClub, selectedData.club]);
+
   // Fetch suggested players for opponent selection
   const { data: players = [] } = useQuery({
     queryKey: ["suggestedPlayers"],
@@ -142,7 +171,7 @@ export default function CreateMatchNewScreen() {
   const { data: courts = [], isLoading: courtsLoading } = useQuery({
     queryKey: ["courts", selectedData.club?.id, formattedDate],
     queryFn: () =>
-      fetchCourtsByClubWithAvailability(selectedData.club!.id, formattedDate),
+      fetchCourtsByClubWithSlotCounts(selectedData.club!.id, formattedDate),
     enabled: !!selectedData.club?.id && !!formattedDate,
     staleTime: 1000 * 60 * 2, // Shorter cache for availability checks
   });
@@ -167,6 +196,13 @@ export default function CreateMatchNewScreen() {
   const handleBack = () => {
     if (currentStep === "club") {
       router.back();
+    } else if (currentStep === "date") {
+      // If clubId was provided, go back to previous screen instead of club selection
+      if (clubId) {
+        router.back();
+      } else {
+        setCurrentStep("club");
+      }
     } else if (currentStep === "summary") {
       setCurrentStep("payment");
     } else if (currentStep === "payment") {
@@ -181,8 +217,6 @@ export default function CreateMatchNewScreen() {
       setCurrentStep("court");
     } else if (currentStep === "court") {
       setCurrentStep("date");
-    } else if (currentStep === "date") {
-      setCurrentStep("club");
     }
   };
 
@@ -263,7 +297,7 @@ export default function CreateMatchNewScreen() {
   };
 
   const getStepNumber = () => {
-    const steps: Step[] = [
+    const allSteps: Step[] = [
       "club",
       "date",
       "court",
@@ -272,6 +306,8 @@ export default function CreateMatchNewScreen() {
       "opponent",
       "payment",
     ];
+    // If clubId was provided, exclude club step
+    const steps = clubId ? allSteps.filter((s) => s !== "club") : allSteps;
     return steps.indexOf(currentStep) + 1;
   };
 
