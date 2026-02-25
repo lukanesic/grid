@@ -35,6 +35,24 @@ export async function fetchCourtsByClub(clubId: string): Promise<Court[]> {
 }
 
 /**
+ * Fetch all courts for a specific club (including unavailable ones)
+ */
+export async function fetchAllCourtsByClub(clubId: string): Promise<Court[]> {
+  const { data, error } = await supabase
+    .from("courts")
+    .select("*")
+    .eq("club_id", clubId)
+    .order("court_number", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching all courts:", error);
+    throw new Error(error.message);
+  }
+
+  return data || [];
+}
+
+/**
  * Fetch a single court by ID
  */
 export async function fetchCourtById(courtId: string): Promise<Court | null> {

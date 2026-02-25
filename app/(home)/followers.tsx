@@ -292,7 +292,7 @@ const createStyles = (colors: any) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 10,
-      paddingVertical: 16,
+      paddingVertical: 10,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },

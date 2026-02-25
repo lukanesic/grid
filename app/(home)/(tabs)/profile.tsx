@@ -13,7 +13,7 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Badge, IconButton } from "../../../components";
+import { AnimatedTab, Badge, IconButton } from "../../../components";
 import VersusMatchCard from "../../../components/VersusMatchCard";
 import { PROFILE_INFO_STATS, PROFILE_POSTS } from "../../../constants/data";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -235,42 +235,30 @@ export default function ProfileScreen() {
 
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-          <Pressable
-            style={[styles.tab, activeTab === "activity" && styles.tabActive]}
+          <AnimatedTab
+            label="Aktivnost"
+            isActive={activeTab === "activity"}
             onPress={() => setActiveTab("activity")}
-          >
-            <Text
-              style={
-                activeTab === "activity" ? styles.tabActiveText : styles.tabText
-              }
-            >
-              Aktivnost
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, activeTab === "info" && styles.tabActive]}
+            colors={colors}
+            fonts={fonts}
+            isDark={isDark}
+          />
+          <AnimatedTab
+            label="Lični podaci"
+            isActive={activeTab === "info"}
             onPress={() => setActiveTab("info")}
-          >
-            <Text
-              style={
-                activeTab === "info" ? styles.tabActiveText : styles.tabText
-              }
-            >
-              Lični podaci
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, activeTab === "stats" && styles.tabActive]}
+            colors={colors}
+            fonts={fonts}
+            isDark={isDark}
+          />
+          <AnimatedTab
+            label="Istorija mečeva"
+            isActive={activeTab === "stats"}
             onPress={() => setActiveTab("stats")}
-          >
-            <Text
-              style={
-                activeTab === "stats" ? styles.tabActiveText : styles.tabText
-              }
-            >
-              Istorija mečeva
-            </Text>
-          </Pressable>
+            colors={colors}
+            fonts={fonts}
+            isDark={isDark}
+          />
         </View>
 
         {activeTab === "activity" ? (

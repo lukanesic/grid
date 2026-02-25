@@ -71,67 +71,66 @@ export default function LocationFilterModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={{ flex: 1, justifyContent: "flex-end" }}
-          onPress={(e) => e.stopPropagation()}
+      <View style={styles.backdrop}>
+        {/* Backdrop area that closes modal */}
+        <Pressable style={styles.backdropTouchable} onPress={onClose} />
+
+        {/* Modal content that doesn't close */}
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [
+                {
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [300, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
         >
-          <Animated.View
-            style={[
-              styles.modalContent,
-              {
-                transform: [
-                  {
-                    translateY: slideAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [300, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
+          <View style={styles.handle} />
+          <Text style={styles.title}>Izaberi lokaciju</Text>
+
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
           >
-            <View style={styles.handle} />
-            <Text style={styles.title}>Izaberi lokaciju</Text>
+            {LOCATIONS.map((location) => {
+              const isSelected =
+                location.id === "all"
+                  ? selectedLocation === null
+                  : selectedLocation === location.id;
 
-            <ScrollView
-              style={styles.scrollView}
-              showsVerticalScrollIndicator={false}
-              bounces={true}
-            >
-              {LOCATIONS.map((location) => {
-                const isSelected =
-                  location.id === "all"
-                    ? selectedLocation === null
-                    : selectedLocation === location.id;
-
-                return (
-                  <Pressable
-                    key={location.id}
+              return (
+                <Pressable
+                  key={location.id}
+                  style={[
+                    styles.locationItem,
+                    isSelected && styles.selectedItem,
+                  ]}
+                  onPress={() => handleSelectLocation(location.id)}
+                >
+                  <Text
                     style={[
-                      styles.locationItem,
-                      isSelected && styles.selectedItem,
+                      styles.locationText,
+                      isSelected && styles.selectedText,
                     ]}
-                    onPress={() => handleSelectLocation(location.id)}
                   >
-                    <Text
-                      style={[
-                        styles.locationText,
-                        isSelected && styles.selectedText,
-                      ]}
-                    >
-                      {location.label}
-                    </Text>
-                    {isSelected && (
-                      <FontAwesome name="check" size={18} color={accentColor} />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </Animated.View>
-        </Pressable>
-      </Pressable>
+                    {location.label}
+                  </Text>
+                  {isSelected && (
+                    <FontAwesome name="check" size={18} color={accentColor} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
@@ -142,6 +141,13 @@ const createStyles = (colors: any, accentColor: string, isDark: boolean) =>
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "flex-end",
+    },
+    backdropTouchable: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
     },
     modalContent: {
       backgroundColor: colors.surface,

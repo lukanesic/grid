@@ -3,20 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
-import { FINISHED_MATCHES, SUGGESTED_FRIENDS } from "../constants/data";
+import { FINISHED_MATCHES } from "../constants/data";
 import { useTheme } from "../contexts/ThemeContext";
 import { fetchTopClubs } from "../lib/clubApi";
 import {
-    fetchClosedReservations,
-    fetchOpenReservations,
+  fetchClosedReservations,
+  fetchOpenReservations,
 } from "../lib/courtApi";
+import { fetchUserFollowing } from "../lib/profileApi";
 import { supabase } from "../lib/supabase";
 import Button from "./Button";
 import InstagramPlayerCard from "./InstagramPlayerCard";
@@ -43,10 +44,18 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
     getCurrentUser();
   }, []);
 
-  // Use static data for following players
-  const suggestedPlayers = SUGGESTED_FRIENDS;
-  const playersLoading = false;
-  const playersError = null;
+  // Fetch users and clubs that the current user is following
+  const {
+    data: userFollowing = [],
+    isLoading: playersLoading,
+    error: playersError,
+  } = useQuery({
+    queryKey: ["userFollowing"],
+    queryFn: () => fetchUserFollowing(),
+    staleTime: 0, // Always fetch fresh data
+    refetchOnFocus: true,
+    refetchOnMount: true,
+  });
 
   // Fetch open reservations (matches looking for players)
   const {
@@ -270,13 +279,13 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
     transformClosedReservationToVersusMatch,
   );
 
-  const handlePlayerPress = (player: any) => {
-    if (player.isConnected) {
-      // If connected/following, go to create match screen
-      router.push("/(home)/createMatchNew");
+  const handlePlayerPress = (item: any) => {
+    if (item.type === "club") {
+      // Navigate to club profile
+      router.push(`/(home)/clubProfile?id=${item.id}`);
     } else {
-      // If not connected, go to player profile
-      router.push(`/(home)/playerProfile?id=${player.id}`);
+      // Navigate to player profile
+      router.push(`/(home)/playerProfile?id=${item.id}`);
     }
   };
 
@@ -299,7 +308,7 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
               Greška pri učitavanju praćenja
             </Text>
           </View>
-        ) : suggestedPlayers.length === 0 ? (
+        ) : userFollowing.length === 0 ? (
           <View style={{ paddingVertical: 20, alignItems: "center" }}>
             <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
               Nema praćenja
@@ -311,16 +320,16 @@ export default function SveTabContent({ styles }: SveTabContentProps) {
             showsHorizontalScrollIndicator={false}
             style={styles.playersScroll}
           >
-            {suggestedPlayers.map((player, index) => (
+            {userFollowing.map((item, index) => (
               <InstagramPlayerCard
-                key={player.id}
-                userId={player.id.toString()}
-                name={player.name}
-                avatar={player.avatar}
-                isFollowing={player.isConnected}
-                onPress={() => handlePlayerPress(player)}
+                key={item.id}
+                userId={item.id.toString()}
+                name={item.name}
+                avatar={item.avatar}
+                isFollowing={item.isConnected}
+                onPress={() => handlePlayerPress(item)}
                 style={[
-                  index === suggestedPlayers.length - 1 && { marginRight: 20 },
+                  index === userFollowing.length - 1 && { marginRight: 20 },
                 ]}
               />
             ))}

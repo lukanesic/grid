@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,11 +9,17 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { colors, fonts } = useTheme();
   const styles = getStyles(colors, fonts);
+  const queryClient = useQueryClient();
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Simulate refresh - in a real app, this would reload data
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Refetch all relevant data
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ["userFollowing"] }),
+      queryClient.refetchQueries({ queryKey: ["openReservations"] }),
+      queryClient.refetchQueries({ queryKey: ["closedReservations"] }),
+      queryClient.refetchQueries({ queryKey: ["topClubs"] }),
+    ]);
     setRefreshing(false);
   };
 

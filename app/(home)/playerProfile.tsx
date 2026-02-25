@@ -3,11 +3,13 @@ import { supabase } from "@/lib/supabase";
 import { FollowStatus, Profile } from "@/types/profile";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -16,7 +18,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FollowButton, IconButton } from "../../components";
+import { AnimatedTab, FollowButton } from "../../components";
 import VersusMatchCard from "../../components/VersusMatchCard";
 import { InfoCard, StatItem } from "../../components/playerProfile";
 
@@ -29,9 +31,28 @@ export default function PlayerProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { colors, fonts } = useTheme();
+  const { colors, fonts, isDark } = useTheme();
+  const slideAnim = useRef(new Animated.Value(300)).current;
+
+  // Animate modal slide
+  useEffect(() => {
+    if (showBlockModal) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showBlockModal]);
 
   // Load profile and follow status from database
   useEffect(() => {
@@ -217,53 +238,23 @@ export default function PlayerProfileScreen() {
   };
 
   const handleOptionsPress = () => {
-    const blockOption = isBlocked
-      ? {
-          text: "Odblokiraj korisnika",
-          onPress: () => {
-            Alert.alert(
-              "Odblokiraj korisnika",
-              "Da li ste sigurni da želite da odblokirate " +
-                (profile?.full_name || "ovog korisnika") +
-                "?",
-              [
-                { text: "Otkaži", style: "cancel" },
-                {
-                  text: "Odblokiraj",
-                  onPress: handleUnblockUser,
-                },
-              ],
-            );
+    if (isBlocked) {
+      Alert.alert(
+        "Odblokiraj korisnika",
+        "Da li ste sigurni da želite da odblokirate " +
+          (profile?.full_name || "ovog korisnika") +
+          "?",
+        [
+          { text: "Otkaži", style: "cancel" },
+          {
+            text: "Odblokiraj",
+            onPress: handleUnblockUser,
           },
-        }
-      : {
-          text: "Blokiraj korisnika",
-          onPress: () => {
-            Alert.alert(
-              "Blokiraj korisnika",
-              "Da li ste sigurni da želite da blokirate " +
-                (profile?.full_name || "ovog korisnika") +
-                "?",
-              [
-                { text: "Otkaži", style: "cancel" },
-                {
-                  text: "Blokiraj",
-                  style: "destructive",
-                  onPress: handleBlockUser,
-                },
-              ],
-            );
-          },
-          style: "destructive" as const,
-        };
-
-    Alert.alert("Opcije", "Izaberite akciju", [
-      blockOption,
-      {
-        text: "Otkaži",
-        style: "cancel",
-      },
-    ]);
+        ],
+      );
+    } else {
+      setShowBlockModal(true);
+    }
   };
 
   const styles = createStyles(colors, fonts);
@@ -311,9 +302,13 @@ export default function PlayerProfileScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <IconButton icon="chevron-left" onPress={() => router.back()} />
+          <Pressable onPress={() => router.back()}>
+            <FontAwesome name="chevron-left" size={20} color={colors.text} />
+          </Pressable>
           <Text style={styles.headerTitle}>Profil igrača</Text>
-          <IconButton icon="ellipsis-v" onPress={handleOptionsPress} />
+          <Pressable onPress={handleOptionsPress}>
+            <FontAwesome name="ellipsis-h" size={20} color={colors.text} />
+          </Pressable>
         </View>
 
         {/* Profile Image & Match Percentage */}
@@ -432,65 +427,32 @@ export default function PlayerProfileScreen() {
         {/* Content - Only show if can view profile */}
         {(!followStatus?.is_private || followStatus?.can_view_profile) && (
           <>
-            {/* Sports Tags */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.sportsScroll}
-              contentContainerStyle={styles.sportsContent}
-            >
-              <View style={[styles.sportTag, styles.sportTagActive]}>
-                <Text style={styles.sportTagTextActive}>
-                  Tenis {profile.rating?.toFixed(1) || "0.0"}
-                </Text>
-              </View>
-            </ScrollView>
-
             {/* Tabs */}
             <View style={styles.tabsContainer}>
-              <Pressable
-                style={[
-                  styles.tab,
-                  activeTab === "activity" && styles.tabActive,
-                ]}
+              <AnimatedTab
+                label="Aktivnost"
+                isActive={activeTab === "activity"}
                 onPress={() => setActiveTab("activity")}
-              >
-                <Text
-                  style={
-                    activeTab === "activity"
-                      ? styles.tabActiveText
-                      : styles.tabText
-                  }
-                >
-                  Aktivnost
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.tab, activeTab === "info" && styles.tabActive]}
+                colors={colors}
+                fonts={fonts}
+                isDark={isDark}
+              />
+              <AnimatedTab
+                label="Lični podaci"
+                isActive={activeTab === "info"}
                 onPress={() => setActiveTab("info")}
-              >
-                <Text
-                  style={
-                    activeTab === "info" ? styles.tabActiveText : styles.tabText
-                  }
-                >
-                  Lični podaci
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.tab, activeTab === "stats" && styles.tabActive]}
+                colors={colors}
+                fonts={fonts}
+                isDark={isDark}
+              />
+              <AnimatedTab
+                label="Istorija mečeva"
+                isActive={activeTab === "stats"}
                 onPress={() => setActiveTab("stats")}
-              >
-                <Text
-                  style={
-                    activeTab === "stats"
-                      ? styles.tabActiveText
-                      : styles.tabText
-                  }
-                >
-                  Istorija mečeva
-                </Text>
-              </Pressable>
+                colors={colors}
+                fonts={fonts}
+                isDark={isDark}
+              />
             </View>
           </>
         )}
@@ -706,6 +668,62 @@ export default function PlayerProfileScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Block User Modal */}
+      <Modal
+        visible={showBlockModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBlockModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowBlockModal(false)}
+        >
+          <Animated.View
+            style={[
+              styles.modalContent,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <View style={styles.blockModalContainer}>
+                <View style={styles.blockUserInfo}>
+                  <Image
+                    source={{
+                      uri:
+                        profile?.avatar_url ||
+                        "https://i.pravatar.cc/150?img=1",
+                    }}
+                    style={styles.blockUserAvatar}
+                  />
+                  <View style={styles.blockUserDetails}>
+                    <Text style={styles.blockUserName}>
+                      {profile?.full_name || "Korisnik"}
+                    </Text>
+                    <Text style={styles.blockUserSubtext}>
+                      Blokiraj korisnika
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  style={styles.blockButton}
+                  onPress={() => {
+                    setShowBlockModal(false);
+                    setTimeout(() => {
+                      handleBlockUser();
+                    }, 300);
+                  }}
+                >
+                  <Text style={styles.blockButtonText}>Blokiraj</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1080,5 +1098,58 @@ const createStyles = (colors: any, fonts: any) =>
       fontSize: 14,
       textAlign: "center",
       lineHeight: 20,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: 40,
+    },
+    blockModalContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+    },
+    blockUserInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    blockUserAvatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: 12,
+    },
+    blockUserDetails: {
+      flex: 1,
+    },
+    blockUserName: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.text,
+      marginBottom: 2,
+    },
+    blockUserSubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    blockButton: {
+      backgroundColor: colors.error || "#FF3B30",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    blockButtonText: {
+      color: "#fff",
+      fontSize: 14,
+      fontWeight: "600",
     },
   });

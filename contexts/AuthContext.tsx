@@ -16,6 +16,7 @@ interface AuthContextValue {
   profile: Profile | null;
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
+  updateFollowingCount: (delta: number) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -164,6 +165,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
           } catch (error) {
             console.error("[AuthContext] Profile refresh failed:", error);
           }
+        }
+      },
+      updateFollowingCount: (delta: number) => {
+        if (profile) {
+          setProfile({
+            ...profile,
+            following_count: (profile.following_count || 0) + delta,
+          });
         }
       },
     }),

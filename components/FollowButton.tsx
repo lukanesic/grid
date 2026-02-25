@@ -29,7 +29,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
   const { colors, fonts } = useTheme();
-  const { refreshProfile } = useAuth();
+  const { refreshProfile, updateFollowingCount } = useAuth();
   const queryClient = useQueryClient();
   const styles = createStyles(colors, fonts);
 
@@ -75,12 +75,17 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
       setIsFollowing(true);
       onFollowChange?.(true);
 
-      // Refresh current user profile to update following_count
+      // Optimistically update following count
+      updateFollowingCount(1);
+
+      // Force refetch userFollowing to show in home feed
+      queryClient.invalidateQueries({ queryKey: ["userFollowing"] });
+      await queryClient.refetchQueries({ queryKey: ["userFollowing"] });
+
+      // Refresh current user profile to update following_count from database
       await refreshProfile();
 
-      // Invalidate queries to refresh counts
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      // Invalidate other queries
       queryClient.invalidateQueries({ queryKey: ["followStatus", userId] });
     } catch (error: any) {
       console.error("Error following user:", error);
@@ -107,12 +112,25 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
       setIsFollowing(false);
       onFollowChange?.(false);
 
-      // Refresh current user profile to update following_count
+      // Optimistically update following count
+      updateFollowingCount(-1);
+
+      // Optimistically remove from following list
+      queryClient.setQueryData(["userFollowing"], (oldData: any) => {
+        console.log("[FollowButton] Removing user from cache", userId, oldData);
+        if (!oldData) return [];
+        const newData = oldData.filter((item: any) => item.id !== userId);
+        console.log("[FollowButton] New cache data", newData);
+        return newData;
+      });
+
+      // Force refetch to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: ["userFollowing"] });
+
+      // Refresh current user profile to update following_count from database
       await refreshProfile();
 
-      // Invalidate queries to refresh counts
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      // Invalidate other queries
       queryClient.invalidateQueries({ queryKey: ["followStatus", userId] });
     } catch (error: any) {
       console.error("Error unfollowing user:", error);

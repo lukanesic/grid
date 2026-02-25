@@ -5,14 +5,14 @@ import { FollowingItem } from "@/types/profile";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -332,14 +332,21 @@ export default function FollowingScreen() {
     followingUserId: string,
     isFollowing: boolean,
   ) => {
-    // Update local state
-    setFollowing((prev) =>
-      prev.map((user) =>
-        user.id === followingUserId
-          ? { ...user, is_following: isFollowing }
-          : user,
-      ),
-    );
+    if (!isFollowing) {
+      // Remove from list when unfollowed
+      setFollowing((prev) =>
+        prev.filter((user) => user.id !== followingUserId),
+      );
+    } else {
+      // Update local state when followed
+      setFollowing((prev) =>
+        prev.map((user) =>
+          user.id === followingUserId
+            ? { ...user, is_following: isFollowing }
+            : user,
+        ),
+      );
+    }
   };
 
   const navigateToProfile = (item: FollowingItem) => {
@@ -457,7 +464,7 @@ const createStyles = (colors: any) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 10,
-      paddingVertical: 16,
+      paddingVertical: 10,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },

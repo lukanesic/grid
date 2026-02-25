@@ -324,7 +324,7 @@ export default function ChatScreen() {
               style={styles.headerButton}
               onPress={handleChatOptions}
             >
-              <FontAwesome name="ellipsis-v" size={20} color={colors.text} />
+              <FontAwesome name="ellipsis-h" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>

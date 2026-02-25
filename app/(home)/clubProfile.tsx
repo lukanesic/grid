@@ -3,17 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  Dimensions,
-  Image,
-  Linking,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    Image,
+    Linking,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { StatItem } from "../../components/playerProfile";
 import VersusMatchCard from "../../components/VersusMatchCard";
@@ -21,10 +21,10 @@ import { FINISHED_MATCHES } from "../../constants/data";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  fetchClubById,
-  fetchClubFollowStatus,
-  followClub,
-  unfollowClub,
+    fetchClubById,
+    fetchClubFollowStatus,
+    followClub,
+    unfollowClub,
 } from "../../lib/clubApi";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -183,7 +183,15 @@ export default function ClubProfileScreen() {
           },
         ]}
       >
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
+        <Pressable
+          style={[
+            styles.iconButton,
+            {
+              paddingHorizontal: 0,
+            },
+          ]}
+          onPress={() => router.back()}
+        >
           <FontAwesome name="chevron-left" size={20} color="white" />
         </Pressable>
         <View style={styles.headerRightButtons}>
@@ -266,7 +274,7 @@ export default function ClubProfileScreen() {
               number={club.courts || 6}
               label="Tereni"
               onPress={() => {
-                // TODO: Navigate to courts list
+                router.push(`/(home)/clubCourts?clubId=${clubId}`);
               }}
             />
             <StatItem

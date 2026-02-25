@@ -3,28 +3,28 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  FINISHED_MATCHES,
-  OPEN_MATCHES,
-  UPCOMING_MATCHES,
+    FINISHED_MATCHES,
+    OPEN_MATCHES,
+    UPCOMING_MATCHES,
 } from "../../constants/data";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
-  cancelReservation,
-  fetchReservationById,
-  joinReservation,
-  leaveReservation,
-  removePlayerFromReservation,
+    cancelReservation,
+    fetchReservationById,
+    joinReservation,
+    leaveReservation,
+    removePlayerFromReservation,
 } from "../../lib/courtApi";
 import { supabase } from "../../lib/supabase";
 
@@ -253,16 +253,9 @@ export default function MatchScreenNew() {
   // Loading state - show for all cases until we have the data
   if ((isUUID && isLoading) || !currentUserId || (isUUID && !reservation)) {
     return (
-      <View style={styles.container}>
-        <SafeAreaView edges={["top"]} style={styles.loadingHeader}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <FontAwesome name="chevron-left" size={20} color={colors.text} />
-          </Pressable>
-        </SafeAreaView>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3867FF" />
-          <Text style={styles.loadingText}>Učitavanje meča...</Text>
-        </View>
+      <View style={styles.fullScreenLoading}>
+        <ActivityIndicator size="large" color="#3867FF" />
+        <Text style={styles.loadingText}>Učitavanje meča...</Text>
       </View>
     );
   }
@@ -932,6 +925,12 @@ const getStyles = (colors: any, isDark: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: colors.background,
+    },
+    fullScreenLoading: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
       backgroundColor: colors.background,
     },
     contentContainer: {

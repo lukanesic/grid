@@ -141,9 +141,7 @@ export default function HomeHeader({ styles }: HomeHeaderProps) {
           </View>
         </View>
         <View style={styles.connectText}>
-          <Text style={styles.connectHeading}>
-            Uveži se sa svojim prijateljima
-          </Text>
+          <Text style={styles.connectHeading}>Poveži se</Text>
           <Text style={styles.connectSubheading}>Brzo i lako</Text>
         </View>
         <FontAwesome name="chevron-right" size={18} color="#8B8B8B" />

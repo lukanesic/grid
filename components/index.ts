@@ -1,4 +1,5 @@
 export { default as ActionCard } from "./ActionCard";
+export { AnimatedTab } from "./AnimatedTab";
 export { default as Badge } from "./Badge";
 export { default as Button } from "./Button";
 export { default as Calendar } from "./Calendar";
